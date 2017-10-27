@@ -14,7 +14,7 @@ A reactive programming library for JavaScript applications, built with TypeScrip
 > 2. From what I observe, I deduce everything else. *(**`Derivations`**)*
 > 3. I don't glitch, my deductions are always correct and up to date, and I'm really fast!
 
-*[Adapted from: [The Science of Deduction](http://www.thescienceofdeduction.co.uk/)]*
+*[Adapted from [The Science of Deduction](http://www.thescienceofdeduction.co.uk/)]*
 
 Special thanks to @ds300 for creating [derivablejs](https://github.com/ds300/derivablejs) which was the main inspiration for Sherlock. Sherlock was originally designed to be API compatible with derivablejs, but has been rewritten from the ground up (in TypeScript) to address a number of fundamental issues that prevented its use in our projects. See [Differences with derivablejs](#differences-with-derivablejs) for more information.
 
@@ -22,7 +22,7 @@ Special thanks to @ds300 for creating [derivablejs](https://github.com/ds300/der
 
 Sherlock Holmes, the fictional consulting detective, is known for his power of deduction. Given a number of truths (or clues or observations), he can deduce other truths (or theories).
 
-Take this example from "*Silver Blaze*," one of his adventures. Holmes deduces that the perpetrator of the crime must have been someone familiar to the household, because the dog didn't bark when the perpetrator approached.
+Take this example from "*Silver Blaze*," one of his adventures. Holmes deduces that the perpetrator of the crime must have been someone familiar to the household because the dog didn't bark when the perpetrator approached.
 
 > **Inspector:** "Is there any point to which you would wish to draw my attention?"
 >
@@ -73,14 +73,14 @@ The rest of the variables is derived state:
 
 The derived state can be derived (deduced) from the real state. As you can see in this example, we need to make sure to always update the derived state whenever the real state changes. If, for example, we forget to update `currentPages` after changing `currentFontSize` we end up with an invalid state.
 
-Another way to explain the difference betwee real state and derived state is to look at the way a spreadsheet works. Any cell in a spreadsheet that contains a value contains *real state*, any cell that contains a formula contains *derived state*. A spreadsheet is very powerful like that because it automatically updates formula-cells whenever needed. Wouldn't it be nice to have that power in our code as well?
+Another way to explain the difference between real state and derived state is to look at the way a spreadsheet works. Any cell in a spreadsheet that contains a value contains *real state*, any cell that contains a formula contains *derived state*. A spreadsheet is very powerful like that because it automatically updates formula-cells whenever needed. Wouldn't it be nice to have that power in our code as well?
 
 Another thing we can see in the eBook code is that this magic `updateScreen` function needs to be called whenever `currentPage` changes.
 
 ### The power of deduction
 The idea behind Sherlock (and other reactive libraries) is to make all derivations *(i.e. calculating derived state)* and reactions *(calling some function whenever something changes)* explicit and automatic.
 
-All real state is put in so-called Atoms, all other state is derived. An Atom has a `get` and a `set` method to access or change its state. Using Sherlock, the code could look as follows *(the dollor-suffix is a syntactic indication that a variable has been "sherlocked", i.e. that a variable is derivable)*:
+All real state is put in so-called Atoms, all other state is derived. An Atom has a `#get` and a `#set` method to access or change its state. Using Sherlock, the code could look as follows *(the dollar-suffix is a syntactic indication that a variable has been "sherlocked", i.e. that a variable is derivable)*:
 
 ```typescript
 /** same as before */
@@ -90,9 +90,11 @@ function calculatePages(book: Book, fontsize: number): string[] { /* secret inte
 let currentBook$: Atom<Book>; // magicly appears
 let currentFontSize$ = atom(12);
 let currentPageNumber$ = atom(0);
+
 // We simply use a lambda function to define currentPage$ as a derivation of currentBook$
 // and currentFontSize$ using calculatePages. Sherlock automatically records all dependencies.
 let currentPages$ = derivation(() => calculatePages(currentBook$.get(), currentFontSize$.get()));
+
 // currentPage$ is always equal to the element in currentPages$ at position currentPageNumber$.
 let currentPage$ = currentPages$.pluck(currentPageNumber$);
 
@@ -108,7 +110,7 @@ function selectFontSize(newSize: number) {
 }
 ```
 
-The initial setup is slightly more complex, because we make all dependencies explicit at initialisation time, but the `selectPage` and `selectFontSize` functions have suddenly become preposterously simple. Wouldn't you agree?
+The initial setup is slightly more complex because we make all dependencies explicit at initialization time, but the `selectPage` and `selectFontSize` functions have suddenly become preposterously simple.
 
 ## Derivables
 
@@ -160,13 +162,19 @@ There are three types of Derivables:
     isBrilliant$.get(); // true
     ```
 
-    Derivations can also be created with the generic `derivation` function as seen above. This function can be used to do an arbitrary calculation on any number of derivables. `@politie/sherlock` automatically records which derivable is dependent on which other derivable to be able to update derived state when needed.
+    Derivations can also be created with the generic `derivation` function as seen earlier. This function can be used to do an arbitrary calculation on any number of derivables. `@politie/sherlock` automatically records which derivable is dependent on which other derivable to be able to update derived state when needed.
 
 ## Reactors
 
 To execute side effects, you can react to changes on any derivable as seen in an earlier example.
 
+## Transactions
+
 *More documentation coming soon*
+
+## Interoperability with RxJS
+
+*Coming soon*
 
 ## Immutable
 
