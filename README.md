@@ -20,27 +20,15 @@ Special thanks to @ds300 for creating [derivablejs](https://github.com/ds300/der
 
 ## Concepts
 
-Sherlock Holmes, the fictional consulting detective, is known for his power of deduction. Given a number of truths (or clues or observations), he can deduce other truths (or theories).
-
-Take this example from "*Silver Blaze*," one of his adventures. Holmes deduces that the perpetrator of the crime must have been someone familiar to the household because the dog didn't bark when the perpetrator approached.
-
-> **Inspector:** "Is there any point to which you would wish to draw my attention?"
->
-> **Holmes:** "To the curious incident of the dog in the night-time."
->
-> **Inspector:** "The dog did nothing in the night-time."
->
-> **Holmes:** "That was the curious incident."
-
 ### Application state
-The Sherlock library applies the power of deduction (or derivation) to application state. This is best explained using a small example. Let's say we're developing an eBook reader (to read about Sherlock Holmes of course). Our naive version is as follow:
+Sherlock Holmes, the fictional consulting detective, is known for his power of deduction. The Sherlock library applies the power of deduction to application state. This is best explained using a small example. Let's say we're developing an eBook reader (to read about Sherlock Holmes of course). Our naive version is as follow:
 
 ```typescript
 /** Calculates an array of pages (['Title page...', 'page 1...', ...]). */
 function calculatePages(book: Book, fontsize: number): string[] { /* secret internal code. ;-) */ }
 
 // Initialisation:
-let currentBook: Book; // magicly appears
+let currentBook: Book = ...; // magically appears
 let currentFontSize = 12;
 let currentPageNumber = 0;
 let currentPages = calculatePages(currentBook, currentFontSize);
@@ -71,7 +59,7 @@ The rest of the variables is derived state:
 - `currentPages`
 - `currentPage`
 
-The derived state can be derived (deduced) from the real state. As you can see in this example, we need to make sure to always update the derived state whenever the real state changes. If, for example, we forget to update `currentPages` after changing `currentFontSize` we end up with an invalid state.
+The derived state can be derived from the real state. As you can see in this example, we need to make sure to always update the derived state whenever the real state changes. If, for example, we forget to update `currentPages` after changing `currentFontSize` we end up with an invalid state.
 
 Another way to explain the difference between real state and derived state is to look at the way a spreadsheet works. Any cell in a spreadsheet that contains a value contains *real state*, any cell that contains a formula contains *derived state*. A spreadsheet is very powerful like that because it automatically updates formula-cells whenever needed. Wouldn't it be nice to have that power in our code as well?
 
@@ -87,7 +75,7 @@ All real state is put in so-called Atoms, all other state is derived. An Atom ha
 function calculatePages(book: Book, fontsize: number): string[] { /* secret internal code. ;-) */ }
 
 // Initialisation:
-let currentBook$: Atom<Book>; // magicly appears
+let currentBook$: Atom<Book> = ...; // magically appears
 let currentFontSize$ = atom(12);
 let currentPageNumber$ = atom(0);
 
@@ -168,11 +156,18 @@ There are three types of Derivables:
 
 To execute side effects, you can react to changes on any derivable as seen in an earlier example.
 
+*More documentation coming soon*
+
+
 ## Transactions
 
 *More documentation coming soon*
 
-## Interoperability with RxJS
+## Interoperability with RxJS using sherlock-rxjs
+
+*Coming soon*
+
+## Proxies using sherlock-proxies
 
 *Coming soon*
 
