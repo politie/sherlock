@@ -1,0 +1,38 @@
+{
+    "name": "@politie/sherlock-rxjs",
+    "version": "1.0.0-beta.0",
+    "description": "An extensions to Sherlock that provides interop with RxJS.",
+    "main": "index.js",
+    "typings": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/politie/sherlock.git"
+    },
+    "keywords": [
+        "derivable",
+        "reactive",
+        "politie",
+        "typescript",
+        "derivation",
+        "state",
+        "rxjs"
+    ],
+    "contributors": [
+        "Paco van der Linden <pavadeli@gmail.com>",
+        "Wilfred van der Deijl <wilfred@vanderdeijl.com>",
+        "Merijn van der Linden <njirem@gmail.com>",
+        "Wouter Spaak <w.spaak@gmail.com>"
+    ],
+    "license": "Apache-2.0",
+    "bugs": {
+        "url": "https://github.com/politie/sherlock/issues"
+    },
+    "homepage": "https://github.com/politie/sherlock/tree/master/extensions/sherlock-rxjs#readme",
+    "dependencies": {
+        "tslib": "^1.8.0"
+    },
+    "peerDependencies": {
+        "@politie/sherlock": "1.0.0-beta.0",
+        "rxjs": "^5.4.0"
+    }
+}

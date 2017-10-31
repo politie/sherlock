@@ -1,0 +1,37 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "lib": [
+            "es2015"
+        ],
+        "declaration": true,
+        "sourceMap": true,
+        "importHelpers": true,
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "pretty": true,
+        "stripInternal": true,
+        "skipLibCheck": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "baseUrl": "src",
+        "paths": {
+            "@politie/sherlock": [
+                "."
+            ],
+            "@politie/sherlock/derivable/derivable": [
+                "derivable/derivable"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts",
+        "extensions/**/*.ts",
+        "typings/**/*.d.ts"
+    ]
+}
