@@ -6,18 +6,21 @@
     "main": "index.js",
     "typings": "index.d.ts",
     "scripts": {
+        "prepack": "npm run build",
         "clean": "rimraf .nyc_output coverage dist",
         "build": "npm-run-all clean test lint copy",
         "tsc": "npm-run-all tsc:*",
         "tsc:base": "tsc -p scripts/tsconfig.base.json",
         "tsc:extensions": "tsc -p scripts/tsconfig.extensions.json",
         "test": "npm-run-all tsc test:run",
-        "test:run": "nyc --check-coverage --lines 98 --functions 98 --branches 98 --statements 98 --reporter html --reporter text-summary --include \"dist/**/*.js\" --exclude \"**/*.spec.js\" mocha -r scripts/tsconfig-paths-test.js --forbid-only \"dist/**/*.spec.js\"",
+        "test:run": "nyc --check-coverage --lines 98 --functions 98 --branches 98 --statements 98 --reporter lcov --reporter text-summary --include \"dist/**/*.js\" --exclude \"**/*.spec.js\" mocha -r scripts/tsconfig-paths-test.js --forbid-only \"dist/**/*.spec.js\"",
         "posttest": "rimraf .nyc_output",
         "watch": "nodemon --watch src --watch extensions --ext ts --exec npm run watch:run",
         "watch:run": "nyc --reporter html --reporter text-summary --extension .ts --include \"{src,extensions}/**/*.ts\" --exclude \"{src,extensions}/**/*.spec.ts\" mocha --reporter landing --compilers ts:ts-node/register -r tsconfig-paths/register \"{src,extensions}/**/*.spec.ts\" && rimraf .nyc_output",
         "lint": "tslint -p tsconfig.json --format codeFrame",
-        "copy": "node scripts/copy-boilerplate.js"
+        "copy": "node scripts/copy-boilerplate.js",
+        "ci:travis": "npm run build && cat coverage/lcov.info | node_modules/.bin/coveralls",
+        "ci:circle": "npm run build"
     },
     "repository": {
         "type": "git",
@@ -54,6 +57,7 @@
         "@types/sinon-chai": "^2.7.29",
         "chai": "^4.1.2",
         "chai-immutable": "^1.6.0",
+        "coveralls": "^3.0.0",
         "immutable": "^3.8.2",
         "mocha": "^4.0.1",
         "nodemon": "^1.12.1",
