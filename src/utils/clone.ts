@@ -35,6 +35,6 @@ declare global {
 
 export function getOwnPropertyDescriptorsShim(obj: any) {
     const properties: PropertyDescriptorMap = {};
-    for (const prop of Reflect.ownKeys(obj)) { properties[prop] = Object.getOwnPropertyDescriptor(obj, prop); }
+    for (const prop of Reflect.ownKeys(obj)) { properties[prop] = Object.getOwnPropertyDescriptor(obj, prop)!; }
     return properties;
 }
