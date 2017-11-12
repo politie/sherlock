@@ -125,7 +125,7 @@ describe('proxy', () => {
 
             it('should also work using PropertyDescriptor', () => {
                 const obj = createForObject({ prop: 'value' });
-                const desc = Object.getOwnPropertyDescriptor(obj, 'prop');
+                const desc = Object.getOwnPropertyDescriptor(obj, 'prop')!;
                 expect(desc.get!.call(obj).$value).to.equal('value');
                 desc.set!.call(obj, 'new value');
                 expect(obj.prop.$value).to.equal('new value');
