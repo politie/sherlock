@@ -1,5 +1,7 @@
 # Sherlock
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/politie/sherlock.svg)](https://greenkeeper.io/)
+
 A reactive programming library for JavaScript applications, built with TypeScript.
 
 ## Introduction
