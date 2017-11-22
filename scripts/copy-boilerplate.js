@@ -1,4 +1,5 @@
-const { cp, echo, sed } = require('shelljs');
+const shell = require('shelljs');
+const cp = shell.cp, echo = shell.echo, sed = shell.sed;
 
 const dirs = {
     'dist/sherlock/': '',
