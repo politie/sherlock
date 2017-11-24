@@ -4,7 +4,7 @@ import { fromJS, Seq } from 'immutable';
 import { spy } from 'sinon';
 import { DerivableProxy, extendExpression, isDerivableProxy, ProxyDescriptor } from './proxy';
 
-describe('proxy', () => {
+typeof Proxy !== 'undefined' && describe('proxy', () => {
 
     type ProxyType<Structure, Extras = {}> = DerivableProxy<Structure>
         & {[P in keyof Structure]: ProxyType<Structure[P], Extras>}
