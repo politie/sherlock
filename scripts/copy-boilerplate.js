@@ -1,6 +1,8 @@
 const shell = require('shelljs');
 const cp = shell.cp, echo = shell.echo, sed = shell.sed;
 
+shell.mkdir('-p', 'dist/stats');
+
 const dirs = {
     'dist/sherlock/': '',
     'dist/sherlock-proxy/': 'extensions/sherlock-proxy/',
@@ -12,6 +14,5 @@ Object.keys(dirs).forEach(to => {
     cp('LICENSE', to);
     cp(from + 'README.md', to);
     cp(from + 'package.json', to);
-    echo('*.spec.*').to(to + '.npmignore');
     sed('-i', '\"private\"\\: true', '\"private\": false', to + 'package.json')
 });
