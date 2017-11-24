@@ -35,6 +35,13 @@ declare global {
 
 export function getOwnPropertyDescriptorsShim(obj: any) {
     const properties: PropertyDescriptorMap = {};
-    for (const prop of Reflect.ownKeys(obj)) { properties[prop] = Object.getOwnPropertyDescriptor(obj, prop)!; }
+    for (const prop of ownKeys(obj)) { properties[prop] = Object.getOwnPropertyDescriptor(obj, prop)!; }
     return properties;
+}
+
+// istanbul ignore next: cannot be tested in a modern Node environment
+const ownKeys = typeof Reflect !== 'undefined' ? Reflect.ownKeys : ownKeysShim;
+
+export function ownKeysShim(obj: any) {
+    return [...Object.getOwnPropertyNames(obj), ...Object.getOwnPropertySymbols(obj)];
 }
