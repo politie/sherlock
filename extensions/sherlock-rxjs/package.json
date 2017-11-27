@@ -1,9 +1,15 @@
 {
     "name": "@politie/sherlock-rxjs",
-    "version": "1.0.0-beta.0",
+    "version": "1.0.0-beta.1",
     "description": "An extensions to Sherlock that provides interop with RxJS.",
-    "main": "index.js",
+    "main": "sherlock-rxjs.cjs.js",
+    "module": "sherlock-rxjs.esm.js",
+    "browser": "sherlock-rxjs.umd.js",
     "typings": "index.d.ts",
+    "files": [
+        "sherlock-rxjs.{cjs,esm,umd}.*",
+        "**/*.d.ts"
+    ],
     "repository": {
         "type": "git",
         "url": "git+https://github.com/politie/sherlock.git"

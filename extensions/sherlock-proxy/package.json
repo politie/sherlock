@@ -1,9 +1,15 @@
 {
     "name": "@politie/sherlock-proxy",
-    "version": "1.0.0-beta.0",
+    "version": "1.0.0-beta.1",
     "description": "A proxy extensions to Sherlock.",
-    "main": "index.js",
+    "main": "sherlock-proxy.cjs.js",
+    "module": "sherlock-proxy.esm.js",
+    "browser": "sherlock-proxy.umd.js",
     "typings": "index.d.ts",
+    "files": [
+        "sherlock-proxy.{cjs,esm,umd}.*",
+        "**/*.d.ts"
+    ],
     "repository": {
         "type": "git",
         "url": "git+https://github.com/politie/sherlock.git"
