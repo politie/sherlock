@@ -1,7 +1,7 @@
 {
     "name": "@politie/sherlock-rxjs",
-    "version": "1.0.0-beta.1",
-    "description": "An extensions to Sherlock that provides interop with RxJS.",
+    "version": "0.0.0-PLACEHOLDER",
+    "description": "An extension to Sherlock that provides interop with RxJS.",
     "main": "sherlock-rxjs.cjs.js",
     "module": "sherlock-rxjs.esm.js",
     "browser": "sherlock-rxjs.umd.js",
@@ -38,7 +38,7 @@
         "tslib": "^1.8.0"
     },
     "peerDependencies": {
-        "@politie/sherlock": "1.0.0-beta.0",
+        "@politie/sherlock": "0.0.0-PLACEHOLDER",
         "rxjs": "^5.4.0"
     }
 }
