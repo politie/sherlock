@@ -1,7 +1,7 @@
 {
     "name": "@politie/sherlock-proxy",
-    "version": "1.0.0-beta.1",
-    "description": "A proxy extensions to Sherlock.",
+    "version": "0.0.0-PLACEHOLDER",
+    "description": "A proxy extension to Sherlock.",
     "main": "sherlock-proxy.cjs.js",
     "module": "sherlock-proxy.esm.js",
     "browser": "sherlock-proxy.umd.js",
@@ -38,6 +38,6 @@
         "tslib": "^1.8.0"
     },
     "peerDependencies": {
-        "@politie/sherlock": "1.0.0-beta.0"
+        "@politie/sherlock": "0.0.0-PLACEHOLDER"
     }
 }

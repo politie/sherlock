@@ -1,4 +1,5 @@
 const shell = require('shelljs');
+const version = require('../package.json').version;
 const cp = shell.cp, echo = shell.echo, sed = shell.sed;
 
 shell.mkdir('-p', 'dist/stats');
@@ -14,5 +15,6 @@ Object.keys(dirs).forEach(to => {
     cp('LICENSE', to);
     cp(from + 'README.md', to);
     cp(from + 'package.json', to);
-    sed('-i', '\"private\"\\: true', '\"private\": false', to + 'package.json')
+    sed('-i', '\"private\"\\: true', '\"private\": false', to + 'package.json');
+    sed('-i', '0.0.0-PLACEHOLDER', version, to + 'package.json');
 });
