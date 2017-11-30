@@ -193,6 +193,7 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
     }
 
     /**
+     * @internal
      * Mark this derivation and all observers of this derivation as "possible outdated" or "state unknown". If this derivation is already
      * in that state, all observers of this derivation are also expected to already be in that state. This invariant should never
      * be invalidated. Any reactors we encounter are pushed into the reactorSink.
