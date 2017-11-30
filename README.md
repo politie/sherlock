@@ -141,8 +141,6 @@ There are three types of Derivables:
     Derivations are calculated derived state (deductions if you will) based on other Atoms of Derivations. They can be created with the `#derive` method that is present on all derivables.
 
     ```typescript
-    const cyber = (word: string) => word.toUpperCase().split('').join(' ');
-
     const isBrilliant$ = name$.derive(name => name === 'Sherlock');
 
     isBrilliant$.get(); // false
