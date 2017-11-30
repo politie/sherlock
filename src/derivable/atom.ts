@@ -15,13 +15,6 @@ export class Atom<V> extends Derivable<V> {
 
     /**
      * @internal
-     * Contains the current value of this atom. Note that this field is public for transaction support, should
-     * not be used in application code. Use {@link Derivable#get} and {@link Atom#set} instead.
-     */
-    public value: V;
-
-    /**
-     * @internal
      * Construct a new atom with the provided initial value.
      *
      * @param value the initial value
@@ -31,6 +24,13 @@ export class Atom<V> extends Derivable<V> {
         this.value = value;
         logger.trace({ id: this.id, value }, 'created');
     }
+
+    /**
+     * @internal
+     * Contains the current value of this atom. Note that this field is public for transaction support, should
+     * not be used in application code. Use {@link Derivable#get} and {@link Atom#set} instead.
+     */
+    value: V;
 
     /**
      * @internal

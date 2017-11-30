@@ -169,6 +169,7 @@ export class Reactor<V> implements Observer {
     }
 
     /**
+     * @internal
      * During the mark phase add this reactor to the reactorSink. This way, the transaction knows we exist and we get to `reactIfNeeded`
      * later on.
      */

@@ -139,6 +139,7 @@ export interface TrackedObservable extends Observable {
 export interface Observer {
     /** @internal */
     disconnect(): void;
+    /** @internal */
     mark(reactorSink: Reactor[]): void;
 }
 
