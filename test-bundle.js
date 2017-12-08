@@ -1,3 +1,5 @@
+'use strict';
+
 console.log('Testing bundle...');
 
 const sherlock = require('./dist/sherlock/sherlock.cjs');
