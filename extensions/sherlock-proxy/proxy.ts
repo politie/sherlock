@@ -11,6 +11,9 @@ export interface DerivableProxy<V> {
     /** The current value that this Proxy represents. Can be expensive to calculate and is often writable. */
     $value: V;
 
+    /** The path for this proxy's {@link DerivableProxy#$value} through the proxy object model. */
+    $expression: string;
+
     /** {@see Derivable#and} */
     $and<W>(other: MaybePacked<W>): Derivable<V | W>;
 
