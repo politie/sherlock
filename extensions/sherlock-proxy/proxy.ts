@@ -12,13 +12,13 @@ export interface DerivableProxy<V> {
     $value: V;
 
     /** A string representation of this proxy's path from the root ProxyDescriptor. */
-    $expression: string;
+    $expression?: string;
 
     /**
      * An array representation of this proxy's path from the root ProxyDescriptor. Useful for programatically walking down the root
      * Descriptor's object tree to reacquire a target proxy.
      */
-    $path: Array<string | number>;
+    $path?: Array<string | number>;
 
     /** {@see Derivable#and} */
     $and<W>(other: MaybePacked<W>): Derivable<V | W>;
@@ -362,6 +362,5 @@ export function extendExpression(expression = '', property: string | number) {
  * @param property the property that should be appended to the path
  */
 export function extendPath(path: Array<string | number> = [], property: string | number) {
-    path.push(property);
-    return path;
+    return path.concat(property);
 }
