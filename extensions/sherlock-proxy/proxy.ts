@@ -11,8 +11,14 @@ export interface DerivableProxy<V> {
     /** The current value that this Proxy represents. Can be expensive to calculate and is often writable. */
     $value: V;
 
-    /** The path for this proxy's {@link DerivableProxy#$value} through the proxy object model. */
+    /** A string representation of this proxy's path from the root ProxyDescriptor. */
     $expression: string;
+
+    /**
+     * An array representation of this proxy's path from the root ProxyDescriptor. Useful for programatically walking down the root
+     * Descriptor's object tree to reacquire a target proxy.
+     */
+    $path: Array<string | number>;
 
     /** {@see Derivable#and} */
     $and<W>(other: MaybePacked<W>): Derivable<V | W>;
