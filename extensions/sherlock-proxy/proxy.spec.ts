@@ -58,6 +58,16 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
                 expect(obj.prop.$pluck(1).$expression).to.equal('.prop[1]');
             });
 
+            it('should expose the extended path when plucked', () => {
+                const obj = createForObject({}) as any;
+                expect(obj.$path).to.be.undefined;
+                expect(obj.prop1.$path).to.deep.equal(['prop1']);
+                expect(obj.prop1.prop2.$path).to.deep.equal(['prop1', 'prop2']);
+                expect(obj.prop1[0][1][2].$path).to.deep.equal(['prop1', '0', '1', '2']);
+
+                expect(obj.prop.$pluck(2).$path).to.deep.equal(['prop', 2]);
+            });
+
             it('should be possible to override the default $pluck behavior', () => {
                 const pd = new ProxyDescriptor<string>();
                 pd.$pluck = function (this: ProxyDescriptor<string>, prop: string | number) {

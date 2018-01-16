@@ -1,3 +1,3 @@
 export {
-    DerivableProxy, extendExpression, isDerivableProxy, MaybePacked, ProxyDescriptor, unpackProxy,
+    DerivableProxy, extendExpression, extendPath, isDerivableProxy, MaybePacked, ProxyDescriptor, unpackProxy,
 } from './proxy';
