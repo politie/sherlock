@@ -11,8 +11,14 @@ export interface DerivableProxy<V> {
     /** The current value that this Proxy represents. Can be expensive to calculate and is often writable. */
     $value: V;
 
-    /** The path for this proxy's {@link DerivableProxy#$value} through the proxy object model. */
-    $expression: string;
+    /** A string representation of this proxy's path from the root ProxyDescriptor. */
+    $expression?: string;
+
+    /**
+     * An array representation of this proxy's path from the root ProxyDescriptor. Useful for programatically walking down the root
+     * Descriptor's object tree to reacquire a target proxy.
+     */
+    $path?: Array<string | number>;
 
     /** {@see Derivable#and} */
     $and<W>(other: MaybePacked<W>): Derivable<V | W>;
@@ -68,6 +74,11 @@ export class ProxyDescriptor<V = any, T = V> {
      * The expression that represents the path to the current Proxy.
      */
     $expression?: string;
+
+    /**
+     * The path to the current Proxy.
+     */
+    $path?: Array<string | number>;
 
     /**
      * The derivable that is the input to all default methods on the Proxy and the {@link #$value} property.
@@ -152,16 +163,17 @@ export class ProxyDescriptor<V = any, T = V> {
      * Wrap a Derivable as DerivableProxy using this ProxyDescriptor.
      *
      * @param obj the object to wrap
-     * @param parentObject the parent object that was plucked
-     * @param property the property with which the parent object was plucked
+     * @param expression the new expression to the created DerivableProxy
+     * @param path the new path to the created DerivableProxy
      */
-    $create(obj: Derivable<T>, expression?: string): DerivableProxy<V> {
+    $create(obj: Derivable<T>, expression?: string, path?: Array<string | number>): DerivableProxy<V> {
         const descriptor: ProxyDescriptor = clone(this.$proxyDescriptor);
         descriptor.$target = obj;
         Object.getOwnPropertyNames(descriptor)
             .filter(prop => prop.startsWith('$$'))
             .forEach(prop => descriptor[prop] = undefined);
         descriptor.$expression = expression;
+        descriptor.$path = path;
         logger.trace({ obj, expression, descriptor }, 'created');
         return new Proxy(descriptor, proxyHandler) as any;
     }
@@ -174,7 +186,7 @@ export class ProxyDescriptor<V = any, T = V> {
      */
     $pluck(prop: string | number): DerivableProxy<V> | undefined {
         const pd = this.$proxyDescriptor;
-        return pd.$create(pd.$derivable.pluck(prop), extendExpression(pd.$expression, prop));
+        return pd.$create(pd.$derivable.pluck(prop), extendExpression(pd.$expression, prop), extendPath(pd.$path, prop));
     }
 
     /**
@@ -341,4 +353,14 @@ export function extendExpression(expression = '', property: string | number) {
         return expression + '["' + property.replace(/\\/g, '\\\\').replace(/\"/g, '\\"') + '"]';
     }
     return expression + '[' + property + ']';
+}
+
+/**
+ * Extends a path with a property access.
+ *
+ * @param path the (optional) path to extend
+ * @param property the property that should be appended to the path
+ */
+export function extendPath(path: Array<string | number> = [], property: string | number) {
+    return path.concat(property);
 }
