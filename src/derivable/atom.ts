@@ -1,10 +1,7 @@
-import { Logger } from '@politie/informant';
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
 import { equals } from '../utils';
 import { Derivable } from './derivable';
-
-const logger = Logger.get('@politie/sherlock.atom');
 
 /**
  * Atom is the basic state holder in a Derivable world. It contains the actual mutable state. In contrast
@@ -22,7 +19,6 @@ export class Atom<V> extends Derivable<V> {
     constructor(value: V) {
         super();
         this.value = value;
-        logger.trace({ id: this.id, value }, 'created');
     }
 
     /**
@@ -56,7 +52,6 @@ export class Atom<V> extends Derivable<V> {
         const oldValue = this.value;
         if (!equals(newValue, oldValue)) {
             this.value = newValue;
-            logger.trace({ id: this.id, newValue, oldValue }, 'changed');
             processChangedAtom(this, oldValue, this.version++);
         }
     }

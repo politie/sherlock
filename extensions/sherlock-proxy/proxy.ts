@@ -1,7 +1,4 @@
-import { clone, Derivable, informant, isAtom, isDerivable, MonoLensDescriptor, ReactorOptions } from '@politie/sherlock';
-const { BaseError, Logger } = informant;
-
-const logger = Logger.get('@politie/sherlock.proxy');
+import { clone, Derivable, isAtom, isDerivable, MonoLensDescriptor, ReactorOptions } from '@politie/sherlock';
 
 /**
  * The base interface for DerivableProxies. Defines only the $-properties and $-methods. Any property accessed with a number or
@@ -99,7 +96,7 @@ export class ProxyDescriptor<V = any, T = V> {
             return pd.$derivable.get();
         } catch (e) {
             // istanbul ignore next: for debug purposes
-            throw new BaseError(e, { expression: pd.$expression }, 'error while getting %s', pd.$expression || '$value');
+            throw Object.assign(new Error(`error while getting ${pd.$expression || '$value'}: ${e && e.message}`), { jse_cause: e });
         }
     }
     set $value(newValue) {
@@ -107,14 +104,12 @@ export class ProxyDescriptor<V = any, T = V> {
         const atom = pd.$derivable;
         const expression = pd.$expression;
         if (!isAtom(atom)) {
-            const oldValue = safeGet(atom);
-            throw new BaseError({ oldValue, newValue, expression }, '%s is readonly', expression || '$value');
+            throw new Error(`${expression || '$value'} is readonly`);
         }
         try {
             atom.set(newValue);
         } catch (e) {
-            const oldValue = safeGet(atom);
-            throw new BaseError(e, { oldValue, newValue, expression }, 'error while setting %s', expression || '$value');
+            throw Object.assign(new Error(`error while setting ${expression || '$value'}: ${e && e.message}`), { jse_cause: e });
         }
     }
 
@@ -127,7 +122,7 @@ export class ProxyDescriptor<V = any, T = V> {
             return pd.$target.get();
         } catch (e) {
             // istanbul ignore next: for debug purposes
-            throw new BaseError(e, { expression: pd.$expression }, 'error while getting %s', pd.$expression || '$targetValue');
+            throw Object.assign(new Error(`error while getting ${pd.$expression || '$targetValue'}: ${e && e.message}`), { jse_cause: e });
         }
     }
     set $targetValue(newValue) {
@@ -135,14 +130,12 @@ export class ProxyDescriptor<V = any, T = V> {
         const atom = pd.$target;
         const expression = pd.$expression;
         if (!isAtom(atom)) {
-            const oldValue = safeGet(atom);
-            throw new BaseError({ oldValue, newValue, expression }, '%s is readonly', expression || '$targetValue');
+            throw new Error(`${expression || '$targetValue'} is readonly`);
         }
         try {
             atom.set(newValue);
         } catch (e) {
-            const oldValue = safeGet(atom);
-            throw new BaseError(e, { oldValue, newValue, expression }, 'error while setting %s', expression || '$targetValue');
+            throw Object.assign(new Error(`error while setting ${expression || '$targetValue'}: ${e && e.message}`), { jse_cause: e });
         }
     }
 
@@ -174,7 +167,6 @@ export class ProxyDescriptor<V = any, T = V> {
             .forEach(prop => descriptor[prop] = undefined);
         descriptor.$expression = expression;
         descriptor.$path = path;
-        logger.trace({ obj, expression, descriptor }, 'created');
         return new Proxy(descriptor, proxyHandler) as any;
     }
 
@@ -245,7 +237,7 @@ export class ProxyDescriptor<V = any, T = V> {
         const length = pd.$length();
         if (length === undefined) {
             const expression = pd.$expression;
-            throw new BaseError({ value: pd.$value, expression }, '%s is not iterable', expression || 'object');
+            throw Object.assign(new Error(`${expression || 'object'} is not iterable`), { value: pd.$value, expression });
         }
         for (let i = 0; i < length; i++) {
             yield pd.$pluck(i)!;
@@ -266,14 +258,6 @@ function createDerivable<V, T>(target: Derivable<T>, lens?: DerivableProxyLens<T
         return target.derive(lens.get).autoCache();
     }
     return target.lens(lens as MonoLensDescriptor<T, V, never>).autoCache();
-}
-
-function safeGet<V>(a$: Derivable<V>): V | Error {
-    try {
-        return a$.get();
-    } catch (e) {
-        return e;
-    }
 }
 
 export interface DerivableProxyLens<T, V> {

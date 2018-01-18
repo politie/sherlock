@@ -17,13 +17,11 @@ export default [].concat.apply([], libs.map(lib => {
                 name: lib,
                 sourcemap: true,
                 globals: {
-                    '@politie/informant': 'informant',
                     '@politie/sherlock': 'sherlock',
                     'rxjs/Observable': 'Rx',
                 },
             },
             external: [
-                '@politie/informant',
                 '@politie/sherlock',
                 'rxjs/Observable',
             ],
@@ -38,7 +36,7 @@ export default [].concat.apply([], libs.map(lib => {
         // CommonJS (for Node) and ES module (for bundlers) build.
         {
             input: `dist/${lib}/index.js`,
-            external: ['@politie/informant', '@politie/sherlock', 'tslib', 'rxjs/Observable'],
+            external: ['@politie/sherlock', 'tslib', 'rxjs/Observable'],
             output: [
                 { sourcemap: true, file: `dist/${lib}/${pkg.main}`, format: 'cjs' },
                 { sourcemap: true, file: `dist/${lib}/${pkg.module}`, format: 'es' },

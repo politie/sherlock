@@ -1,7 +1,4 @@
-import { Logger } from '@politie/informant';
 import { Derivable } from './derivable';
-
-const logger = Logger.get('@politie/sherlock.constant');
 
 /**
  * Constant represents a basic immutable building block of derivations.
@@ -19,7 +16,6 @@ export class Constant<V> extends Derivable<V> {
         public readonly value: V,
     ) {
         super();
-        logger.trace({ id: this.id, value }, 'created');
     }
 
     /**

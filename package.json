@@ -56,7 +56,6 @@
     },
     "homepage": "https://github.com/politie/sherlock#readme",
     "dependencies": {
-        "@politie/informant": "^1.0.0-beta.1",
         "tslib": "^1.8.0"
     },
     "devDependencies": {

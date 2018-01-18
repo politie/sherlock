@@ -1,4 +1,3 @@
-import { BaseError } from '@politie/informant';
 import { atomic } from '../transaction';
 import { clone } from '../utils';
 import { Atom } from './atom';
@@ -88,7 +87,7 @@ function pluckSetter(newValue: any, object: any, key: string | number) {
         if (hasSetter(object)) {
             return object.set(key, newValue);
         }
-        throw new BaseError({ object, newValue, key }, 'object is readonly');
+        throw new Error('object is readonly');
     }
     const result = clone(object);
     result[key] = newValue;
