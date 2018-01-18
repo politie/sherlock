@@ -11,19 +11,22 @@ export default [].concat.apply([], libs.map(lib => {
         // browser-friendly UMD build
         {
             input: `dist/${lib}/index.js`,
-            output: { file: `dist/${lib}/${pkg.browser}`, format: 'umd' },
+            output: {
+                file: `dist/${lib}/${pkg.browser}`,
+                format: 'umd',
+                name: lib,
+                sourcemap: true,
+                globals: {
+                    '@politie/informant': 'informant',
+                    '@politie/sherlock': 'sherlock',
+                    'rxjs/Observable': 'Rx',
+                },
+            },
             external: [
                 '@politie/informant',
                 '@politie/sherlock',
                 'rxjs/Observable',
             ],
-            globals: {
-                '@politie/informant': 'informant',
-                '@politie/sherlock': 'sherlock',
-                'rxjs/Observable': 'Rx',
-            },
-            name: lib,
-            sourcemap: true,
             plugins: [
                 sourcemaps(),
                 commonjs(),
@@ -37,10 +40,9 @@ export default [].concat.apply([], libs.map(lib => {
             input: `dist/${lib}/index.js`,
             external: ['@politie/informant', '@politie/sherlock', 'tslib', 'rxjs/Observable'],
             output: [
-                { file: `dist/${lib}/${pkg.main}`, format: 'cjs' },
-                { file: `dist/${lib}/${pkg.module}`, format: 'es' },
+                { sourcemap: true, file: `dist/${lib}/${pkg.main}`, format: 'cjs' },
+                { sourcemap: true, file: `dist/${lib}/${pkg.module}`, format: 'es' },
             ],
-            sourcemap: true,
             plugins: [
                 sourcemaps(),
                 resolve(),
