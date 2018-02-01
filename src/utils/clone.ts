@@ -1,5 +1,3 @@
-import { BaseError } from '@politie/informant';
-
 /**
  * Creates a shallow clone of the object with the same prototype chain and working getters and setters.
  *
@@ -19,7 +17,7 @@ function cloneArray<T extends any[]>(obj: T): T {
         return Object.defineProperties(new (obj.constructor as any)(), getOwnPropertyDescriptors(obj));
     } catch (e) {
         // istanbul ignore next: for debug purposes
-        throw new BaseError(e, { obj }, 'could not construct a clone of the provided Array');
+        throw Object.assign(new Error('could not construct a clone of the provided Array: ' + (e && e.message)), { jse_cause: e });
     }
 }
 

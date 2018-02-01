@@ -1,7 +1,4 @@
-import { Logger } from '@politie/informant';
 import { Reactor, TrackedObservable } from '../tracking';
-
-const logger = Logger.get('@politie/sherlock.transaction');
 
 let currentTransaction: Transaction | undefined;
 
@@ -157,8 +154,6 @@ export function transaction<F extends (...args: any[]) => any>(f?: F): MethodDec
 }
 
 function beginTransaction() {
-    logger.trace('begin');
-
     currentTransaction = {
         touchedAtoms: [],
         oldValues: {},
@@ -176,11 +171,7 @@ function commitTransaction() {
     }
     currentTransaction = ctx.parentTransaction;
 
-    const info = { touchedAtoms: ctx.touchedAtoms.length, touchedReactors: ctx.touchedReactors.length };
-
     if (currentTransaction) {
-        logger.trace(info, 'commit to parent');
-
         // Hand over all info to the parent transaction
         ctx.touchedAtoms.forEach(atom => processChangedAtomInTransaction(
             currentTransaction!,
@@ -195,8 +186,6 @@ function commitTransaction() {
         // do it explicitly here.
         currentTransaction.touchedReactors.push(...ctx.touchedReactors);
     } else {
-        logger.trace(info, 'commit');
-
         // No parent transaction, so we just committed the outermost transaction, let's react.
         reactIfNeeded(ctx.touchedReactors);
     }
@@ -209,8 +198,6 @@ function rollbackTransaction() {
         throw new Error('No active transaction!');
     }
     currentTransaction = ctx.parentTransaction;
-
-    logger.trace({ touchedAtoms: ctx.touchedAtoms.length, touchedReactors: ctx.touchedReactors.length }, 'rollback');
 
     // Restore the state of all touched atoms.
     ctx.touchedAtoms.forEach(atom => {

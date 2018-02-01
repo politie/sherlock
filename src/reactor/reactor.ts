@@ -1,10 +1,7 @@
-import { Logger } from '@politie/informant';
 import { constant, Derivable, derivation, unpack } from '../derivable';
 import { isConstant, isDerivable } from '../extras';
 import { Observer, removeObserver, TrackedObservable } from '../tracking';
 import { debugMode, equals, uniqueId } from '../utils';
-
-const logger = Logger.get('@politie/sherlock.reactor');
 
 // Adds the react method to Derivable.
 declare module '../derivable/derivable' {
@@ -175,7 +172,6 @@ export class Reactor<V> implements Observer {
      */
     mark(reactorSink: Array<Reactor<any>>): void {
         if (reactorSink.indexOf(this) < 0) {
-            logger.trace({ id: this.id }, 'parent became stale');
             reactorSink.push(this);
         }
     }
@@ -204,7 +200,6 @@ export class Reactor<V> implements Observer {
             if (skipFirst) {
                 skipFirst = false;
             } else {
-                logger.trace({ id: reactor.id, value }, 'react');
                 reaction(value);
                 if (once) {
                     done();
@@ -218,10 +213,8 @@ export class Reactor<V> implements Observer {
             if (conds.until) {
                 done();
             } else if (conds.when) {
-                logger.trace({ id: reactor.id }, 'resume');
                 reactor.start();
             } else if (reactor.active) {
-                logger.trace({ id: reactor.id }, 'suspend');
                 reactor.stop();
             }
         });
@@ -232,21 +225,17 @@ export class Reactor<V> implements Observer {
         // The starter waits until `from` to start the controller.
         const starter = new Reactor(toDerivable(from, parent), value => {
             if (value) {
-                logger.trace({ id: reactor.id }, 'start');
                 controller.start();
                 starter.stop();
             }
         });
 
         function done() {
-            logger.trace({ id: reactor.id }, 'stop');
             starter.stop();
             controller.stop();
             reactor.stop();
             ended && ended();
         }
-
-        logger.trace({ id: reactor.id, parent: parent.id, reaction, from, until, when, once, skipFirst }, 'created');
 
         // Go!!!
         starter.start();

@@ -18,6 +18,3 @@ export {
 export {
     clone, equals, isPlainObject, setDebugMode,
 } from './utils';
-
-import * as informant from '@politie/informant';
-export { informant };

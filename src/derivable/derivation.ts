@@ -1,4 +1,3 @@
-import { Logger } from '@politie/informant';
 import {
     isRecordingObservations, Reactor, recordObservation, removeObserver, startRecordingObservations,
     stopRecordingObservations, TrackedObservable, TrackedObserver,
@@ -6,8 +5,6 @@ import {
 import { debugMode, equals } from '../utils';
 import { Derivable } from './derivable';
 import { unpack } from './unpack';
-
-const logger = Logger.get('@politie/sherlock.derivation');
 
 // Augments the Derivable interface with the following methods:
 declare module './derivable' {
@@ -100,8 +97,6 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
         protected readonly args?: any[],
     ) {
         super();
-
-        logger.trace({ id: this.id, deriver, args }, 'created', this.constructor.name);
     }
 
     private _version = 0;
@@ -145,8 +140,6 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
      * Ensure the derivable is connected and update the currently cached value of this derivation.
      */
     private update() {
-        logger.trace({ id: this.id }, this.connected ? 'updating' : 'connecting');
-
         startRecordingObservations(this);
         const oldValue = this.cachedValue;
         try {
@@ -156,11 +149,9 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
             this.connected = true;
             if (!equals(newValue, oldValue)) {
                 this._version++;
-                logger.trace({ id: this.id, newValue, oldValue }, 'changed');
             }
         } catch (error) {
             this.cachedError = error;
-            logger.trace(error, { id: this.id, oldValue }, 'errored');
         } finally {
             stopRecordingObservations();
         }
@@ -202,7 +193,6 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
         // If we think we're up-to-date our observers might think the same, otherwise, we're good, cause our observers can never
         // believe the're up-to-date when any of their dependencies is not up-to-date.
         if (this.isUpToDate) {
-            logger.trace({ id: this.id }, 'mark stale');
             this.isUpToDate = false;
             for (const observer of this.observers) {
                 observer.mark(reactorSink);
@@ -228,8 +218,6 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
     }
 
     private disconnectNow() {
-        logger.trace({ id: this.id }, 'disconnecting');
-
         this.isUpToDate = false;
         this.connected = false;
         // Disconnect all observers. When an observer disconnects it removes itself from this array.

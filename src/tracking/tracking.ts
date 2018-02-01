@@ -1,7 +1,3 @@
-import { BaseError, Logger } from '@politie/informant';
-
-const logger = Logger.get('@politie/sherlock.tracking');
-
 let currentRecording: Recording | undefined;
 
 /**
@@ -20,11 +16,10 @@ export function startRecordingObservations(observer: TrackedObserver) {
     let r = currentRecording;
     while (r) {
         if (r.observer === observer) {
-            throw new BaseError({ observer: observer.id }, 'cyclic dependency between derivables detected');
+            throw new Error('cyclic dependency between derivables detected');
         }
         r = r.previousRecording;
     }
-    logger.trace({ observer: observer.id }, 'start recording');
     currentRecording = { observer, confirmed: 0, previousRecording: currentRecording };
 }
 
@@ -41,9 +36,7 @@ export function stopRecordingObservations() {
     }
     currentRecording = recording.previousRecording;
     const { confirmed, observer } = recording;
-    const { id, dependencies, dependencyVersions } = observer;
-
-    logger.trace({ observer: id, recorded: confirmed, removed: dependencies.length - confirmed }, 'stop recording');
+    const { dependencies, dependencyVersions } = observer;
 
     // Any previous dependency that was not confirmed during the recording can be removed now.
     for (let i = confirmed, n = dependencies.length; i < n; i++) {
@@ -86,8 +79,6 @@ export function recordObservation(dependency: TrackedObservable) {
         // dependency because of last time.
         currentRecording.confirmed++;
 
-        logger.trace({ observer: observer.id, dependency: dependency.id }, 'dependency confirmed');
-
     } else {
         // This branch means this is either the first recording, this dependency is new, or the dependencies are out of order
         // compared to last time.
@@ -109,15 +100,11 @@ export function recordObservation(dependency: TrackedObservable) {
             currentRecording.confirmed++;
             // dependencies[0..currentRecording.confirmed) are dependencies
 
-            logger.trace({ observer: observer.id, dependency: dependency.id }, 'new dependency found');
-
         } else if (index > currentRecording.confirmed) {
             // dependency is present in dependencies, but we were not expecting it yet, swap places
             dependencies[index] = dependencies[currentRecording.confirmed];
             dependencies[currentRecording.confirmed] = dependency;
             currentRecording.confirmed++;
-
-            logger.trace({ observer: observer.id, dependency: dependency.id }, 'dependency confirmed out of order');
         }
         // else: index >= 0 && index < currentRecording.confirmed, i.e. already seen before and already confirmed. Do nothing.
     }
