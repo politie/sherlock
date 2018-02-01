@@ -64,7 +64,7 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
     /**
      * The last value that was calculated for this derivation. Is only used when connected.
      */
-    private cachedValue: V;
+    private cachedValue?: V;
 
     /**
      * The error that was caught while calculating the derivation. Is only used when connected.
@@ -131,7 +131,7 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
             if (this.cachedError) {
                 throw this.cachedError;
             }
-            return this.cachedValue;
+            return this.cachedValue!;
         }
         return this.callDeriver();
     }

@@ -65,7 +65,7 @@ export class ProxyDescriptor<V = any, T = V> {
      * The target derivable (the input to the proxy and the {@link #$create} method). The actual values that can be seed by methods
      * on the Proxy can be influenced by providing a {@link #$lens}.
      */
-    $target: Derivable<T>;
+    $target!: Derivable<T>;
 
     /**
      * The expression that represents the path to the current Proxy.
