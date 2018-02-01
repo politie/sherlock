@@ -5,11 +5,11 @@ describe('util/clonex', () => {
     it('should clone an instance of a class', () => {
         class Super {
             superProp = 'superPropValue';
-            otherSuperProp: string;
+            otherSuperProp?: string;
         }
         class Sub extends Super {
             subProp = 'subPropValue';
-            otherSubProp: string;
+            otherSubProp?: string;
         }
         const sub = new Sub;
         sub.otherSuperProp = 'otherSuperProp';
@@ -34,7 +34,7 @@ describe('util/clonex', () => {
 
     it('should clone a subclass of Array', () => {
         class MyArray extends Array {
-            myProp: string;
+            myProp?: string;
 
             constructor(arrayLength?: number) {
                 super(arrayLength);

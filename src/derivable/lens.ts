@@ -16,7 +16,7 @@ export class Lens<V> extends Derivation<V> implements Atom<V> {
      * @internal
      * Not used. Only to satisfy Atom<V> interface.
      */
-    value: V;
+    value: never;
 
     /**
      * The setter that was provided in the constructor.
