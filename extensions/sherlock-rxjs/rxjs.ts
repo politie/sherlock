@@ -1,6 +1,5 @@
 import { Derivable, Reactor, ReactorOptions } from '@politie/sherlock';
-import { Observable } from 'rxjs/Observable';
-import { Subscriber } from 'rxjs/Subscriber';
+import { Observable, Subscriber } from 'rxjs';
 
 // Adds the toObservable method to Derivable.
 declare module '@politie/sherlock/derivable/derivable' {
