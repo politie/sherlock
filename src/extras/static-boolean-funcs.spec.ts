@@ -5,7 +5,7 @@ import { and, firstNotNull, or } from './static-boolean-funcs';
 describe('extras/static-boolean-funcs', () => {
     const testSet = sets([undefined, '', 'abc', 0, 3, false, true], 3);
     let atoms: Array<Atom<any>>;
-    beforeEach('create the atoms', () => atoms = [atom(0), atom(0), atom(0)]);
+    beforeEach('create the atoms', () => { atoms = [atom(0), atom(0), atom(0)]; });
 
     function updateAtoms(values: any[]) {
         values.forEach((v, i) => atoms[i].set(v));

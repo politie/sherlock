@@ -78,17 +78,17 @@ describe('derivable/derivation', () => {
 
     describe('#autoCache', () => {
         let clock: SinonFakeTimers;
-        beforeEach('use fake timers', () => clock = useFakeTimers());
-        afterEach('restore timers', () => clock.restore());
+        beforeEach('use fake timers', () => { clock = useFakeTimers(); });
+        afterEach('restore timers', () => { clock.restore(); });
 
         let a$: Atom<string>;
-        beforeEach('create the atom', () => a$ = atom('value'));
+        beforeEach('create the atom', () => { a$ = atom('value'); });
 
         let deriver: SinonSpy;
-        beforeEach('create the deriver', () => deriver = spy((v = 'empty') => v + '!'));
+        beforeEach('create the deriver', () => { deriver = spy((v = 'empty') => v + '!'); });
 
         let d$: Derivable<string>;
-        beforeEach('create the derivation', () => d$ = a$.derive(deriver).autoCache());
+        beforeEach('create the derivation', () => { d$ = a$.derive(deriver).autoCache(); });
 
         it('should automatically cache the value of the Derivable the first time in a tick', () => {
             expect(d$.get()).to.equal('value!');

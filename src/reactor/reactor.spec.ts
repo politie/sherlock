@@ -638,7 +638,7 @@ function shouldHaveReactedOnce(value: any) {
 
 function shouldHaveBeenCalledOnce(s: sinon.SinonSpy) {
     expect(s).to.have.been.calledOnce;
-    s.reset();
+    s.resetHistory();
 }
 
 function shouldNotHaveBeenCalled(s: sinon.SinonSpy) {

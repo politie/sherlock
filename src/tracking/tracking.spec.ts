@@ -32,7 +32,7 @@ describe('tracking/tracking', () => {
             }));
         });
 
-        afterEach('check no remaining recordings', () => expect(isRecordingObservations()).to.be.false);
+        afterEach('check no remaining recordings', () => { expect(isRecordingObservations()).to.be.false; });
 
         it('should report that we are in a recording', () => {
             expect(isRecordingObservations()).to.be.false;
