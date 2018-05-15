@@ -9,43 +9,45 @@ import { derivation, Derivation } from './derivation';
 import { Lens } from './lens';
 
 export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
-    [
-        {
-            title: '#get',
-            get<V>(value$: Derivable<V>) { return value$.get(); },
-        }, {
-            title: '#value (getter)',
-            get<V>(value$: Derivable<V>) { return value$.value; },
-        },
-    ].forEach(({ title, get }) => {
-        describe(title, () => {
-            it('should return the current state', () => {
-                const value$ = factory(123);
-                expect(get(value$)).to.equal(123);
+    describe('#get', () => {
+        it('should return the current state', () => {
+            const value$ = factory(123);
+            expect(value$.get()).to.equal(123);
 
-                if (isAtom(value$)) {
-                    value$.set(456);
-                    expect(get(value$)).to.equal(456);
-                }
-            });
+            if (isAtom(value$)) {
+                value$.set(456);
+                expect(value$.get()).to.equal(456);
+            }
+        });
 
-            it(`should ${factory === constant ? 'not ' : ''}be recorded inside a derivation'`, () => {
-                const value$ = factory(123);
+        it(`should ${factory === constant ? 'not ' : ''}be recorded inside a derivation'`, () => {
+            const value$ = factory(123);
+            expect(value$.observers).to.be.empty;
+            const derived$ = value$.derive(value => value + 876);
+            expect(value$.observers).to.be.empty;
+
+            // Simulate being observed to force derived$ to go into connected state.
+            derived$.observers.push({} as any);
+            derived$.get();
+
+            if (factory === constant) {
                 expect(value$.observers).to.be.empty;
-                const derived$ = value$.derive(value => value + 876);
-                expect(value$.observers).to.be.empty;
+            } else {
+                expect(value$.observers).to.have.length(1);
+                expect(value$.observers[0]).to.equal(derived$);
+            }
+        });
+    });
 
-                // Simulate being observed to force derived$ to go into connected state.
-                derived$.observers.push({} as any);
-                get(derived$);
+    describe('#value', () => {
+        it('should call #get() when getting the #value property', () => {
+            const a$ = factory('a');
+            const s = spy(a$, 'get');
 
-                if (factory === constant) {
-                    expect(value$.observers).to.be.empty;
-                } else {
-                    expect(value$.observers).to.have.length(1);
-                    expect(value$.observers[0]).to.equal(derived$);
-                }
-            });
+            // Use the getter
+            a$.value;
+
+            expect(s).to.have.been.calledOnce;
         });
     });
 

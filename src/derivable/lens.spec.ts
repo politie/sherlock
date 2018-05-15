@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { atom, Atom } from './atom';
+import { atom } from './atom';
 import { testDerivable } from './derivable.spec';
 import { lens, MonoLensDescriptor } from './lens';
 
@@ -56,36 +56,49 @@ describe('derivable/lens', () => {
         });
     });
 
-    [
-        {
-            title: '#set',
-            set<V>(value$: Atom<V>, value: V) { return value$.set(value); },
-        }, {
-            title: '#value (setter)',
-            set<V>(value$: Atom<V>, value: V) { return value$.value = value; },
-        },
-    ].forEach(({ title, set }) => {
-        describe(title, () => {
-            it('should change the current state (and version) of the parent atom', () => {
-                const a$ = atom('a');
-                const lensed$ = a$.lens(identityLens<string>());
-                expect(lensed$.get()).to.equal('a');
-                expect(a$.version).to.equal(0);
+    describe('#set', () => {
+        it('should change the current state (and version) of the parent atom', () => {
+            const a$ = atom('a');
+            const lensed$ = a$.lens(identityLens<string>());
+            expect(lensed$.get()).to.equal('a');
+            expect(a$.version).to.equal(0);
 
-                set(lensed$, 'b');
-                expect(lensed$.get()).to.equal('b');
-                expect(a$.version).to.equal(1);
-            });
+            lensed$.set('b');
+            expect(lensed$.get()).to.equal('b');
+            expect(a$.version).to.equal(1);
+        });
 
-            it('should not update the version if the new value equals the previous value', () => {
-                const a$ = atom('a');
-                const lensed$ = a$.lens(identityLens<string>());
-                expect(lensed$.get()).to.equal('a');
-                expect(a$.version).to.equal(0);
-                set(lensed$, 'a');
-                expect(lensed$.get()).to.equal('a');
-                expect(a$.version).to.equal(0);
-            });
+        it('should not update the version if the new value equals the previous value', () => {
+            const a$ = atom('a');
+            const lensed$ = a$.lens(identityLens<string>());
+            expect(lensed$.get()).to.equal('a');
+            expect(a$.version).to.equal(0);
+            lensed$.set('a');
+            expect(lensed$.get()).to.equal('a');
+            expect(a$.version).to.equal(0);
+        });
+    });
+
+    describe('#value', () => {
+        it('should call #get() when getting the #value property', () => {
+            const a$ = atom('a');
+            const lensed$ = a$.lens(identityLens<string>());
+            const s = spy(lensed$, 'get');
+
+            // Use the getter
+            lensed$.value;
+
+            expect(s).to.have.been.calledOnce;
+        });
+
+        it('should call #set() when setting the #value property', () => {
+            const a$ = atom('a');
+            const lensed$ = a$.lens(identityLens<string>());
+            const s = spy(lensed$, 'set');
+
+            lensed$.value = 'b';
+
+            expect(s).to.have.been.calledOnce.and.calledWithExactly('b');
         });
     });
 

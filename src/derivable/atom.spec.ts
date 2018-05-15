@@ -2,51 +2,62 @@ import { expect } from 'chai';
 import { Seq } from 'immutable';
 import { spy } from 'sinon';
 import { txn } from '../transaction/transaction.spec';
-import { atom, Atom } from './atom';
+import { atom } from './atom';
 import { testDerivable } from './derivable.spec';
 
 describe('derivable/atom', () => {
     testDerivable(atom);
 
-    [
-        {
-            title: '#set',
-            set<V>(value$: Atom<V>, value: V) { return value$.set(value); },
-        }, {
-            title: '#value (setter)',
-            set<V>(value$: Atom<V>, value: V) { return value$.value = value; },
-        },
-    ].forEach(({ title, set }) => {
-        describe(title, () => {
-            it('should change the current state and version', () => {
-                const a$ = atom('a');
-                expect(a$.get()).to.equal('a');
-                expect(a$.version).to.equal(0);
+    describe('#set', () => {
+        it('should change the current state and version', () => {
+            const a$ = atom('a');
+            expect(a$.get()).to.equal('a');
+            expect(a$.version).to.equal(0);
 
-                set(a$, 'b');
-                expect(a$.get()).to.equal('b');
-                expect(a$.version).to.equal(1);
-            });
+            a$.set('b');
+            expect(a$.get()).to.equal('b');
+            expect(a$.version).to.equal(1);
+        });
 
-            it('should not update the version if the new value equals the previous value', () => {
-                const a$ = atom('a');
-                expect(a$.get()).to.equal('a');
-                expect(a$.version).to.equal(0);
-                set(a$, 'a');
-                expect(a$.get()).to.equal('a');
-                expect(a$.version).to.equal(0);
+        it('should not update the version if the new value equals the previous value', () => {
+            const a$ = atom('a');
+            expect(a$.get()).to.equal('a');
+            expect(a$.version).to.equal(0);
+            a$.set('a');
+            expect(a$.get()).to.equal('a');
+            expect(a$.version).to.equal(0);
 
-                // Using the utils.equals function
-                const imm$ = atom(Seq.Indexed.of(1, 2, 3));
-                expect(imm$.get()).to.equal(Seq.of(1, 2, 3));
-                expect(imm$.version).to.equal(0);
-                set(imm$, Seq.of(1, 2).concat(3).toIndexedSeq());
-                expect(imm$.get()).to.equal(Seq.of(1, 2, 3));
-                expect(imm$.version).to.equal(0);
-                set(imm$, Seq.of(1, 2));
-                expect(imm$.get()).to.equal(Seq.of(1, 2));
-                expect(imm$.version).to.equal(1);
-            });
+            // Using the utils.equals function
+            const imm$ = atom(Seq.Indexed.of(1, 2, 3));
+            expect(imm$.get()).to.equal(Seq.of(1, 2, 3));
+            expect(imm$.version).to.equal(0);
+            imm$.set(Seq.of(1, 2).concat(3).toIndexedSeq());
+            expect(imm$.get()).to.equal(Seq.of(1, 2, 3));
+            expect(imm$.version).to.equal(0);
+            imm$.set(Seq.of(1, 2));
+            expect(imm$.get()).to.equal(Seq.of(1, 2));
+            expect(imm$.version).to.equal(1);
+        });
+    });
+
+    describe('#value', () => {
+        it('should call #get() when getting the #value property', () => {
+            const a$ = atom('a');
+            const s = spy(a$, 'get');
+
+            // Use the getter
+            a$.value;
+
+            expect(s).to.have.been.calledOnce;
+        });
+
+        it('should call #set() when setting the #value property', () => {
+            const a$ = atom('a');
+            const s = spy(a$, 'set');
+
+            a$.value = 'b';
+
+            expect(s).to.have.been.calledOnce.and.calledWithExactly('b');
         });
     });
 
