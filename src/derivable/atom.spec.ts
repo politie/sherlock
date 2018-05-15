@@ -11,42 +11,40 @@ describe('derivable/atom', () => {
     [
         {
             title: '#set',
-            get<V>(value$: Atom<V>) { return value$.get(); },
             set<V>(value$: Atom<V>, value: V) { return value$.set(value); },
         }, {
             title: '#value (setter)',
-            get<V>(value$: Atom<V>) { return value$.value; },
             set<V>(value$: Atom<V>, value: V) { return value$.value = value; },
         },
-    ].forEach(({ title, get, set }) => {
+    ].forEach(({ title, set }) => {
         describe(title, () => {
             it('should change the current state and version', () => {
                 const a$ = atom('a');
-                expect(get(a$)).to.equal('a');
+                expect(a$.get()).to.equal('a');
                 expect(a$.version).to.equal(0);
 
                 set(a$, 'b');
-                expect(get(a$)).to.equal('b');
+                expect(a$.get()).to.equal('b');
                 expect(a$.version).to.equal(1);
             });
 
             it('should not update the version if the new value equals the previous value', () => {
                 const a$ = atom('a');
-                expect(get(a$)).to.equal('a');
+                expect(a$.get()).to.equal('a');
                 expect(a$.version).to.equal(0);
                 set(a$, 'a');
-                expect(get(a$)).to.equal('a');
+                expect(a$.get()).to.equal('a');
                 expect(a$.version).to.equal(0);
 
                 // Using the utils.equals function
                 const imm$ = atom(Seq.Indexed.of(1, 2, 3));
-                expect(get(imm$)).to.equal(Seq.of(1, 2, 3));
+                expect(imm$.get()).to.equal(Seq.of(1, 2, 3));
                 expect(imm$.version).to.equal(0);
                 set(imm$, Seq.of(1, 2).concat(3).toIndexedSeq());
-                expect(get(imm$)).to.equal(Seq.of(1, 2, 3));
+                expect(imm$.get()).to.equal(Seq.of(1, 2, 3));
                 expect(imm$.version).to.equal(0);
                 set(imm$, Seq.of(1, 2));
-                expect(get(imm$)).to.equal(Seq.of(1, 2));
+                expect(imm$.get()).to.equal(Seq.of(1, 2));
                 expect(imm$.version).to.equal(1);
             });
         });
