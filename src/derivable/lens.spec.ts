@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { atom } from './atom';
+import { atom, Atom } from './atom';
 import { testDerivable } from './derivable.spec';
 import { lens, MonoLensDescriptor } from './lens';
 
@@ -56,26 +56,38 @@ describe('derivable/lens', () => {
         });
     });
 
-    describe('#set', () => {
-        it('should change the current state (and version) of the parent atom', () => {
-            const a$ = atom('a');
-            const lensed$ = a$.lens(identityLens<string>());
-            expect(lensed$.get()).to.equal('a');
-            expect(a$.version).to.equal(0);
+    [
+        {
+            title: '#set',
+            get<V>(value$: Atom<V>) { return value$.get(); },
+            set<V>(value$: Atom<V>, value: V) { return value$.set(value); },
+        }, {
+            title: '#value (setter)',
+            get<V>(value$: Atom<V>) { return value$.value; },
+            set<V>(value$: Atom<V>, value: V) { return value$.value = value; },
+        },
+    ].forEach(({ title, get, set }) => {
+        describe(title, () => {
+            it('should change the current state (and version) of the parent atom', () => {
+                const a$ = atom('a');
+                const lensed$ = a$.lens(identityLens<string>());
+                expect(get(lensed$)).to.equal('a');
+                expect(a$.version).to.equal(0);
 
-            lensed$.set('b');
-            expect(lensed$.get()).to.equal('b');
-            expect(a$.version).to.equal(1);
-        });
+                set(lensed$, 'b');
+                expect(get(lensed$)).to.equal('b');
+                expect(a$.version).to.equal(1);
+            });
 
-        it('should not update the version if the new value equals the previous value', () => {
-            const a$ = atom('a');
-            const lensed$ = a$.lens(identityLens<string>());
-            expect(lensed$.get()).to.equal('a');
-            expect(a$.version).to.equal(0);
-            lensed$.set('a');
-            expect(lensed$.get()).to.equal('a');
-            expect(a$.version).to.equal(0);
+            it('should not update the version if the new value equals the previous value', () => {
+                const a$ = atom('a');
+                const lensed$ = a$.lens(identityLens<string>());
+                expect(get(lensed$)).to.equal('a');
+                expect(a$.version).to.equal(0);
+                set(lensed$, 'a');
+                expect(get(lensed$)).to.equal('a');
+                expect(a$.version).to.equal(0);
+            });
         });
     });
 

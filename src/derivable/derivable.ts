@@ -29,8 +29,7 @@ export abstract class Derivable<V> implements TrackedObservable {
     abstract get(): V;
 
     /**
-     * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
-     * Uses a JavaScript getter for convenience.
+     * JavaScript getter access to the `#get` method
      */
     get value() { return this.get(); }
 

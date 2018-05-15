@@ -51,9 +51,9 @@ export class Lens<V> extends Derivation<V> implements Atom<V> {
     }
 
     /**
-     * Sets the value of this Lens, fires reactors when expected.
-     * Uses a JavaScript setter for convenience.
+     * JavaScript getter/setter access to the `#get` and `#set` methods
      */
+    get value() { return this.get(); }
     set value(newValue: V) { this.set(newValue); }
 
     /**
