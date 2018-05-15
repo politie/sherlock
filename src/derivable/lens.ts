@@ -16,7 +16,7 @@ export class Lens<V> extends Derivation<V> implements Atom<V> {
      * @internal
      * Not used. Only to satisfy Atom<V> interface.
      */
-    value: never;
+    _value: never;
 
     /**
      * The setter that was provided in the constructor.
@@ -49,6 +49,12 @@ export class Lens<V> extends Derivation<V> implements Atom<V> {
             setter(newValue);
         }
     }
+
+    /**
+     * Sets the value of this Lens, fires reactors when expected.
+     * Uses a JavaScript setter for convenience.
+     */
+    set value(newValue: V) { this.set(newValue); }
 
     /**
      * Swaps the current value of this atom using the provided swap function. Any additional arguments to this function are

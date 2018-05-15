@@ -9,7 +9,6 @@ import { Derivable } from './derivable';
  * with the initial state.
  */
 export class Atom<V> extends Derivable<V> {
-
     /**
      * @internal
      * Construct a new atom with the provided initial value.
@@ -18,7 +17,7 @@ export class Atom<V> extends Derivable<V> {
      */
     constructor(value: V) {
         super();
-        this.value = value;
+        this._value = value;
     }
 
     /**
@@ -26,7 +25,7 @@ export class Atom<V> extends Derivable<V> {
      * Contains the current value of this atom. Note that this field is public for transaction support, should
      * not be used in application code. Use {@link Derivable#get} and {@link Atom#set} instead.
      */
-    value: V;
+    _value: V;
 
     /**
      * @internal
@@ -40,7 +39,7 @@ export class Atom<V> extends Derivable<V> {
      */
     get() {
         recordObservation(this);
-        return this.value;
+        return this._value;
     }
 
     /**
@@ -49,12 +48,18 @@ export class Atom<V> extends Derivable<V> {
      * @param newValue the new state
      */
     set(newValue: V) {
-        const oldValue = this.value;
+        const oldValue = this._value;
         if (!equals(newValue, oldValue)) {
-            this.value = newValue;
+            this._value = newValue;
             processChangedAtom(this, oldValue, this.version++);
         }
     }
+
+    /**
+     * Sets the value of this atom, fires reactors when expected.
+     * Uses a JavaScript setter for convenience.
+     */
+    set value(newValue: V) { this.set(newValue); }
 
     /**
      * Swaps the current value of this atom using the provided swap function. Any additional arguments to this function are
@@ -67,7 +72,7 @@ export class Atom<V> extends Derivable<V> {
     swap<P1, P2>(f: (v: V, p1: P1, p2: P2) => V, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): void;
     swap<P>(f: (v: V, ...ps: P[]) => V, ...ps: Array<P | Derivable<P>>): void;
     swap(f: (oldValue: V, ...args: any[]) => V, ...args: any[]) {
-        this.set(f(this.value, ...args));
+        this.set(f(this._value, ...args));
     }
 }
 

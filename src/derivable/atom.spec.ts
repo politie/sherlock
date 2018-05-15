@@ -62,23 +62,23 @@ describe('derivable/atom', () => {
     context('in transactions', () => {
         it('should be restored on abort', () => {
             const a$ = atom('a');
-            expect(a$.value).to.equal('a');
+            expect(a$._value).to.equal('a');
             expect(a$.version).to.equal(0);
             txn(abortOuter => {
                 a$.set('b');
-                expect(a$.value).to.equal('b');
+                expect(a$._value).to.equal('b');
                 expect(a$.version).to.equal(1);
                 txn(abortInner => {
                     a$.set('c');
-                    expect(a$.value).to.equal('c');
+                    expect(a$._value).to.equal('c');
                     expect(a$.version).to.equal(2);
                     abortInner();
                 });
-                expect(a$.value).to.equal('b');
+                expect(a$._value).to.equal('b');
                 expect(a$.version).to.equal(1);
                 abortOuter();
             });
-            expect(a$.value).to.equal('a');
+            expect(a$._value).to.equal('a');
             expect(a$.version).to.equal(0);
         });
 
@@ -93,19 +93,19 @@ describe('derivable/atom', () => {
                     b$.set('set in both');
                     c$.set('set in inner');
                 });
-                expect(a$.value).to.equal('set in outer');
+                expect(a$._value).to.equal('set in outer');
                 expect(a$.version).to.equal(1);
-                expect(b$.value).to.equal('set in both');
+                expect(b$._value).to.equal('set in both');
                 expect(b$.version).to.equal(2);
-                expect(c$.value).to.equal('set in inner');
+                expect(c$._value).to.equal('set in inner');
                 expect(c$.version).to.equal(1);
                 abort();
             });
-            expect(a$.value).to.equal('a');
+            expect(a$._value).to.equal('a');
             expect(a$.version).to.equal(0);
-            expect(b$.value).to.equal('a');
+            expect(b$._value).to.equal('a');
             expect(b$.version).to.equal(0);
-            expect(c$.value).to.equal('a');
+            expect(c$._value).to.equal('a');
             expect(c$.version).to.equal(0);
         });
 
@@ -122,9 +122,9 @@ describe('derivable/atom', () => {
                     c$.set('set in inner');
                 });
             });
-            expect(a$.value).to.equal('set in outer');
-            expect(b$.value).to.equal('set in both');
-            expect(c$.value).to.equal('set in inner');
+            expect(a$._value).to.equal('set in outer');
+            expect(b$._value).to.equal('set in both');
+            expect(c$._value).to.equal('set in inner');
         });
     });
 });

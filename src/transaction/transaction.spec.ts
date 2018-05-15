@@ -14,7 +14,7 @@ describe('transaction/transaction', () => {
             txn(() => {
                 a$.set('c');
             });
-            expect(a$.value).to.equal('c');
+            expect(a$._value).to.equal('c');
             abort();
         });
         expect(reactions).to.equal(0);
@@ -30,7 +30,7 @@ describe('transaction/transaction', () => {
             txn(() => {
                 a$.set('d');
             });
-            expect(a$.value).to.equal('d');
+            expect(a$._value).to.equal('d');
         });
         expect(reactions).to.equal(1);
     });
@@ -54,7 +54,7 @@ describe('transaction/transaction', () => {
             txn(() => {
                 a$.set('b');
             });
-            expect(a$.value).to.equal('b');
+            expect(a$._value).to.equal('b');
         });
         expect(reactions).to.equal(1);
     });
@@ -72,7 +72,7 @@ describe('transaction/transaction', () => {
                 expect(value).to.equal('b!');
                 a$.set('c');
             });
-            expect(a$.value).to.equal('c');
+            expect(a$._value).to.equal('c');
         });
         expect(reactions).to.equal(2);
         expect(value).to.equal('c!');
