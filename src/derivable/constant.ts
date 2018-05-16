@@ -7,13 +7,13 @@ export class Constant<V> extends Derivable<V> {
     /**
      * Creates a new Constant with the give value.
      *
-     * @param value the immutable value of this Constant
+     * @param _value the immutable value of this Constant
      */
     constructor(
         /**
          * The readonly value of this Constant.
          */
-        public readonly value: V,
+        public readonly _value: V,
     ) {
         super();
     }
@@ -27,7 +27,7 @@ export class Constant<V> extends Derivable<V> {
     /**
      * Returns the value of this Constant.
      */
-    get(): V { return this.value; }
+    get(): V { return this._value; }
 }
 
 /**

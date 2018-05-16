@@ -29,6 +29,13 @@ export abstract class Derivable<V> implements TrackedObservable {
     abstract get(): V;
 
     /**
+     * `#value` is an alias for the `#get()` method on the Derivable.
+     * Getting `#value` will call `#get()` and return the value.
+     * `#value` is readonly on a Derivable
+     */
+    get value() { return this.get(); }
+
+    /**
      * Sets this Derivable to autoCache mode. This will cache the value of this Derivable the first time {@link #get} is called every tick
      * and release this cache some time after this tick. The value is still guaranteed to be up-to-date with respect to changes in any of
      * its dependencies, by using the same mechanism that is used by a reactor. It has a setup cost comparable to starting a reactor every

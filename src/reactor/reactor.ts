@@ -302,7 +302,7 @@ function combineWhenUntil<V>(parent: Derivable<V>, whenOption: ReactorOptionValu
     const until = toDerivable(untilOption, parent);
 
     if (isConstant(when) && isConstant(until)) {
-        return constant({ when: when.value, until: until.value });
+        return constant({ when: when._value, until: until._value });
     }
 
     return derivation(whenUntil, when, until);
