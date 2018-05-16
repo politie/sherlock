@@ -56,7 +56,9 @@ export class Atom<V> extends Derivable<V> {
     }
 
     /**
-     * JavaScript getter/setter access to the `#get` and `#set` methods
+     * `#value` is an alias for the `#get()` and `#set()` methods on the Atom.
+     * Getting `#value` will call `#get()` and return the value.
+     * Setting `#value` will call `#set()` with the new value.
      */
     get value() { return this.get(); }
     set value(newValue: V) { this.set(newValue); }

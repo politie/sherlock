@@ -46,7 +46,7 @@ describe('derivable/atom', () => {
             const s = spy(a$, 'get');
 
             // Use the getter
-            a$.value;
+            expect(a$.value).to.equal('a');
 
             expect(s).to.have.been.calledOnce;
         });

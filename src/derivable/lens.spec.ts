@@ -86,7 +86,7 @@ describe('derivable/lens', () => {
             const s = spy(lensed$, 'get');
 
             // Use the getter
-            lensed$.value;
+            expect(lensed$.value).to.equal('a');
 
             expect(s).to.have.been.calledOnce;
         });

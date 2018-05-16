@@ -29,7 +29,9 @@ export abstract class Derivable<V> implements TrackedObservable {
     abstract get(): V;
 
     /**
-     * JavaScript getter access to the `#get` method
+     * `#value` is an alias for the `#get()` method on the Derivable.
+     * Getting `#value` will call `#get()` and return the value.
+     * `#value` is readonly on a Derivable
      */
     get value() { return this.get(); }
 
