@@ -547,12 +547,15 @@ describe('reactor/reactor error handling', () => {
 
     beforeEach('setup atom and derivable', () => {
         a$ = atom('no error');
-        d$ = a$.derive(v => {
-            if (v === 'error in derivation') {
-                throw new Error(v);
-            }
-            return v;
-        });
+        d$ = a$
+            .derive(v => v)     // other derive steps in the chain should have no effect on the error propagation
+            .derive(v => {
+                if (v === 'error in derivation') {
+                    throw new Error(v);
+                }
+                return v;
+            })
+            .derive(v => v);    // other derive steps in the chain should have no effect on the error propagation
     });
 
     context('with no error handler provided', () => {
@@ -604,7 +607,7 @@ describe('reactor/reactor error handling', () => {
                 expect(latestValue).to.equal('error in reactor');
             });
 
-            it('will break other reactors, and therefore your application', () => {
+            it('will result in unexpected behavior of other reactors, and therefore your application', () => {
                 react(d$);
                 shouldHaveReactedOnce('no error');
 

@@ -152,6 +152,7 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
             }
         } catch (error) {
             this.cachedError = error;
+            this._version++;
         } finally {
             stopRecordingObservations();
         }
