@@ -459,7 +459,7 @@ describe('reactor/reactor', () => {
         shouldHaveReactedOnce('c');
     });
 
-    class TestReactor<V> extends Reactor<V> { constructor(p: ReactorParent<V>, r: (value: V) => void) { super(p, r); } }
+    class TestReactor<V> extends Reactor<V> { constructor(p: ReactorParent<V>, r: (value: V) => void) { super(p, e => { throw e; }, r); } }
 
     it('should not generate a stacktrace on instantiation', () => {
         // tslint:disable-next-line:no-string-literal
@@ -538,6 +538,178 @@ describe('reactor/reactor with cycles', () => {
         a$.set('b');
 
         shouldNotHaveReacted();
+    });
+});
+
+describe('reactor/reactor error handling', () => {
+    let a$: Atom<string>;
+    let d$: Derivable<string>;
+
+    beforeEach('setup atom and derivable', () => {
+        a$ = atom('no error');
+        d$ = a$
+            .derive(v => v)     // other derive steps in the chain should have no effect on the error propagation
+            .derive(v => {
+                if (v === 'error in derivation') {
+                    throw new Error(v);
+                }
+                return v;
+            })
+            .derive(v => v);    // other derive steps in the chain should have no effect on the error propagation
+    });
+
+    context('with no error handler provided', () => {
+        context('when an error occurs in any derivation', () => {
+            beforeEach('start the reactor', () => {
+                react(d$);
+                shouldHaveReactedOnce('no error');
+            });
+
+            it('should throw on Atom#set', () => {
+                expect(() => a$.set('error in derivation')).to.throw('error in derivation');
+            });
+
+            it('should stop the reactor', () => {
+                a$.set('whatever');
+                shouldHaveReactedOnce('whatever');
+
+                try { a$.set('error in derivation'); } catch (e) { /**/ }
+                shouldNotHaveReacted();
+
+                a$.set('no error at all!');
+                shouldNotHaveReacted();
+            });
+        });
+
+        context('when an error occurs in any reactor', () => {
+            let latestValue: string;
+            beforeEach('start an unstable reactor', () => {
+                d$.react(v => {
+                    latestValue = v;
+                    if (v === 'error in reactor') {
+                        throw new Error(v);
+                    }
+                });
+            });
+
+            it('should throw on Atom#set', () => {
+                expect(() => a$.set('error in reactor')).to.throw('error in reactor');
+            });
+
+            it('should stop the reactor', () => {
+                a$.set('whatever');
+                expect(latestValue).to.equal('whatever');
+
+                try { a$.set('error in reactor'); } catch (e) {/**/ }
+                expect(latestValue).to.equal('error in reactor');
+
+                a$.set('back to normal?');
+                expect(latestValue).to.equal('error in reactor');
+            });
+
+            it('will result in unexpected behavior of other reactors, and therefore your application', () => {
+                react(d$);
+                shouldHaveReactedOnce('no error');
+
+                try { a$.set('error in reactor'); } catch (e) {/**/ }
+                // use error handlers on unstable reactors to prevent this behavior
+                shouldNotHaveReacted();
+
+                a$.set('unstable reactors are bad');
+                shouldHaveReactedOnce('unstable reactors are bad');
+            });
+        });
+    });
+
+    context('with an error handler', () => {
+        context('when an error occurs in any derivation', () => {
+            let errorHandler: sinon.SinonSpy;
+            beforeEach('start the reactor', () => {
+                errorHandler = spy();
+                react(d$, { errorHandler });
+                shouldHaveReactedOnce('no error');
+                shouldNotHaveBeenCalled(errorHandler);
+            });
+
+            it('should not throw on Atom#set', () => {
+                expect(() => a$.set('error in derivation')).not.to.throw();
+            });
+
+            it('should call the errorhandler with the error', () => {
+                a$.set('error in derivation');
+                expect(errorHandler).to.have.been.calledOnce;
+                const err = errorHandler.firstCall.args[0];
+                expect(err).to.be.an('error');
+                expect(err.message).to.equal('error in derivation');
+
+                errorHandler.resetHistory();
+                a$.set('no error at all!');
+                expect(errorHandler).to.not.have.been.called;
+            });
+
+            it('should stop the reactor', () => {
+                a$.set('whatever');
+                shouldHaveReactedOnce('whatever');
+
+                a$.set('error in derivation');
+                shouldNotHaveReacted();
+
+                a$.set('no error at all!');
+                shouldNotHaveReacted();
+            });
+        });
+
+        context('when an error occurs in any reactor', () => {
+            let errorHandler: sinon.SinonSpy;
+            let latestValue: string;
+            beforeEach('start an unstable reactor', () => {
+                errorHandler = spy();
+                d$.react(v => {
+                    latestValue = v;
+                    if (v === 'error in reactor') {
+                        throw new Error(v);
+                    }
+                }, { errorHandler });
+            });
+
+            it('should not throw on Atom#set', () => {
+                expect(() => a$.set('error in reactor')).not.to.throw();
+            });
+
+            it('should call the errorhandler with the error', () => {
+                a$.set('error in reactor');
+                expect(errorHandler).to.have.been.calledOnce;
+                const err = errorHandler.firstCall.args[0];
+                expect(err).to.be.an('error');
+                expect(err.message).to.equal('error in reactor');
+
+                errorHandler.resetHistory();
+                a$.set('no error at all!');
+                expect(errorHandler).to.not.have.been.called;
+            });
+
+            it('should stop the reactor', () => {
+                a$.set('whatever');
+                expect(latestValue).to.equal('whatever');
+
+                a$.set('error in reactor');
+                expect(latestValue).to.equal('error in reactor');
+
+                a$.set('back to normal?');
+                expect(latestValue).to.equal('error in reactor');
+            });
+
+            it('should have no effect on other reactors', () => {
+                react(d$);
+                shouldHaveReactedOnce('no error');
+
+                a$.set('error in reactor');
+                shouldHaveReactedOnce('error in reactor');
+
+                a$.set('conditions are normal');
+                shouldHaveReactedOnce('conditions are normal');
+            });
+        });
     });
 });
 
