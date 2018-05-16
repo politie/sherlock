@@ -15,6 +15,14 @@ declare module '../derivable/derivable' {
          * @param options lifecycle options
          */
         react(reaction: (value: V) => void, options?: Partial<ReactorOptions<V>>): () => void;
+
+        /**
+         * Returns a promise that resolves with the first value that passes the lifecycle options. Reject on any error in an upstream
+         * derivable.
+         *
+         * @param options lifecycle options
+         */
+        toPromise(options?: Partial<ReactorOptions<V>>): Promise<V>;
     }
 }
 
@@ -25,13 +33,17 @@ Derivable.prototype.react = function react<V>(this: Derivable<V>, reaction: (val
     return Reactor.create(this, reaction, options);
 };
 
+Derivable.prototype.toPromise = function toPromise<V>(this: Derivable<V>, options?: Partial<ToPromiseOptions<V>>) {
+    return new Promise((resolve, reject) => this.react(resolve, { ...options, once: true, errorHandler: reject }));
+};
+
 /**
  * The maximum recursion depth for a single Reactor. Is used to fail faster than JavaScripts "Maximum call stack size
  * exceeded" and provide better error messages.
  */
 const MAX_REACTION_DEPTH = 100;
 
-export const defaultOptions = { from: true$, until: false$, when: true$, once: false, skipFirst: false };
+export const defaultOptions = { from: true$, until: false$, when: true$, once: false, skipFirst: false, errorHandler: undefined };
 
 /**
  * A Reactor is an observer of a derivable that automatically performs some reaction whenever the derivable changes. Will not
@@ -83,6 +95,11 @@ export class Reactor<V> implements Observer {
         private readonly parent: ReactorParent<V>,
 
         /**
+         * The error handler, is called when either the observed derivable or the reactor throws.
+         */
+        private readonly errorHandler: (error: any) => void,
+
+        /**
          * The reaction that should fire when the derivable changes.
          */
         private readonly reaction: (value: V) => void,
@@ -118,11 +135,15 @@ export class Reactor<V> implements Observer {
             return;
         }
 
-        const { lastValue } = this;
-        const nextValue = this.lastValue = this.parent.get();
+        try {
+            const { lastValue } = this;
+            const nextValue = this.lastValue = this.parent.get();
 
-        if (!equals(lastValue, nextValue)) {
-            this.react(nextValue);
+            if (!equals(lastValue, nextValue)) {
+                this.react(nextValue);
+            }
+        } catch (err) {
+            this.errorHandler(err);
         }
     }
 
@@ -196,7 +217,7 @@ export class Reactor<V> implements Observer {
         let { skipFirst } = resolvedOptions;
 
         // Wrap the reaction to enforce skipFirst and once.
-        const reactor = new Reactor<W>(parent, value => {
+        const reactor = new Reactor<W>(parent, errorHandler, value => {
             if (skipFirst) {
                 skipFirst = false;
             } else {
@@ -209,7 +230,7 @@ export class Reactor<V> implements Observer {
 
         // Listen to when and until conditions, starting and stopping the reactor when
         // needed, and stopping the reaction and controller when until becomes true.
-        const controller = new Reactor(combineWhenUntil(parent, when, until), conds => {
+        const controller = new Reactor(combineWhenUntil(parent, when, until), errorHandler, conds => {
             if (conds.until) {
                 done();
             } else if (conds.when) {
@@ -223,7 +244,7 @@ export class Reactor<V> implements Observer {
         reactor.controller = controller;
 
         // The starter waits until `from` to start the controller.
-        const starter = new Reactor(toDerivable(from, parent), value => {
+        const starter = new Reactor(toDerivable(from, parent), errorHandler, value => {
             if (value) {
                 controller.start();
                 starter.stop();
@@ -235,6 +256,15 @@ export class Reactor<V> implements Observer {
             controller.stop();
             reactor.stop();
             ended && ended();
+        }
+
+        function errorHandler(error: any) {
+            done();
+            if (resolvedOptions.errorHandler) {
+                resolvedOptions.errorHandler(error);
+            } else {
+                throw error;
+            }
         }
 
         // Go!!!
@@ -285,7 +315,15 @@ export interface ReactorOptions<V> {
      * When `true` the reactor will not react the first time it would normally react. After that it has no effect.
      */
     skipFirst: boolean;
+
+    /**
+     * An errorhandler that gets called when an error is thrown in any upstream derivation or the reactor itself. Any
+     * error will stop the reactor.
+     */
+    errorHandler: (error: any) => void;
 }
+
+export type ToPromiseOptions<V> = Pick<ReactorOptions<V>, 'from' | 'until' | 'when' | 'skipFirst'>;
 
 export function toDerivable<V>(option: ReactorOptionValue<V>, derivable: Derivable<V>) {
     if (isDerivable(option)) {

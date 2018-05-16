@@ -8,7 +8,7 @@ try {
 
 // Watch mode.
 if (process.argv.indexOf('watch') >= 0) {
-    shell.exec('nyc --reporter html --reporter text-summary --extension .ts --include "{src,extensions}/**/*.ts" --exclude "{src,extensions}/**/*.spec.ts" mocha --reporter landing --compilers ts:ts-node/register -r tsconfig-paths/register "{src,extensions}/**/*.spec.ts" && rimraf .nyc_output');
+    shell.exec('nyc --reporter html --reporter text-summary --extension .ts --include "{src,extensions}/**/*.ts" --exclude "{src,extensions}/**/*.spec.ts" mocha --reporter landing -r ts-node/register -r tsconfig-paths/register "{src,extensions}/**/*.spec.ts" && rimraf .nyc_output');
     return;
 }
 

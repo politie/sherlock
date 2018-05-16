@@ -358,7 +358,36 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
                 expect(reactions).to.equal(1);
             });
         }
+    });
 
+    describe('#toPromise', () => {
+        const value$ = factory('the value');
+        it('should resolve immediately when no options are given', async () => {
+            expect(await value$.toPromise()).to.equal('the value');
+        });
+
+        it('should reject on errors in any upstream derivation', async () => {
+            const d$ = value$.derive(() => { throw new Error('with a message'); });
+
+            try {
+                await d$.toPromise();
+            } catch (e) {
+                expect(e).to.be.an('error');
+                expect(e.message).to.equal('with a message');
+                return;
+            }
+            throw new Error('expected promise to reject');
+        });
+
+        if (isAtom(value$)) {
+            beforeEach('reset the atom', () => { value$.observers.forEach(obs => obs.disconnect()); value$.set('the value'); });
+
+            it('should resolve on the first reaction according to the lifecycle options', async () => {
+                const promise = value$.toPromise({ skipFirst: true });
+                value$.set('as promised');
+                expect(await promise).to.equal('as promised');
+            });
+        }
     });
 
     context('(nested derivables)', () => {
