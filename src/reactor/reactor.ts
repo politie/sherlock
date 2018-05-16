@@ -22,7 +22,7 @@ declare module '../derivable/derivable' {
          *
          * @param options lifecycle options
          */
-        toPromise(options?: Partial<ReactorOptions<V>>): Promise<V>;
+        toPromise(options?: Partial<ToPromiseOptions<V>>): Promise<V>;
     }
 }
 

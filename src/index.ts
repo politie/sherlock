@@ -8,7 +8,7 @@ export {
 } from './extras';
 
 export {
-    Reactor, ReactorOptions, ReactorOptionValue,
+    Reactor, ReactorOptions, ReactorOptionValue, ToPromiseOptions,
 } from './reactor';
 
 export {
