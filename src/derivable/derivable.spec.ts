@@ -40,8 +40,9 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
     });
 
     describe('#value', () => {
+        const a$ = factory('a');
+
         it('should call #get() when getting the #value property', () => {
-            const a$ = factory('a');
             const s = spy(a$, 'get');
 
             // Use the getter
@@ -49,6 +50,18 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
 
             expect(s).to.have.been.calledOnce;
         });
+
+        if (isAtom(a$)) {
+            afterEach('reset a$', () => a$.set('a'));
+
+            it('should call #set() when setting the #value property', () => {
+                const s = spy(a$, 'set');
+
+                a$.value = 'b';
+
+                expect(s).to.have.been.calledOnce.and.calledWithExactly('b');
+            });
+        }
     });
 
     describe('#derive', () => {

@@ -79,29 +79,6 @@ describe('derivable/lens', () => {
         });
     });
 
-    describe('#value', () => {
-        it('should call #get() when getting the #value property', () => {
-            const a$ = atom('a');
-            const lensed$ = a$.lens(identityLens<string>());
-            const s = spy(lensed$, 'get');
-
-            // Use the getter
-            expect(lensed$.value).to.equal('a');
-
-            expect(s).to.have.been.calledOnce;
-        });
-
-        it('should call #set() when setting the #value property', () => {
-            const a$ = atom('a');
-            const lensed$ = a$.lens(identityLens<string>());
-            const s = spy(lensed$, 'set');
-
-            lensed$.value = 'b';
-
-            expect(s).to.have.been.calledOnce.and.calledWithExactly('b');
-        });
-    });
-
     describe('#swap', () => {
         it('should invoke the swap function with the current value and delegate the work to #set', () => {
             const a$ = atom('a');

@@ -40,27 +40,6 @@ describe('derivable/atom', () => {
         });
     });
 
-    describe('#value', () => {
-        it('should call #get() when getting the #value property', () => {
-            const a$ = atom('a');
-            const s = spy(a$, 'get');
-
-            // Use the getter
-            expect(a$.value).to.equal('a');
-
-            expect(s).to.have.been.calledOnce;
-        });
-
-        it('should call #set() when setting the #value property', () => {
-            const a$ = atom('a');
-            const s = spy(a$, 'set');
-
-            a$.value = 'b';
-
-            expect(s).to.have.been.calledOnce.and.calledWithExactly('b');
-        });
-    });
-
     describe('#swap', () => {
         it('should invoke the swap function with the current value and delegate the work to #set', () => {
             const a$ = atom('a');
