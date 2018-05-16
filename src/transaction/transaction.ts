@@ -50,7 +50,7 @@ interface Transaction {
 }
 
 export interface TransactionAtom<V> extends TrackedObservable {
-    value: V;
+    _value: V;
 }
 
 function markObservers(changedAtom: TransactionAtom<any>, reactorSink: Reactor[]) {
@@ -201,7 +201,7 @@ function rollbackTransaction() {
 
     // Restore the state of all touched atoms.
     ctx.touchedAtoms.forEach(atom => {
-        atom.value = ctx.oldValues[atom.id];
+        atom._value = ctx.oldValues[atom.id];
         atom.version = ctx.oldVersions[atom.id];
         markObservers(atom, []);
     });
