@@ -1,8 +1,9 @@
 import { atomic } from '../transaction';
-import { clone } from '../utils';
+import { MixinFn, MixinProp } from '../utils';
 import { Atom } from './atom';
 import { Derivable } from './derivable';
-import { Derivation, hasGetter, plucker } from './derivation';
+import { Derivation } from './derivation';
+import { AtomPluck, pluck } from './pluck';
 import { unpack } from './unpack';
 
 /**
@@ -51,24 +52,6 @@ export class Lens<V> extends Derivation<V> implements Atom<V> {
     }
 
     /**
-     * `#value` is an alias for the `#get()` and `#set()` methods on the Lens.
-     * Getting `#value` will call `#get()` and return the value.
-     * Setting `#value` will call `#set()` with the new value.
-     */
-    get value() { return this.get(); }
-    set value(newValue: V) { this.set(newValue); }
-
-    /**
-     * Swaps the current value of this atom using the provided swap function. Any additional arguments to this function are
-     * fed to the swap function.
-     *
-     * @param f the swap function
-     */
-    swap(f: (oldValue: V, ...args: any[]) => V, ...args: any[]) {
-        this.set(f(this.get(), ...args));
-    }
-
-    /**
      * Create a new Lens using the provided deriver (get) and transform (set) functions.
      *
      * @param param0 the deriver (get) and transform (set) functions
@@ -81,29 +64,9 @@ export class Lens<V> extends Derivation<V> implements Atom<V> {
         }, [atom, ...ps]);
     }
 
-    // Locally overridden to return an Atom instead of an ordinary Derivable.
-    pluck(key: string | number | Derivable<string | number>): Atom<any> {
-        return this.lens<V, string | number>({
-            get: plucker,
-            set: pluckSetter,
-        }, key);
-    }
-}
-
-function pluckSetter(newValue: any, object: any, key: string | number) {
-    if (hasGetter(object)) {
-        if (hasSetter(object)) {
-            return object.set(key, newValue);
-        }
-        throw new Error('object is readonly');
-    }
-    const result = clone(object);
-    result[key] = newValue;
-    return result;
-}
-
-function hasSetter(obj: any): obj is { set(key: string | number, value: any): any } {
-    return typeof obj.set === 'function';
+    @MixinFn(pluck) pluck!: AtomPluck<V>;
+    @MixinProp(Atom.prototype) swap!: Atom<V>['swap'];
+    @MixinProp(Atom.prototype) value!: V;
 }
 
 /**
@@ -152,15 +115,6 @@ declare module './atom' {
         lens<W, P1>(descriptor: MonoLensDescriptor<V, W, P1>, p1: P1 | Derivable<P1>): Atom<W>;
         lens<W, P1, P2>(descriptor: MonoLensDescriptor<V, W, P1 | P2>, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): Atom<W>;
         lens<W, P>(descriptor: MonoLensDescriptor<V, W, P>, ...ps: Array<P | Derivable<P>>): Atom<W>;
-
-        /**
-         * Create a derivation that plucks the property with the given key of the current value of the Derivable.
-         *
-         * @param key the key or derivable to a key that should be used to dereference the current value
-         */
-        pluck<K extends keyof V>(key: K | Derivable<K>): Atom<V[K]>;
-        pluck(key: string | number | Derivable<string | number>): Atom<any>;
     }
 }
 Atom.prototype.lens = Lens.prototype.lens;
-Atom.prototype.pluck = Lens.prototype.pluck;

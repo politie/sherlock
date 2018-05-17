@@ -19,16 +19,10 @@ declare module './derivable' {
         derive<R, P1>(f: (v: V, p1: P1) => R, p1: P1 | Derivable<P1>): Derivable<R>;
         derive<R, P1, P2>(f: (v: V, p1: P1, p2: P2) => R, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): Derivable<R>;
         derive<R, P>(f: (v: V, ...ps: P[]) => R, ...ps: Array<P | Derivable<P>>): Derivable<R>;
-
-        /**
-         * Create a derivation that plucks the property with the given key of the current value of the Derivable.
-         *
-         * @param key the key or derivable to a key that should be used to dereference the current value
-         */
-        pluck<K extends keyof V>(key: K | Derivable<K>): Derivable<V[K]>;
-        pluck(key: string | number | Derivable<string | number>): Derivable<any>;
     }
 }
+
+export const EMPTY_CACHE = {};
 
 /**
  * Derivation is the implementation of derived state. Automatically tracks other Derivables that are used in the deriver function
@@ -51,20 +45,21 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
 
     /**
      * Indicates whether the derivation is actively used to power a reactor, either directly or indirectly with other derivations in
-     * between. Should always be kept up to date in order to prevent memory leaks.
+     * between, or connected in this tick because of autoCacheMode. Should always be kept up to date in order to prevent memory leaks.
      */
     private connected = false;
 
     /**
      * Indicates whether the current cachedValue of this derivation is known to be up to date, or might need an update. Is set to false
-     * by our dependencies when needed. We should be able to trust `true`.
+     * by our dependencies when needed. We should be able to trust `true`. It may only be set to true when connected, because true means
+     * that we depend on upstream dependencies to keep us informed of changes.
      */
     private isUpToDate = false;
 
     /**
      * The last value that was calculated for this derivation. Is only used when connected.
      */
-    private cachedValue?: V;
+    private cachedValue = EMPTY_CACHE as V;
 
     /**
      * The error that was caught while calculating the derivation. Is only used when connected.
@@ -107,47 +102,66 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
      * is only guaranteed to increase on each change when connected.
      */
     get version() {
-        if (this.connected && this.shouldUpdate()) { this.update(); }
+        this.updateIfNeeded();
         return this._version;
+    }
+
+    /**
+     * `#value` is an alias for the `#get()` method on the Derivable. Getting `#value` will return the same value as `#get()`
+     * It is readonly on derivations.
+     */
+    get value() {
+        return this.get();
     }
 
     /**
      * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
     get(): V {
-        if (this.autoCacheMode && !this.connected) {
-            // We will connect because of autoCacheMode in next block, after a tick we maybe need to disconnect (if no reactor was started
-            // in this tick).
-            this.maybeDisconnectInNextTick();
-        }
-        // Are we currently connected or should we connect now? We know we need to connect if an observer is registered or
-        // isRecordingObservations() returns true (in which case our observer is connecting and therefore recording its dependencies).
-        if (this.autoCacheMode || this.observers.length || isRecordingObservations()) {
-            recordObservation(this);
-            // If we are not connected we should connect (by calling update). Otherwise ask shouldUpdate().
-            if (!this.connected || this.shouldUpdate()) {
-                this.update();
+        // Should we connect now?
+        if (!this.connected) {
+            if (this.autoCacheMode) {
+                // We will connect because of autoCacheMode, after a tick we may need to disconnect (if no reactor was started
+                // in this tick).
+                this.connect();
+                this.maybeDisconnectInNextTick();
+            } else if (isRecordingObservations()) {
+                // We know we need to connect if isRecordingObservations() returns true (in which case our observer is connecting
+                // and therefore recording its dependencies).
+                this.connect();
             }
-            if (this.cachedError) {
-                throw this.cachedError;
-            }
-            return this.cachedValue!;
         }
-        return this.callDeriver();
+
+        // Not connected, so just calculate our value one time.
+        if (!this.connected) {
+            return this.callDeriver();
+        }
+
+        // We are connected, so we should record this instance as a dependency of our observers.
+        recordObservation(this);
+        this.updateIfNeeded();
+        if (this.cachedError) {
+            throw this.cachedError;
+        }
+        return this.cachedValue!;
     }
 
     /**
-     * Ensure the derivable is connected and update the currently cached value of this derivation.
+     * Update the currently cached value of this derivation (only when connected).
      */
-    private update() {
+    private updateIfNeeded() {
+        if (!this.connected || !this.shouldUpdate()) {
+            return;
+        }
+
         startRecordingObservations(this);
         const oldValue = this.cachedValue;
         try {
-            const newValue = this.cachedValue = this.callDeriver();
+            const newValue = this.callDeriver();
             this.cachedError = undefined;
             this.isUpToDate = true;
-            this.connected = true;
             if (!equals(newValue, oldValue)) {
+                this.cachedValue = newValue;
                 this._version++;
             }
         } catch (error) {
@@ -177,8 +191,8 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
      * current actual versions of the dependencies. If there is any mismatch between versions we need to update. Simple.
      */
     private shouldUpdate() {
-        // Update the isUpToDate boolean only when it is false.
-        if (!this.isUpToDate) {
+        // Update the isUpToDate boolean only when it is false and we know all our dependencies (c.q. the cache is not empty).
+        if (!this.isUpToDate && this.cachedValue !== EMPTY_CACHE) {
             this.isUpToDate = this.dependencies.every(obs => this.dependencyVersions[obs.id] === obs.version);
         }
         return !this.isUpToDate;
@@ -203,8 +217,19 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
 
     /**
      * @internal
-     * Disconnect this derivation. It will disconnect all remaining observers (downstream), stop all reactors that depend on this
-     * derivation and disconnect all dependencies (upstream) that have no other observers.
+     * Connect this derivation. It will make sure that the internal cache is kept up-to-date and all reactors are notified of changes
+     * until disconnected.
+     */
+    connect() {
+        this.connected = true;
+    }
+
+    /**
+     * @internal
+     * Disconnect this derivation when not in autoCache mode. It will disconnect all remaining observers (downstream), stop all
+     * reactors that depend on this derivation and disconnect all dependencies (upstream) that have no other observers.
+     *
+     * When in autoCache mode, it will wait a tick and then disconnect when no observers are listening.
      */
     disconnect() {
         if (this.autoCacheMode) {
@@ -218,9 +243,13 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
         setTimeout(() => this.observers.length || this.disconnectNow(), 0);
     }
 
-    private disconnectNow() {
+    /**
+     * Force disconnect.
+     */
+    protected disconnectNow() {
         this.isUpToDate = false;
         this.connected = false;
+        this.cachedValue = EMPTY_CACHE as V;
         // Disconnect all observers. When an observer disconnects it removes itself from this array.
         for (let i = this.observers.length - 1; i >= 0; i--) {
             this.observers[i].disconnect();
@@ -257,17 +286,3 @@ Derivable.prototype.derive = function derive<V extends P, R, P>(
 ): Derivable<R> {
     return new Derivation(f, [this, ...ps]);
 };
-
-Derivable.prototype.pluck = function pluck(this: Derivable<any>, key: string | number | Derivable<string | number>) {
-    return this.derive(plucker, key);
-};
-
-export function plucker(obj: any, key: string | number) {
-    return hasGetter(obj)
-        ? obj.get(key)
-        : obj[key];
-}
-
-export function hasGetter(obj: any): obj is { get(key: string | number): any } {
-    return obj && typeof obj.get === 'function';
-}

@@ -1,11 +1,12 @@
 import { expect } from 'chai';
 import { fromJS, List, Seq } from 'immutable';
 import { spy } from 'sinon';
-import { isAtom } from '../extras';
-import { atom, Atom } from './atom';
+import { isAtom, isConstant } from '../extras';
+import { addObserver } from '../tracking';
+import { Atom, atom } from './atom';
 import { constant } from './constant';
 import { Derivable } from './derivable';
-import { derivation, Derivation } from './derivation';
+import { Derivation, derivation } from './derivation';
 import { Lens } from './lens';
 
 export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
@@ -27,7 +28,7 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
             expect(value$.observers).to.be.empty;
 
             // Simulate being observed to force derived$ to go into connected state.
-            derived$.observers.push({} as any);
+            addObserver(derived$, {} as any);
             derived$.get();
 
             if (factory === constant) {
@@ -42,17 +43,19 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
     describe('#value', () => {
         const a$ = factory('a');
 
-        it('should call #get() when getting the #value property', () => {
-            const s = spy(a$, 'get');
+        if (!isConstant(a$)) {
+            it('should call #get() when getting the #value property', () => {
+                const s = spy(a$, 'get');
 
-            // Use the getter
-            expect(a$.value).to.equal('a');
+                // Use the getter
+                expect(a$.value).to.equal('a');
 
-            expect(s).to.have.been.calledOnce;
-        });
+                expect(s).to.have.been.calledOnce;
+            });
+        }
 
         if (isAtom(a$)) {
-            afterEach('reset a$', () => a$.set('a'));
+            beforeEach('reset a$', () => a$.set('a'));
 
             it('should call #set() when setting the #value property', () => {
                 const s = spy(a$, 'set');
@@ -316,7 +319,7 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
         });
 
         if (isAtom(value$)) {
-            beforeEach('reset the atom', () => { value$.observers.forEach(obs => obs.disconnect()); value$.set('the value'); });
+            beforeEach('reset the atom', () => resetAtomTo(value$, 'the value'));
 
             it('should react to change', () => {
                 let receivedValue: string | undefined;
@@ -405,7 +408,7 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
         });
 
         if (isAtom(value$)) {
-            beforeEach('reset the atom', () => { value$.observers.forEach(obs => obs.disconnect()); value$.set('the value'); });
+            beforeEach('reset the atom', () => resetAtomTo(value$, 'the value'));
 
             it('should resolve on the first reaction according to the lifecycle options', async () => {
                 const promise = value$.toPromise({ skipFirst: true });
@@ -450,4 +453,22 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
             expect(value).to.equal(9);
         });
     });
+
+    context('(stability)', () => {
+        const a$ = factory(fromJS({ a: 1 })).autoCache();
+
+        if (isAtom(a$)) {
+            it('should not return new instances when structurally the same', () => {
+                const instance = a$.get();
+                a$.set(fromJS({ a: 1 }));
+                expect(a$.get()).to.equal(instance);
+                expect(a$.get() === instance).to.equal(true, 'encountered another instance with the same data');
+            });
+        }
+    });
+}
+
+function resetAtomTo<V>(a$: Atom<V>, value: V) {
+    a$.observers.forEach(obs => obs.disconnect());
+    a$.set(value);
 }

@@ -1,5 +1,6 @@
 import { TrackedObservable, TrackedObserver } from '../tracking';
-import { uniqueId } from '../utils';
+import { MixinFn, uniqueId } from '../utils';
+import { DerivablePluck, pluck } from './pluck';
 
 /**
  * Derivable is the base class of all derivable state constructs: Atom, Constant, Derivation and Lens.
@@ -29,11 +30,10 @@ export abstract class Derivable<V> implements TrackedObservable {
     abstract get(): V;
 
     /**
-     * `#value` is an alias for the `#get()` method on the Derivable.
-     * Getting `#value` will call `#get()` and return the value.
-     * `#value` is readonly on a Derivable
+     * `#value` is an alias for the `#get()` method on the Derivable. Getting `#value` will return the same value as `#get()`
+     * It is only settable if the Derivable is settable (has a `#set()` method).
      */
-    get value() { return this.get(); }
+    abstract readonly value: V;
 
     /**
      * Sets this Derivable to autoCache mode. This will cache the value of this Derivable the first time {@link #get} is called every tick
@@ -42,4 +42,6 @@ export abstract class Derivable<V> implements TrackedObservable {
      * first time #get is called per tick. Starting a reactor on a Derivable with an active and up-to-date cache is cheap though.
      */
     autoCache() { return this; }
+
+    @MixinFn(pluck) pluck!: DerivablePluck<V>;
 }
