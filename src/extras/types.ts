@@ -1,4 +1,4 @@
-import { Atom, Constant, Derivable, Derivation, Lens } from '../derivable';
+import { Atom, Constant, DataSource, Derivable, Derivation, Lens } from '../derivable';
 
 // tslint:disable:unified-signatures
 
@@ -10,7 +10,9 @@ import { Atom, Constant, Derivable, Derivation, Lens } from '../derivable';
 export function isAtom<V>(derivable: Derivable<V>): derivable is Atom<V>;
 export function isAtom<V>(obj: any): obj is Atom<V>;
 export function isAtom(derivable: any) {
-    return derivable instanceof Atom || derivable instanceof Lens;
+    return derivable instanceof Atom
+        || derivable instanceof Lens
+        || derivable instanceof DataSource && derivable.settable;
 }
 
 /**

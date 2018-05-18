@@ -143,7 +143,7 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
         if (this.cachedError) {
             throw this.cachedError;
         }
-        return this.cachedValue!;
+        return this.cachedValue;
     }
 
     /**

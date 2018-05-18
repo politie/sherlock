@@ -1,14 +1,23 @@
 import { expect } from 'chai';
-import { atom, constant, derivation } from '../derivable';
+import { atom, constant, DataSource, derivation } from '../derivable';
 import { identityLens } from '../derivable/lens.spec';
 import { isAtom, isConstant, isDerivable, isDerivation, isLens } from './types';
 
 describe('extras/types', () => {
+    class ReadonlyDataSource extends DataSource<void> {
+        calculateCurrentValue() { /**/ }
+    }
+    class SettableDataSource extends DataSource<void> {
+        calculateCurrentValue() { /**/ }
+        acceptNewValue() { /**/ }
+    }
     const testCases = [
         { value: atom(123), pAtom: true, pConstant: false, pDerivable: true, pDerivation: false, pLens: false },
         { value: constant(123), pAtom: false, pConstant: true, pDerivable: true, pDerivation: false, pLens: false },
         { value: derivation(() => 123), pAtom: false, pConstant: false, pDerivable: true, pDerivation: true, pLens: false },
         { value: atom(123).lens(identityLens<number>()), pAtom: true, pConstant: false, pDerivable: true, pDerivation: true, pLens: true },
+        { value: new ReadonlyDataSource(), pAtom: false, pConstant: false, pDerivable: true, pDerivation: false, pLens: false },
+        { value: new SettableDataSource(), pAtom: true, pConstant: false, pDerivable: true, pDerivation: false, pLens: false },
     ];
 
     for (const { value, pAtom, pConstant, pDerivable, pDerivation, pLens } of testCases) {

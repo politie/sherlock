@@ -56,6 +56,10 @@ export class Lens<V> extends Derivation<V> implements Atom<V> {
      *
      * @param param0 the deriver (get) and transform (set) functions
      */
+    lens<W>(descriptor: MonoLensDescriptor<V, W, never>): Atom<W>;
+    lens<W, P1>(descriptor: MonoLensDescriptor<V, W, P1>, p1: P1 | Derivable<P1>): Atom<W>;
+    lens<W, P1, P2>(descriptor: MonoLensDescriptor<V, W, P1 | P2>, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): Atom<W>;
+    lens<W, P>(descriptor: MonoLensDescriptor<V, W, P>, ...ps: Array<P | Derivable<P>>): Atom<W>;
     lens<W, P>({ get, set }: MonoLensDescriptor<V, W, P>, ...ps: Array<P | Derivable<P>>): Atom<W> {
         const atom = this;
         return new Lens({
