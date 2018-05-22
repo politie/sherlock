@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { clone, getOwnPropertyDescriptorsShim, ownKeysShim } from './clone';
+import { clone } from './clone';
 
 describe('util/clonex', () => {
     it('should clone an instance of a class', () => {
@@ -83,15 +83,5 @@ describe('util/clonex', () => {
         });
         const copy = clone(obj);
         expect(copy.prop1).to.equal('value');
-    });
-
-    Object.getOwnPropertyDescriptors && it('should use a correct Object.getOwnPropertyDescriptors shim', () => {
-        const obj = { a: 'b', c: 123, get d() { return false; } };
-        expect(getOwnPropertyDescriptorsShim(obj)).to.deep.equal(Object.getOwnPropertyDescriptors(obj));
-    });
-
-    typeof Reflect !== 'undefined' && it('should use a correct Reflect.ownKeys shim', () => {
-        const obj = { a: 'b', c: 123, get d() { return false; }, [Symbol()]: {} };
-        expect(ownKeysShim(obj)).to.deep.equal(Reflect.ownKeys(obj));
     });
 });

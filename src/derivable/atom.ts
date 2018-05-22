@@ -1,7 +1,8 @@
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { equals } from '../utils';
+import { equals, MixinFn } from '../utils';
 import { Derivable } from './derivable';
+import { AtomPluck, pluck } from './pluck';
 
 /**
  * Atom is the basic state holder in a Derivable world. It contains the actual mutable state. In contrast
@@ -15,17 +16,16 @@ export class Atom<V> extends Derivable<V> {
      *
      * @param value the initial value
      */
-    constructor(value: V) {
+    constructor(
+        /**
+         * @internal
+         * Contains the current value of this atom. Note that this field is public for transaction support, should
+         * not be used in application code. Use {@link Derivable#get} and {@link Atom#set} instead.
+         */
+        public _value: V,
+    ) {
         super();
-        this._value = value;
     }
-
-    /**
-     * @internal
-     * Contains the current value of this atom. Note that this field is public for transaction support, should
-     * not be used in application code. Use {@link Derivable#get} and {@link Atom#set} instead.
-     */
-    _value: V;
 
     /**
      * @internal
@@ -74,8 +74,9 @@ export class Atom<V> extends Derivable<V> {
     swap<P1, P2>(f: (v: V, p1: P1, p2: P2) => V, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): void;
     swap<P>(f: (v: V, ...ps: P[]) => V, ...ps: Array<P | Derivable<P>>): void;
     swap(f: (oldValue: V, ...args: any[]) => V, ...args: any[]) {
-        this.set(f(this._value, ...args));
+        this.set(f(this.get(), ...args));
     }
+    @MixinFn(pluck) pluck!: AtomPluck<V>;
 }
 
 /**

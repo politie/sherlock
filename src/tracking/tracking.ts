@@ -86,7 +86,7 @@ export function recordObservation(dependency: TrackedObservable) {
         if (index < 0) {
             // dependency not yet present in dependencies array. This means we have to register the observer at
             // the dependency and add the dependency to the observer (both ways).
-            dependency.observers.push(observer);
+            addObserver(dependency, observer);
             if (currentRecording.confirmed === dependencies.length) {
                 // We don't have to reorder dependencies, because it is empty to the right of currentRecording.confirmed.
                 dependencies.push(dependency);
@@ -143,6 +143,21 @@ export interface Reactor {
 }
 
 /**
+ * Registers a single observer on an observable. The observer must not already be registered on this observable. If this
+ * observer is the first and the observable can be connected it will be connected.
+ *
+ * @param observable the observable on which to register the observer
+ * @param observer the observer that should be registered
+ */
+export function addObserver(observable: TrackedObservable, observer: Observer) {
+    const { observers } = observable;
+    observers.push(observer);
+    if (observers.length === 1 && isConnectable(observable)) {
+        observable.connect();
+    }
+}
+
+/**
  * Removes a single observer from the registered observers of the observable. Will error if the observer is not known.
  * If the observable has no observers left and can be disconnected it will be disconnected.
  *
@@ -158,12 +173,16 @@ export function removeObserver(observable: TrackedObservable, observer: Observer
     }
     observers.splice(i, 1);
     // If the dependency is itself another observer and is not observed anymore, we should disconnect it.
-    if (observers.length === 0 && canBeDisconnected(observable)) {
+    if (observers.length === 0 && isDisconnectable(observable)) {
         observable.disconnect();
     }
 }
 
-function canBeDisconnected(obj: any): obj is { disconnect(): void; } {
+function isConnectable(obj: any): obj is Connectable {
+    return obj && typeof obj.connect === 'function';
+}
+
+function isDisconnectable(obj: any): obj is Disconnectable {
     return obj && typeof obj.disconnect === 'function';
 }
 
@@ -174,4 +193,12 @@ interface Recording {
     confirmed: number;
     /** The recording to return to after this recording ends, if applicable. */
     previousRecording: Recording | undefined;
+}
+
+interface Connectable {
+    connect(): void;
+}
+
+interface Disconnectable {
+    disconnect(): void;
 }

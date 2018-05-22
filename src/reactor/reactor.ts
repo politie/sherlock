@@ -1,6 +1,6 @@
 import { constant, Derivable, derivation, unpack } from '../derivable';
 import { isConstant, isDerivable } from '../extras';
-import { Observer, removeObserver, TrackedObservable } from '../tracking';
+import { addObserver, Observer, removeObserver, TrackedObservable } from '../tracking';
 import { debugMode, equals, uniqueId } from '../utils';
 
 // Adds the react method to Derivable.
@@ -112,7 +112,7 @@ export class Reactor<V> implements Observer {
         if (this.active) {
             return;
         }
-        this.parent.observers.push(this);
+        addObserver(this.parent, this);
         this.active = true;
         this.reactIfNeeded();
     }
@@ -340,7 +340,7 @@ function combineWhenUntil<V>(parent: Derivable<V>, whenOption: ReactorOptionValu
     const until = toDerivable(untilOption, parent);
 
     if (isConstant(when) && isConstant(until)) {
-        return constant({ when: when._value, until: until._value });
+        return constant({ when: when.value, until: until.value });
     }
 
     return derivation(whenUntil, when, until);
