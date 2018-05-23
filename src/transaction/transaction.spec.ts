@@ -1,136 +1,11 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { atom } from '../derivable';
+import { Atom, atom } from '../derivable';
 import { template } from '../extras';
 import { atomic, atomically, transact, transaction } from './transaction';
 
 describe('transaction/transaction', () => {
-    it('should not react on abort of outer transaction', () => {
-        const a$ = atom('a');
-        let reactions = 0;
-        a$.react(() => reactions++, { skipFirst: true });
-        txn(abort => {
-            a$.set('b');
-            txn(() => {
-                a$.set('c');
-            });
-            expect(a$._value).to.equal('c');
-            abort();
-        });
-        expect(reactions).to.equal(0);
-    });
-
-    it('should react once for each reactor on commit of outer transaction', () => {
-        const a$ = atom('a');
-        let reactions = 0;
-        a$.react(() => reactions++, { skipFirst: true });
-        txn(() => {
-            a$.set('b');
-            a$.set('c');
-            txn(() => {
-                a$.set('d');
-            });
-            expect(a$._value).to.equal('d');
-        });
-        expect(reactions).to.equal(1);
-    });
-
-    it('should not react when an atom is reset to its previous value', () => {
-        const a$ = atom('a');
-        let reactions = 0;
-        a$.react(() => reactions++, { skipFirst: true });
-        txn(() => {
-            a$.set('b');
-            a$.set('a');
-        });
-        expect(reactions).to.equal(0);
-    });
-
-    it('should also react on atoms that were only changed inside a nested transaction', () => {
-        const a$ = atom('a');
-        let reactions = 0;
-        a$.react(() => reactions++, { skipFirst: true });
-        txn(() => {
-            txn(() => {
-                a$.set('b');
-            });
-            expect(a$._value).to.equal('b');
-        });
-        expect(reactions).to.equal(1);
-    });
-
-    it('should support adding a reactor to an atom after it was reassigned inside a transaction', () => {
-        const a$ = atom('a');
-        const derived$ = template`${a$}!`;
-        let reactions = 0;
-        let value: string | undefined;
-        txn(() => {
-            a$.set('b');
-            txn(() => {
-                derived$.react(v => { reactions++; value = v; });
-                expect(reactions).to.equal(1);
-                expect(value).to.equal('b!');
-                a$.set('c');
-            });
-            expect(a$._value).to.equal('c');
-        });
-        expect(reactions).to.equal(2);
-        expect(value).to.equal('c!');
-    });
-
-    it('should fully support derivations inside transactions that abort', () => {
-        const a$ = atom('a');
-        const b$ = atom('b');
-        const derived$ = template`${a$} ${b$}`;
-        let reactions = 0;
-        derived$.react(() => reactions++, { skipFirst: true });
-        expect(derived$.get()).to.equal('a b');
-        txn(outerAbort => {
-            a$.set('b');
-            expect(derived$.get()).to.equal('b b');
-            txn(innerAbort => {
-                b$.set('c');
-                expect(derived$.get()).to.equal('b c');
-                innerAbort();
-            });
-            expect(derived$.get()).to.equal('b b');
-            outerAbort();
-        });
-        expect(derived$.get()).to.equal('a b');
-        expect(reactions).to.equal(0);
-    });
-
-    it('should fully support derivations inside transactions that commit', () => {
-        const a$ = atom('a');
-        const derived$ = template`${a$}!`;
-        let reactions = 0;
-        let value: string | undefined;
-        derived$.react(v => { reactions++; value = v; }, { skipFirst: true });
-        expect(derived$.get()).to.equal('a!');
-        txn(() => {
-            txn(() => {
-                a$.set('b');
-                expect(derived$.get()).to.equal('b!');
-            });
-            expect(derived$.get()).to.equal('b!');
-        });
-        expect(derived$.get()).to.equal('b!');
-        expect(reactions).to.equal(1);
-        expect(value).to.equal('b!');
-    });
-
-    it('should support transactions inside reactions', () => {
-        const a$ = atom('a');
-        const b$ = atom('b');
-        const derived$ = template`${a$} ${b$}`;
-        derived$.react(d => txn(abort => {
-            expect(d).to.equal('a b');
-            a$.set('b');
-            b$.set('c');
-            expect(derived$.get()).to.equal('b c');
-            abort();
-        }));
-    });
+    basicTransactionsTests(atom, true);
 
     describe('#atomically', () => {
         testAtomically(atomically);
@@ -184,6 +59,141 @@ describe('transaction/transaction', () => {
         });
     });
 });
+
+export function basicTransactionsTests(atomFactory: <V>(v: V) => Atom<V>, shouldRollbackValue: boolean) {
+    it('should not react on abort of outer transaction', () => {
+        const a$ = atomFactory('a');
+        let reactions = 0;
+        a$.react(() => reactions++, { skipFirst: true });
+        txn(abort => {
+            a$.set('b');
+            txn(() => {
+                a$.set('c');
+            });
+            expect(a$.get()).to.equal('c');
+            abort();
+        });
+        if (shouldRollbackValue) {
+            // Atoms get restored to their original value on abort (DataSources don't).
+            expect(a$.get()).to.equal('a');
+        }
+        expect(reactions).to.equal(0);
+    });
+
+    it('should react once for each reactor on commit of outer transaction', () => {
+        const a$ = atomFactory('a');
+        let reactions = 0;
+        a$.react(() => reactions++, { skipFirst: true });
+        txn(() => {
+            a$.set('b');
+            a$.set('c');
+            txn(() => {
+                a$.set('d');
+            });
+            expect(a$.get()).to.equal('d');
+        });
+        expect(a$.get()).to.equal('d');
+        expect(reactions).to.equal(1);
+    });
+
+    it('should not react when an atom is reset to its previous value', () => {
+        const a$ = atomFactory('a');
+        let reactions = 0;
+        a$.react(() => reactions++, { skipFirst: true });
+        txn(() => {
+            a$.set('b');
+            a$.set('a');
+        });
+        expect(reactions).to.equal(0);
+    });
+
+    it('should also react on atoms that were only changed inside a nested transaction', () => {
+        const a$ = atomFactory('a');
+        let reactions = 0;
+        a$.react(() => reactions++, { skipFirst: true });
+        txn(() => {
+            txn(() => {
+                a$.set('b');
+            });
+            expect(a$.get()).to.equal('b');
+        });
+        expect(a$.get()).to.equal('b');
+        expect(reactions).to.equal(1);
+    });
+
+    it('should support adding a reactor to an atom after it was reassigned inside a transaction', () => {
+        const a$ = atomFactory('a');
+        const derived$ = template`${a$}!`;
+        let reactions = 0;
+        let value: string | undefined;
+        txn(() => {
+            a$.set('b');
+            txn(() => {
+                derived$.react(v => { reactions++; value = v; });
+                expect(reactions).to.equal(1);
+                expect(value).to.equal('b!');
+                a$.set('c');
+            });
+            expect(a$.get()).to.equal('c');
+        });
+        expect(reactions).to.equal(2);
+        expect(value).to.equal('c!');
+    });
+
+    it('should fully support derivations inside transactions that abort', () => {
+        const a$ = atomFactory('a');
+        const b$ = atomFactory('b');
+        const derived$ = template`${a$} ${b$}`;
+        let reactions = 0;
+        derived$.react(() => reactions++, { skipFirst: true });
+        expect(derived$.get()).to.equal('a b');
+        txn(outerAbort => {
+            a$.set('b');
+            expect(derived$.get()).to.equal('b b');
+            txn(innerAbort => {
+                b$.set('c');
+                expect(derived$.get()).to.equal('b c');
+                innerAbort();
+            });
+            expect(derived$.get()).to.equal(shouldRollbackValue ? 'b b' : 'b c');
+            outerAbort();
+        });
+        expect(derived$.get()).to.equal(shouldRollbackValue ? 'a b' : 'b c');
+        expect(reactions).to.equal(0);
+    });
+
+    it('should fully support derivations inside transactions that commit', () => {
+        const a$ = atomFactory('a');
+        const derived$ = template`${a$}!`;
+        let reactions = 0;
+        let value: string | undefined;
+        derived$.react(v => { reactions++; value = v; }, { skipFirst: true });
+        expect(derived$.get()).to.equal('a!');
+        txn(() => {
+            txn(() => {
+                a$.set('b');
+                expect(derived$.get()).to.equal('b!');
+            });
+            expect(derived$.get()).to.equal('b!');
+        });
+        expect(derived$.get()).to.equal('b!');
+        expect(reactions).to.equal(1);
+        expect(value).to.equal('b!');
+    });
+
+    it('should support transactions inside reactions', () => {
+        const a$ = atomFactory('a');
+        const b$ = atomFactory('b');
+        const derived$ = template`${a$} ${b$}`;
+        derived$.react(d => txn(abort => {
+            expect(d).to.equal('a b');
+            a$.set('b');
+            b$.set('c');
+            expect(derived$.get()).to.equal('b c');
+            abort();
+        }));
+    });
+}
 
 const ABORT = {};
 export function txn<R>(f: (abort: () => void) => R): R | undefined {

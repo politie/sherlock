@@ -22,6 +22,6 @@ const { statSync } = require('fs');
 
 assert(statSync('./dist/sherlock-rxjs/sherlock-rxjs.cjs.js').size < 1000, 'Unexpected bundle size for sherlock-rxjs');
 assert(statSync('./dist/sherlock-proxy/sherlock-proxy.cjs.js').size < 15000, 'Unexpected bundle size for sherlock-proxy');
-assert(statSync('./dist/sherlock/sherlock.cjs.js').size < 50000, 'Unexpected bundle size for sherlock');
+assert(statSync('./dist/sherlock/sherlock.cjs.js').size < 56000, 'Unexpected bundle size for sherlock');
 
 console.log('Bundle ok.');
