@@ -1,11 +1,9 @@
 import { expect } from 'chai';
 import { SinonFakeTimers, SinonSpy, SinonStub, spy, stub, useFakeTimers } from 'sinon';
 import { setDebugMode } from '../utils';
-import { Atom } from './atom';
-import { atom } from './atom';
-import { Derivable } from './derivable';
+import { Derivable, SettableDerivable } from './derivable';
 import { testDerivable } from './derivable.spec';
-import { derivation } from './derivation';
+import { atom, derivation } from './factories';
 
 describe('derivable/derivation', () => {
     testDerivable(<V>(v: V) => derivation(() => v));
@@ -81,7 +79,7 @@ describe('derivable/derivation', () => {
         beforeEach('use fake timers', () => { clock = useFakeTimers(); });
         afterEach('restore timers', () => { clock.restore(); });
 
-        let a$: Atom<string>;
+        let a$: SettableDerivable<string>;
         beforeEach('create the atom', () => { a$ = atom('value'); });
 
         let deriver: SinonSpy;

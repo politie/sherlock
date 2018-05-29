@@ -1,12 +1,12 @@
-import { constant, Derivable, derivation, unpack } from '../derivable';
+import { BaseDerivable, constant, Derivable, derivation } from '../derivable';
 import { isConstant, isDerivable } from '../extras';
 import { addObserver, Observer, removeObserver, TrackedObservable } from '../tracking';
-import { debugMode, equals, uniqueId } from '../utils';
+import { debugMode, equals, uniqueId, unpack } from '../utils';
 
 // Adds the react method to Derivable.
 declare module '../derivable/derivable' {
     // tslint:disable-next-line:no-shadowed-variable
-    export interface Derivable<V> {
+    export interface BaseDerivable<V> {
         /**
          * React on changes of the this derivable. Will continu to run indefinitely until either garbage collected or limited by
          * the provided lifecycle options. Returns a callback function that can be used to stop the reactor indefinitely.
@@ -29,11 +29,11 @@ declare module '../derivable/derivable' {
 const true$ = constant(true) as Derivable<true>;
 const false$ = constant(false) as Derivable<false>;
 
-Derivable.prototype.react = function react<V>(this: Derivable<V>, reaction: (value: V) => void, options?: Partial<ReactorOptions<V>>) {
+BaseDerivable.prototype.react = function react<V>(this: Derivable<V>, reaction: (value: V) => void, options?: Partial<ReactorOptions<V>>) {
     return Reactor.create(this, reaction, options);
 };
 
-Derivable.prototype.toPromise = function toPromise<V>(this: Derivable<V>, options?: Partial<ToPromiseOptions<V>>) {
+BaseDerivable.prototype.toPromise = function toPromise<V>(this: Derivable<V>, options?: Partial<ToPromiseOptions<V>>) {
     return new Promise((resolve, reject) => this.react(resolve, { ...options, once: true, errorHandler: reject }));
 };
 

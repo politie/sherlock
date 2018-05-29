@@ -1,10 +1,9 @@
-import { BaseTrackedObservable } from 'tracking/tracked-observable';
 import {
     isRecordingObservations, Reactor, recordObservation, removeObserver, startRecordingObservations,
     stopRecordingObservations, TrackedObservable,
 } from '../tracking';
 import { debugMode, equals, MixinFn, MixinProp, unpack } from '../utils';
-import { Derivable } from './derivable';
+import { BaseDerivable, Derivable } from './derivable';
 import { ValueGetter } from './mixins/accessors';
 import { and, is, not, or } from './mixins/boolean-funcs';
 import { BooleanAnd, BooleanIs, BooleanNot, BooleanOr, DerivablePluck, Derive } from './mixins/interfaces';
@@ -16,7 +15,7 @@ export const EMPTY_CACHE = {};
  * Derivation is the implementation of derived state. Automatically tracks other Derivables that are used in the deriver function
  * and updates when needed.
  */
-export class Derivation<V> extends BaseTrackedObservable implements Derivable<V> {
+export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     /**
      * @internal
      * The recorded dependencies of this derivation. Is only used when the derivation is connected (i.e. it is actively used to

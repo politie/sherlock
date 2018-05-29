@@ -1,7 +1,7 @@
 import { atomic } from '../transaction';
 import { MixinFn, MixinProp, unpack } from '../utils';
+import { Derivable, SettableDerivable } from './derivable';
 import { Derivation } from './derivation';
-import { SettableDerivable, Derivable } from './interfaces';
 import { LensDescriptor, LensFn, MonoLensDescriptor } from './lens.interface';
 import { ValueAccessor } from './mixins/accessors';
 import { and, is, not, or } from './mixins/boolean-funcs';
@@ -65,7 +65,11 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
     @MixinFn(is) is!: BooleanIs;
 }
 
-export function lens<V, W, P>(this: SettableDerivable<V>, { get, set }: MonoLensDescriptor<V, W, P>, ...ps: Array<P | Derivable<P>>): SettableDerivable<W> {
+export function lens<V, W, P>(
+    this: SettableDerivable<V>, { get, set }: MonoLensDescriptor<V, W, P>,
+    ...ps: Array<P | Derivable<P>>,
+): SettableDerivable<W> {
+
     const atom = this;
     return new Lens({
         get,

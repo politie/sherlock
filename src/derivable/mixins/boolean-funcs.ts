@@ -1,5 +1,5 @@
 import { equals, unpack } from '../../utils';
-import { Derivable } from '../interfaces';
+import { Derivable } from '../derivable';
 
 // Implementations:
 

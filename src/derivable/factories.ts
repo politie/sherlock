@@ -1,7 +1,6 @@
-import { Atom as AtomCtr } from './atom';
-import { Atom } from './atom.interface';
+import { Atom } from './atom';
 import { Constant } from './constant';
-import { Derivable } from './derivable';
+import { Derivable, SettableDerivable } from './derivable';
 import { Derivation } from './derivation';
 import { Lens } from './lens';
 import { LensDescriptor } from './lens.interface';
@@ -11,8 +10,8 @@ import { LensDescriptor } from './lens.interface';
  *
  * @param value the initial value
  */
-export function atom<V>(value: V): Atom<V> {
-    return new AtomCtr(value);
+export function atom<V>(value: V): SettableDerivable<V> {
+    return new Atom(value);
 }
 
 /**
@@ -33,7 +32,7 @@ export function derivation<R, P>(f: (...ps: P[]) => R, ...ps: Array<P | Derivabl
  *
  * @param value the immutable value of this Constant
  */
-export function constant<V>(value: V): Constant<V> {
+export function constant<V>(value: V): Derivable<V> {
     return new Constant(value);
 }
 
@@ -43,10 +42,11 @@ export function constant<V>(value: V): Constant<V> {
  *
  * @param descriptor the get and set functions
  */
-export function lens<V>(descriptor: LensDescriptor<V, never>): Atom<V>;
-export function lens<V, P1>(descriptor: LensDescriptor<V, P1>, p1: P1 | Derivable<P1>): Atom<V>;
-export function lens<V, P1, P2>(descriptor: LensDescriptor<V, P1 | P2>, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): Atom<V>;
-export function lens<V, P>(descriptor: LensDescriptor<V, P>, ...ps: Array<P | Derivable<P>>): Atom<V>;
-export function lens<V, P>(descriptor: LensDescriptor<V, P>, ...ps: Array<P | Derivable<P>>): Atom<V> {
+export function lens<V>(descriptor: LensDescriptor<V, never>): SettableDerivable<V>;
+export function lens<V, P1>(descriptor: LensDescriptor<V, P1>, p1: P1 | Derivable<P1>): SettableDerivable<V>;
+export function lens<V, P1, P2>(
+    descriptor: LensDescriptor<V, P1 | P2>, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): SettableDerivable<V>;
+export function lens<V, P>(descriptor: LensDescriptor<V, P>, ...ps: Array<P | Derivable<P>>): SettableDerivable<V>;
+export function lens<V, P>(descriptor: LensDescriptor<V, P>, ...ps: Array<P | Derivable<P>>): SettableDerivable<V> {
     return new Lens(descriptor, ps.length ? ps : undefined);
 }

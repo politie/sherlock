@@ -1,4 +1,5 @@
-import { Derivable, derivation, unpack } from '../derivable';
+import { Derivable, derivation } from '../derivable';
+import { unpack } from '../utils';
 
 /**
  * Performs JavaScript `&&` operation on the provided arguments after unpacking.

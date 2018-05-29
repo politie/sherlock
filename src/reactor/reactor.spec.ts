@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 import { SinonStub, spy, stub } from 'sinon';
-import { atom, Atom, Derivable, derivation } from '../derivable';
+import { atom, Derivable, derivation, SettableDerivable } from '../derivable';
 import { atomically } from '../transaction';
 import { setDebugMode } from '../utils';
 import { Reactor, ReactorOptions, ReactorParent } from './reactor';
 
 describe('reactor/reactor', () => {
-    let a$: Atom<string>;
+    let a$: SettableDerivable<string>;
 
     beforeEach('create the base atom', () => { a$ = atom('a'); });
 
@@ -222,9 +222,9 @@ describe('reactor/reactor', () => {
     });
 
     context('with the combined use of `from`, `when` and `until` options', () => {
-        let from: Atom<boolean>;
-        let when: Atom<boolean>;
-        let until: Atom<boolean>;
+        let from: SettableDerivable<boolean>;
+        let when: SettableDerivable<boolean>;
+        let until: SettableDerivable<boolean>;
 
         beforeEach('create the atoms', () => {
             from = atom(false);
@@ -542,7 +542,7 @@ describe('reactor/reactor with cycles', () => {
 });
 
 describe('reactor/reactor error handling', () => {
-    let a$: Atom<string>;
+    let a$: SettableDerivable<string>;
     let d$: Derivable<string>;
 
     beforeEach('setup atom and derivable', () => {

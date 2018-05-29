@@ -1,5 +1,6 @@
 import { Derivable, derivation } from '../derivable';
 import { isPlainObject } from '../utils';
+import { isDerivable } from './types';
 
 /**
  * Converts a map or array of Derivables or any nested structure containing maps, arrays and Derivables into a single
@@ -14,13 +15,13 @@ import { isPlainObject } from '../utils';
  * @param obj the object to deepunpack into a derivable
  */
 export function struct<V>(obj: Derivable<V>): Derivable<V>;
-export function struct<I extends { [key: string]: Derivable<V> }, V>(obj: I): Derivable<{[P in keyof I]: V }>;
+export function struct<I extends { [key: string]: Derivable<V> }, V>(obj: I): Derivable<{ [P in keyof I]: V }>;
 export function struct<I extends Array<Derivable<V>>, V>(obj: I): Derivable<V[]>;
 export function struct<I extends any[]>(obj: I): Derivable<any[]>;
-export function struct<I extends object | any[]>(obj: I): Derivable<{[P in keyof I]: any}>;
+export function struct<I extends object | any[]>(obj: I): Derivable<{ [P in keyof I]: any }>;
 
 export function struct(obj: any) {
-    if (obj instanceof Derivable) {
+    if (isDerivable(obj)) {
         return obj;
     }
     if (!Array.isArray(obj) && !isPlainObject(obj)) {
@@ -30,7 +31,7 @@ export function struct(obj: any) {
 }
 
 function deepUnpack(obj: any): any {
-    if (obj instanceof Derivable) {
+    if (isDerivable(obj)) {
         return obj.get();
     }
     if (Array.isArray(obj)) {

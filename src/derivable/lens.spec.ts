@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import { spy } from 'sinon';
-import { atom } from './atom';
 import { testDerivable } from './derivable.spec';
-import { lens, MonoLensDescriptor } from './lens';
+import { atom, lens } from './factories';
+import { MonoLensDescriptor } from './lens.interface';
+import { testSwap } from './mixins/swap.spec';
 
 describe('derivable/lens', () => {
     context('(mono)', () => {
@@ -79,28 +79,7 @@ describe('derivable/lens', () => {
         });
     });
 
-    describe('#swap', () => {
-        it('should invoke the swap function with the current value and delegate the work to #set', () => {
-            const a$ = atom('a');
-            const lensed$ = a$.lens(identityLens<string>());
-            spy(a$, 'get');
-            spy(a$, 'set');
-
-            lensed$.swap(a => a + '!');
-            expect(a$.get).to.have.been.calledTwice;
-            expect(a$.set).to.have.been.calledOnce
-                .and.to.have.been.calledWithExactly('a!');
-            expect(lensed$.get()).to.equal('a!');
-        });
-
-        it('should pass any additional parameters to the swap function', () => {
-            const a$ = atom('a');
-            const lensed$ = a$.lens(identityLens<string>());
-            function add(a: string, b: string) { return a + b; }
-            lensed$.swap(add, '!');
-            expect(lensed$.get()).to.equal('a!');
-        });
-    });
+    testSwap(<V>(val: V) => atom(val).lens(identityLens<V>()));
 });
 
 export function identityLens<V>(): MonoLensDescriptor<V, V, never> {

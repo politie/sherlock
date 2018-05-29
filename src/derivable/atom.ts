@@ -1,8 +1,7 @@
-import { BaseTrackedObservable } from 'tracking/tracked-observable';
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
 import { equals, MixinFn, MixinProp } from '../utils';
-import { SettableDerivable } from './derivable';
+import { BaseDerivable, SettableDerivable } from './derivable';
 import {
     and, AtomPluck, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, derive,
     Derive, is, lens, LensFn, not, or, pluck, Swap, swap, ValueAccessor,
@@ -13,7 +12,7 @@ import {
  * with other kinds of derivables that only store immutable (constant) or derived state. Should be constructed
  * with the initial state.
  */
-export class Atom<V> extends BaseTrackedObservable implements SettableDerivable<V> {
+export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V> {
     /**
      * @internal
      * Construct a new atom with the provided initial value.

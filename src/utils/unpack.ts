@@ -1,4 +1,4 @@
-import { Derivable } from '../derivable/interfaces';
+import { Derivable } from '../derivable';
 import { isDerivable } from '../extras';
 
 /**

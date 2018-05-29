@@ -1,4 +1,4 @@
-import { SettableDerivable, Derivable } from './interfaces';
+import { Derivable, SettableDerivable } from './derivable';
 
 export interface Lensable<V> {
     /**

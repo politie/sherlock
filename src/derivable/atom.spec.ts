@@ -1,9 +1,10 @@
 import { expect } from 'chai';
 import { Seq } from 'immutable';
-import { spy } from 'sinon';
 import { txn } from '../transaction/transaction.spec';
-import { atom } from './atom';
+import { Atom } from './atom';
 import { testDerivable } from './derivable.spec';
+import { atom } from './factories';
+import { testSwap } from './mixins/swap.spec';
 
 describe('derivable/atom', () => {
     testDerivable(atom);
@@ -40,28 +41,11 @@ describe('derivable/atom', () => {
         });
     });
 
-    describe('#swap', () => {
-        it('should invoke the swap function with the current value and delegate the work to #set', () => {
-            const a$ = atom('a');
-            spy(a$, 'set');
-
-            a$.swap(a => a + '!');
-            expect(a$.set).to.have.been.calledOnce
-                .and.to.have.been.calledWithExactly('a!');
-            expect(a$.get()).to.equal('a!');
-        });
-
-        it('should pass any additional parameters to the swap function', () => {
-            const a$ = atom('a');
-            function add(a: string, b: string) { return a + b; }
-            a$.swap(add, '!');
-            expect(a$.get()).to.equal('a!');
-        });
-    });
+    testSwap(atom);
 
     context('in transactions', () => {
         it('should be restored on abort', () => {
-            const a$ = atom('a');
+            const a$ = atom('a') as Atom<string>;
             expect(a$._value).to.equal('a');
             expect(a$.version).to.equal(0);
             txn(abortOuter => {
@@ -83,9 +67,9 @@ describe('derivable/atom', () => {
         });
 
         it('should also be restored when only the outer txn aborts', () => {
-            const a$ = atom('a');
-            const b$ = atom('a');
-            const c$ = atom('a');
+            const a$ = atom('a') as Atom<string>;
+            const b$ = atom('a') as Atom<string>;
+            const c$ = atom('a') as Atom<string>;
             txn(abort => {
                 a$.set('set in outer');
                 b$.set('set in outer');
@@ -110,9 +94,9 @@ describe('derivable/atom', () => {
         });
 
         it('should not be restored on commit', () => {
-            const a$ = atom('a');
-            const b$ = atom('a');
-            const c$ = atom('a');
+            const a$ = atom('a') as Atom<string>;
+            const b$ = atom('a') as Atom<string>;
+            const c$ = atom('a') as Atom<string>;
 
             txn(() => {
                 a$.set('set in outer');

@@ -1,5 +1,4 @@
-import { Constant, DataSource, Derivation, Lens } from '../derivable';
-import { SettableDerivable, Derivable } from '../derivable/interfaces';
+import { Atom, BaseDerivable, Constant, DataSource, Derivable, Derivation, Lens, SettableDerivable } from '../derivable';
 
 // tslint:disable:unified-signatures
 
@@ -35,7 +34,23 @@ export function isConstant(derivable: any) {
 export function isDerivable<V>(derivable: Derivable<V>): derivable is Derivable<V>;
 export function isDerivable(obj: any): obj is Derivable<any>;
 export function isDerivable(derivable: any) {
-    return derivable instanceof Derivable;
+    return derivable instanceof BaseDerivable &&
+        typeof (derivable as Derivable<any>).get === 'function' &&
+        typeof (derivable as Derivable<any>).derive === 'function';
+}
+
+/**
+ * Returns true iff the provided `derivable` is a SettableDerivable.
+ *
+ * @param derivable the object to test
+ */
+export function isSettableDerivable<V>(derivable: Derivable<V>): derivable is SettableDerivable<V>;
+export function isSettableDerivable(obj: any): obj is SettableDerivable<any>;
+export function isSettableDerivable(derivable: any) {
+    return derivable instanceof BaseDerivable &&
+        typeof (derivable as SettableDerivable<any>).get === 'function' &&
+        typeof (derivable as SettableDerivable<any>).set === 'function' &&
+        typeof (derivable as SettableDerivable<any>).derive === 'function';
 }
 
 /**

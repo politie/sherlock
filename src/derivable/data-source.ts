@@ -1,8 +1,7 @@
 import { isRecordingObservations, recordObservation } from '../tracking';
-import { BaseTrackedObservable } from '../tracking/tracked-observable';
 import { processChangedAtom } from '../transaction';
 import { debugMode, equals, MixinFn, MixinProp } from '../utils';
-import { SettableDerivable } from './derivable';
+import { BaseDerivable, SettableDerivable } from './derivable';
 import {
     and, AtomPluck, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, Derive,
     derive, is, lens, LensFn, not, or, pluck, swap, Swap, ValueAccessor,
@@ -10,7 +9,7 @@ import {
 
 export const EMPTY_CACHE = {};
 
-export abstract class DataSource<V> extends BaseTrackedObservable implements SettableDerivable<V> {
+export abstract class DataSource<V> extends BaseDerivable<V> implements SettableDerivable<V> {
     /**
      * Optional hook that will be called when the first observer connects to this datasource.
      */

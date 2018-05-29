@@ -1,10 +1,10 @@
 import { expect } from 'chai';
-import { Atom, atom, constant } from '../derivable';
+import { atom, constant, SettableDerivable } from '../derivable';
 import { and, firstNotNull, or } from './static-boolean-funcs';
 
 describe('extras/static-boolean-funcs', () => {
     const testSet = sets([undefined, '', 'abc', 0, 3, false, true], 3);
-    let atoms: Array<Atom<any>>;
+    let atoms: Array<SettableDerivable<any>>;
     beforeEach('create the atoms', () => { atoms = [atom(0), atom(0), atom(0)]; });
 
     function updateAtoms(values: any[]) {
