@@ -123,6 +123,10 @@ export interface TrackedObservable extends Observable {
     readonly observers: Observer[];
 }
 
+export interface AutoCacheable {
+    autoCache(): this;
+}
+
 export interface Observer {
     /** @internal */
     disconnect(): void;

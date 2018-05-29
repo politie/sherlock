@@ -1,15 +1,19 @@
+import { BaseTrackedObservable } from 'tracking/tracked-observable';
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { equals, MixinFn } from '../utils';
-import { Derivable } from './derivable';
-import { AtomPluck, pluck } from './pluck';
+import { equals, MixinFn, MixinProp } from '../utils';
+import { SettableDerivable } from './derivable';
+import {
+    and, AtomPluck, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, derive,
+    Derive, is, lens, LensFn, not, or, pluck, Swap, swap, ValueAccessor,
+} from './mixins';
 
 /**
  * Atom is the basic state holder in a Derivable world. It contains the actual mutable state. In contrast
  * with other kinds of derivables that only store immutable (constant) or derived state. Should be constructed
  * with the initial state.
  */
-export class Atom<V> extends Derivable<V> {
+export class Atom<V> extends BaseTrackedObservable implements SettableDerivable<V> {
     /**
      * @internal
      * Construct a new atom with the provided initial value.
@@ -55,35 +59,14 @@ export class Atom<V> extends Derivable<V> {
         }
     }
 
-    /**
-     * `#value` is an alias for the `#get()` and `#set()` methods on the Atom.
-     * Getting `#value` will call `#get()` and return the value.
-     * Setting `#value` will call `#set()` with the new value.
-     */
-    get value() { return this.get(); }
-    set value(newValue: V) { this.set(newValue); }
-
-    /**
-     * Swaps the current value of this atom using the provided swap function. Any additional arguments to this function are
-     * fed to the swap function.
-     *
-     * @param f the swap function
-     */
-    swap(f: (v: V) => V): void;
-    swap<P1>(f: (v: V, p1: P1) => V, p1: P1 | Derivable<P1>): void;
-    swap<P1, P2>(f: (v: V, p1: P1, p2: P2) => V, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): void;
-    swap<P>(f: (v: V, ...ps: P[]) => V, ...ps: Array<P | Derivable<P>>): void;
-    swap(f: (oldValue: V, ...args: any[]) => V, ...args: any[]) {
-        this.set(f(this.get(), ...args));
-    }
+    @MixinProp(ValueAccessor.prototype) value!: V;
+    @MixinFn(swap) swap!: Swap<V>;
     @MixinFn(pluck) pluck!: AtomPluck<V>;
-}
+    @MixinFn(lens) lens!: LensFn<V>;
+    @MixinFn(derive) derive!: Derive<V>;
 
-/**
- * Construct a new atom with the provided initial value.
- *
- * @param value the initial value
- */
-export function atom<V>(value: V): Atom<V> {
-    return new Atom(value);
+    @MixinFn(and) and!: BooleanAnd<V>;
+    @MixinFn(or) or!: BooleanOr<V>;
+    @MixinFn(not) not!: BooleanNot;
+    @MixinFn(is) is!: BooleanIs;
 }

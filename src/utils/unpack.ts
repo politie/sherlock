@@ -1,4 +1,5 @@
-import { Derivable } from './derivable';
+import { Derivable } from '../derivable/interfaces';
+import { isDerivable } from '../extras';
 
 /**
  * Unpacks a derivable or does nothing if `v` is not a derivable.
@@ -8,5 +9,5 @@ import { Derivable } from './derivable';
 export function unpack<T>(v: T | Derivable<T>): T;
 export function unpack<T>(v: T | Derivable<T> | undefined): T | undefined;
 export function unpack<T>(v?: T | Derivable<T>): T | undefined {
-    return v instanceof Derivable ? v.get() : v;
+    return isDerivable(v) ? v.get() : v;
 }

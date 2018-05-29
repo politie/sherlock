@@ -1,26 +1,14 @@
+import { BaseTrackedObservable } from 'tracking/tracked-observable';
 import {
     isRecordingObservations, Reactor, recordObservation, removeObserver, startRecordingObservations,
-    stopRecordingObservations, TrackedObservable, TrackedObserver,
+    stopRecordingObservations, TrackedObservable,
 } from '../tracking';
-import { debugMode, equals } from '../utils';
+import { debugMode, equals, MixinFn, MixinProp, unpack } from '../utils';
 import { Derivable } from './derivable';
-import { unpack } from './unpack';
-
-// Augments the Derivable interface with the following methods:
-declare module './derivable' {
-    // tslint:disable-next-line:no-shadowed-variable
-    export interface Derivable<V> {
-        /**
-         * Create a derivation based on this Derivable and the given deriver function.
-         *
-         * @param f the deriver function
-         */
-        derive<R>(f: (v: V) => R): Derivable<R>;
-        derive<R, P1>(f: (v: V, p1: P1) => R, p1: P1 | Derivable<P1>): Derivable<R>;
-        derive<R, P1, P2>(f: (v: V, p1: P1, p2: P2) => R, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): Derivable<R>;
-        derive<R, P>(f: (v: V, ...ps: P[]) => R, ...ps: Array<P | Derivable<P>>): Derivable<R>;
-    }
-}
+import { ValueGetter } from './mixins/accessors';
+import { and, is, not, or } from './mixins/boolean-funcs';
+import { BooleanAnd, BooleanIs, BooleanNot, BooleanOr, DerivablePluck, Derive } from './mixins/interfaces';
+import { pluck } from './mixins/pluck';
 
 export const EMPTY_CACHE = {};
 
@@ -28,7 +16,7 @@ export const EMPTY_CACHE = {};
  * Derivation is the implementation of derived state. Automatically tracks other Derivables that are used in the deriver function
  * and updates when needed.
  */
-export class Derivation<V> extends Derivable<V> implements TrackedObserver {
+export class Derivation<V> extends BaseTrackedObservable implements Derivable<V> {
     /**
      * @internal
      * The recorded dependencies of this derivation. Is only used when the derivation is connected (i.e. it is actively used to
@@ -104,14 +92,6 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
     get version() {
         this.updateIfNeeded();
         return this._version;
-    }
-
-    /**
-     * `#value` is an alias for the `#get()` method on the Derivable. Getting `#value` will return the same value as `#get()`
-     * It is readonly on derivations.
-     */
-    get value() {
-        return this.get();
     }
 
     /**
@@ -264,25 +244,22 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
         this.autoCacheMode = true;
         return this;
     }
+
+    @MixinProp(ValueGetter.prototype) readonly value!: V;
+    @MixinFn(derive) derive!: Derive<V>;
+    @MixinFn(pluck) pluck!: DerivablePluck<V>;
+
+    @MixinFn(and) and!: BooleanAnd<V>;
+    @MixinFn(or) or!: BooleanOr<V>;
+    @MixinFn(not) not!: BooleanNot;
+    @MixinFn(is) is!: BooleanIs;
+
 }
 
-/**
- * Create a new derivation using the deriver function.
- *
- * @param deriver the deriver function
- */
-export function derivation<R>(f: () => R): Derivable<R>;
-export function derivation<R, P1>(f: (p1: P1) => R, p1: P1 | Derivable<P1>): Derivable<R>;
-export function derivation<R, P1, P2>(f: (p1: P1, p2: P2) => R, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): Derivable<R>;
-export function derivation<R, P>(f: (...ps: P[]) => R, ...ps: Array<P | Derivable<P>>): Derivable<R>;
-export function derivation<R, P>(f: (...ps: P[]) => R, ...ps: Array<P | Derivable<P>>): Derivable<R> {
-    return new Derivation(f, ps.length ? ps : undefined);
-}
-
-Derivable.prototype.derive = function derive<V extends P, R, P>(
+export function derive<V extends P, R, P>(
     this: Derivable<V>,
     f: (v: V, ...ps: P[]) => R,
     ...ps: Array<P | Derivable<P>>,
 ): Derivable<R> {
     return new Derivation(f, [this, ...ps]);
-};
+}

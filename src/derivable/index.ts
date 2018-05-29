@@ -1,8 +1,12 @@
-export { atom, Atom } from './atom';
+// TODO
 import './boolean-funcs';
-export { constant, Constant } from './constant';
+
+export { Atom } from './atom.interface';
+export { Constant } from './constant';
 export { DataSource } from './data-source';
 export { Derivable } from './derivable';
-export { Derivation, derivation } from './derivation';
-export { lens, Lens, LensDescriptor, MonoLensDescriptor } from './lens';
+export { LensDescriptor, MonoLensDescriptor } from './lens.interface';
 export { unpack } from './unpack';
+export { Lens } from './lens';
+export { Derivation } from './derivation';
+export * from './factories';

@@ -1,9 +1,15 @@
+import { BaseTrackedObservable } from 'tracking/tracked-observable';
+import { MixinFn } from 'utils';
 import { Derivable } from './derivable';
+import {
+    and, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, DerivablePluck,
+    derive, Derive, is, not, or, pluck,
+} from './mixins';
 
 /**
  * Constant represents a basic immutable building block of derivations.
  */
-export class Constant<V> extends Derivable<V> {
+export class Constant<V> extends BaseTrackedObservable implements Derivable<V> {
     /**
      * Creates a new Constant with the give value.
      *
@@ -29,13 +35,12 @@ export class Constant<V> extends Derivable<V> {
      * Returns the value of this Constant.
      */
     get(): V { return this.value; }
-}
 
-/**
- * Creates a new Constant with the give value.
- *
- * @param value the immutable value of this Constant
- */
-export function constant<V>(value: V): Constant<V> {
-    return new Constant(value);
+    @MixinFn(derive) derive!: Derive<V>;
+    @MixinFn(pluck) pluck!: DerivablePluck<V>;
+
+    @MixinFn(and) and!: BooleanAnd<V>;
+    @MixinFn(or) or!: BooleanOr<V>;
+    @MixinFn(not) not!: BooleanNot;
+    @MixinFn(is) is!: BooleanIs;
 }

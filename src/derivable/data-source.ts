@@ -1,14 +1,16 @@
 import { isRecordingObservations, recordObservation } from '../tracking';
+import { BaseTrackedObservable } from '../tracking/tracked-observable';
 import { processChangedAtom } from '../transaction';
 import { debugMode, equals, MixinFn, MixinProp } from '../utils';
-import { Atom } from './atom';
-import { Derivable } from './derivable';
-import { Lens } from './lens';
-import { AtomPluck, pluck } from './pluck';
+import { SettableDerivable } from './derivable';
+import {
+    and, AtomPluck, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, Derive,
+    derive, is, lens, LensFn, not, or, pluck, swap, Swap, ValueAccessor,
+} from './mixins';
 
 export const EMPTY_CACHE = {};
 
-export abstract class DataSource<V> extends Derivable<V> implements Atom<V> {
+export abstract class DataSource<V> extends BaseTrackedObservable implements SettableDerivable<V> {
     /**
      * Optional hook that will be called when the first observer connects to this datasource.
      */
@@ -217,7 +219,13 @@ export abstract class DataSource<V> extends Derivable<V> implements Atom<V> {
     }
 
     @MixinFn(pluck) pluck!: AtomPluck<V>;
-    @MixinProp(Lens.prototype) lens!: Lens<V>['lens'];
-    @MixinProp(Atom.prototype) swap!: Atom<V>['swap'];
-    @MixinProp(Atom.prototype) value!: V;
+    @MixinFn(lens) lens!: LensFn<V>;
+    @MixinFn(swap) swap!: Swap<V>;
+    @MixinFn(derive) derive!: Derive<V>;
+    @MixinProp(ValueAccessor.prototype) value!: V;
+
+    @MixinFn(and) and!: BooleanAnd<V>;
+    @MixinFn(or) or!: BooleanOr<V>;
+    @MixinFn(not) not!: BooleanNot;
+    @MixinFn(is) is!: BooleanIs;
 }
