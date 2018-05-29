@@ -1,9 +1,10 @@
-import { BaseDerivable, Derivable, Reactor, ReactorOptions } from '@politie/sherlock';
+import { _advanced, Derivable, Reactor, ReactorOptions } from '@politie/sherlock';
 import { Observable, Subscriber } from 'rxjs';
 
 //
 // TODO!!!!!
 //
+const { BaseDerivable } = _advanced;
 
 // Adds the toObservable method to Derivable.
 declare module '@politie/sherlock/derivable/derivable' {

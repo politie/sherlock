@@ -10,7 +10,7 @@ export interface DerivablePluck<V> {
      * @param key the key or derivable to a key that should be used to dereference the current value
      */
     <K extends keyof V>(key: K | Derivable<K>): Derivable<V[K]>;
-    (key: string | number | Derivable<string | number> | Derivable<string> | Derivable<number>): Derivable<any>;
+    (key: string | number | Derivable<string | number>): Derivable<any>;
 }
 
 export interface AtomPluckable<V> {
@@ -28,5 +28,5 @@ export interface AtomPluck<V> {
      * @param key the key or derivable to a key that should be used to dereference the current value
      */
     <K extends keyof V>(key: K | Derivable<K>): SettableDerivable<V[K]>;
-    (key: string | number | Derivable<string | number> | Derivable<string> | Derivable<number>): SettableDerivable<any>;
+    (key: string | number | Derivable<string | number>): SettableDerivable<any>;
 }

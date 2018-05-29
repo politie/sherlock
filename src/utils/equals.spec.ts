@@ -1,8 +1,7 @@
 import { expect } from 'chai';
 import { Seq, Set as ISet } from 'immutable';
-import { atom } from '../derivable/atom';
-import { unpack } from '../derivable/unpack';
-// import { ProxyDescriptor } from '../proxy/proxy';
+import { atom } from '../derivable';
+import { unpack } from '../utils';
 import { equals } from './equals';
 
 describe('util/equals', () => {
