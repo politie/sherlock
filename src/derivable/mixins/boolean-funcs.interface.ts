@@ -1,9 +1,9 @@
 import { Derivable } from '../derivable';
 
-export type BooleanAnd<V> = <W>(this: Derivable<V>, other: Derivable<W> | W) => Derivable<V | W>;
-export type BooleanOr<V> = <W>(this: Derivable<V>, other: Derivable<W> | W) => Derivable<V | W>;
-export type BooleanNot = (this: Derivable<any>) => Derivable<boolean>;
-export type BooleanIs = (this: Derivable<any>, other: Derivable<any> | any) => Derivable<boolean>;
+export type BooleanAnd<V> = <W>(other: Derivable<W> | W) => Derivable<V | W>;
+export type BooleanOr<V> = <W>(other: Derivable<W> | W) => Derivable<V | W>;
+export type BooleanNot = () => Derivable<boolean>;
+export type BooleanIs = (other: Derivable<any> | any) => Derivable<boolean>;
 
 export interface BooleanDerivable<V> {
     /**
