@@ -1,11 +1,10 @@
 import { AutoCacheable, TrackedObservable, TrackedObserver } from '../tracking';
-import { uniqueId } from '../utils';
+import { uniqueId } from '../utils/unique-id';
 import {
     AtomPluckable, BooleanDerivable, CanDerive, DerivablePluckable, Gettable, Lensable, Settable, Swappable,
 } from './mixins/interfaces';
 
 export abstract class BaseDerivable<V> implements TrackedObservable, AutoCacheable {
-
     /**
      * The unique ID of this Derivable. Can be used to uniquely identify this Derivable.
      */

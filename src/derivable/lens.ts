@@ -1,11 +1,10 @@
 import { atomic } from '../transaction';
-import { MixinFn, MixinProp, unpack } from '../utils';
+import { unpack } from '../utils';
 import { Derivable, SettableDerivable } from './derivable';
 import { Derivation } from './derivation';
 import { LensDescriptor, LensFn, MonoLensDescriptor } from './lens.interface';
-import { ValueAccessor } from './mixins/accessors';
-import { and, is, not, or } from './mixins/boolean-funcs';
-import { AtomPluck, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, Swap } from './mixins/interfaces';
+import { addValueAccessors } from './mixins/accessors';
+import { AtomPluck, Swap } from './mixins/interfaces';
 import { pluck } from './mixins/pluck';
 import { swap } from './mixins/swap';
 
@@ -16,6 +15,11 @@ import { swap } from './mixins/swap';
  * transaction if one is already active) to prevent inconsistent state when an error occurs.
  */
 export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
+    /**
+     * A Lens is settable
+     */
+    readonly settable = true;
+
     /**
      * @internal
      * Not used. Only to satisfy Atom<V> interface.
@@ -54,16 +58,15 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
         }
     }
 
-    @MixinFn(lens) lens!: LensFn<V>;
-    @MixinFn(pluck) pluck!: AtomPluck<V>;
-    @MixinFn(swap) swap!: Swap<V>;
-    @MixinProp(ValueAccessor.prototype) value!: V;
-
-    @MixinFn(and) and!: BooleanAnd<V>;
-    @MixinFn(or) or!: BooleanOr<V>;
-    @MixinFn(not) not!: BooleanNot;
-    @MixinFn(is) is!: BooleanIs;
+    value!: V;
+    lens!: LensFn<V>;
+    pluck!: AtomPluck<V>;
+    swap!: Swap<V>;
 }
+addValueAccessors(Lens.prototype);
+Lens.prototype.lens = lens;
+Lens.prototype.pluck = pluck as AtomPluck<any>;
+Lens.prototype.swap = swap;
 
 export function lens<V, W, P>(
     this: SettableDerivable<V>, { get, set }: MonoLensDescriptor<V, W, P>,

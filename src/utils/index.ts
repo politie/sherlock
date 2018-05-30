@@ -1,6 +1,5 @@
 export { clone } from './clone';
 export * from './equals';
-export * from './mixin';
 export * from './plain-object-detection';
 export * from './unique-id';
 export * from './unpack';

@@ -1,4 +1,3 @@
-import { MixinFn } from '../utils';
 import { BaseDerivable, Derivable } from './derivable';
 import {
     and, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, DerivablePluck,
@@ -9,6 +8,11 @@ import {
  * Constant represents a basic immutable building block of derivations.
  */
 export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
+    /**
+     * Constant is not settable
+     */
+    readonly settable = false;
+
     /**
      * Creates a new Constant with the give value.
      *
@@ -35,11 +39,18 @@ export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
      */
     get(): V { return this.value; }
 
-    @MixinFn(derive) derive!: Derive<V>;
-    @MixinFn(pluck) pluck!: DerivablePluck<V>;
+    derive!: Derive<V>;
+    pluck!: DerivablePluck<V>;
 
-    @MixinFn(and) and!: BooleanAnd<V>;
-    @MixinFn(or) or!: BooleanOr<V>;
-    @MixinFn(not) not!: BooleanNot;
-    @MixinFn(is) is!: BooleanIs;
+    and!: BooleanAnd<V>;
+    or!: BooleanOr<V>;
+    not!: BooleanNot;
+    is!: BooleanIs;
 }
+Constant.prototype.derive = derive;
+Constant.prototype.pluck = pluck;
+
+Constant.prototype.and = and;
+Constant.prototype.or = or;
+Constant.prototype.not = not;
+Constant.prototype.is = is;

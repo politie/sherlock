@@ -2,9 +2,9 @@ import {
     isRecordingObservations, Reactor, recordObservation, removeObserver, startRecordingObservations,
     stopRecordingObservations, TrackedObservable,
 } from '../tracking';
-import { debugMode, equals, MixinFn, MixinProp, unpack } from '../utils';
+import { debugMode, equals, unpack } from '../utils';
 import { BaseDerivable, Derivable } from './derivable';
-import { ValueGetter } from './mixins/accessors';
+import { addValueGetter } from './mixins/accessors';
 import { and, is, not, or } from './mixins/boolean-funcs';
 import { BooleanAnd, BooleanIs, BooleanNot, BooleanOr, DerivablePluck, Derive } from './mixins/interfaces';
 import { pluck } from './mixins/pluck';
@@ -16,6 +16,12 @@ export const EMPTY_CACHE = {};
  * and updates when needed.
  */
 export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
+    // `as boolean`, to let `Lens` extend from `Derivation` without typing problems
+    /**
+     * A Derivation is not settable.
+     */
+    readonly settable = false as boolean;
+
     /**
      * @internal
      * The recorded dependencies of this derivation. Is only used when the derivation is connected (i.e. it is actively used to
@@ -244,16 +250,21 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
         return this;
     }
 
-    @MixinProp(ValueGetter.prototype) readonly value!: V;
-    @MixinFn(derive) derive!: Derive<V>;
-    @MixinFn(pluck) pluck!: DerivablePluck<V>;
-
-    @MixinFn(and) and!: BooleanAnd<V>;
-    @MixinFn(or) or!: BooleanOr<V>;
-    @MixinFn(not) not!: BooleanNot;
-    @MixinFn(is) is!: BooleanIs;
-
+    readonly value!: V;
+    derive!: Derive<V>;
+    pluck!: DerivablePluck<V>;
+    and!: BooleanAnd<V>;
+    or!: BooleanOr<V>;
+    not!: BooleanNot;
+    is!: BooleanIs;
 }
+addValueGetter(Derivation.prototype);
+Derivation.prototype.derive = derive;
+Derivation.prototype.pluck = pluck;
+Derivation.prototype.and = and;
+Derivation.prototype.or = or;
+Derivation.prototype.not = not;
+Derivation.prototype.is = is;
 
 export function derive<V extends P, R, P>(
     this: Derivable<V>,

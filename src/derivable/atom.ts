@@ -1,10 +1,10 @@
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { equals, MixinFn, MixinProp } from '../utils';
+import { equals } from '../utils/equals';
 import { BaseDerivable, SettableDerivable } from './derivable';
 import {
-    and, AtomPluck, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, derive,
-    Derive, is, lens, LensFn, not, or, pluck, Swap, swap, ValueAccessor,
+    addValueAccessors, and, AtomPluck, BooleanAnd, BooleanIs, BooleanNot, BooleanOr,
+    derive, Derive, is, lens, LensFn, not, or, pluck, Swap, swap,
 } from './mixins';
 
 /**
@@ -13,6 +13,11 @@ import {
  * with the initial state.
  */
 export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V> {
+    /**
+     * An Atom is settable
+     */
+    readonly settable = true;
+
     /**
      * @internal
      * Construct a new atom with the provided initial value.
@@ -58,14 +63,23 @@ export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V> {
         }
     }
 
-    @MixinProp(ValueAccessor.prototype) value!: V;
-    @MixinFn(swap) swap!: Swap<V>;
-    @MixinFn(pluck) pluck!: AtomPluck<V>;
-    @MixinFn(lens) lens!: LensFn<V>;
-    @MixinFn(derive) derive!: Derive<V>;
+    value!: V;
+    swap!: Swap<V>;
+    pluck!: AtomPluck<V>;
+    lens!: LensFn<V>;
+    derive!: Derive<V>;
 
-    @MixinFn(and) and!: BooleanAnd<V>;
-    @MixinFn(or) or!: BooleanOr<V>;
-    @MixinFn(not) not!: BooleanNot;
-    @MixinFn(is) is!: BooleanIs;
+    and!: BooleanAnd<V>;
+    or!: BooleanOr<V>;
+    not!: BooleanNot;
+    is!: BooleanIs;
 }
+addValueAccessors(Atom.prototype);
+Atom.prototype.swap = swap;
+Atom.prototype.pluck = pluck as AtomPluck<any>;
+Atom.prototype.lens = lens;
+Atom.prototype.derive = derive;
+Atom.prototype.and = and;
+Atom.prototype.or = or;
+Atom.prototype.not = not;
+Atom.prototype.is = is;

@@ -1,22 +1,11 @@
-export abstract class ValueAccessor<V> {
-    abstract get(): V;
-    abstract set(newValue: V): void;
+import { Derivable, SettableDerivable } from '../derivable';
 
-    /**
-     * `#value` is an alias for the `#get()` and `#set()` methods on the Atom.
-     * Getting `#value` will call `#get()` and return the value.
-     * Setting `#value` will call `#set()` with the new value.
-     */
-    get value() { return this.get(); }
-    set value(newValue: V) { this.set(newValue); }
+function get<V>(this: Derivable<V>) { return this.get(); }
+function set<V>(this: SettableDerivable<V>, newValue: V) { return this.set(newValue); }
+
+export function addValueGetter<V>(prot: Derivable<V>) {
+    Object.defineProperty(prot, 'value', { get });
 }
-
-export abstract class ValueGetter<V> {
-    abstract get(): V;
-
-    /**
-     * `#value` is an alias for the `#get()` method on the Derivable.
-     * Getting `#value` will call `#get()` and return the value.
-     */
-    get value() { return this.get(); }
+export function addValueAccessors<V>(prot: SettableDerivable<V>) {
+    Object.defineProperty(prot, 'value', { get, set });
 }

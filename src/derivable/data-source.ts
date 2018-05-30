@@ -1,10 +1,10 @@
 import { isRecordingObservations, recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { debugMode, equals, MixinFn, MixinProp } from '../utils';
+import { debugMode, equals } from '../utils';
 import { BaseDerivable, SettableDerivable } from './derivable';
 import {
-    and, AtomPluck, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, Derive,
-    derive, is, lens, LensFn, not, or, pluck, swap, Swap, ValueAccessor,
+    addValueAccessors, and, AtomPluck, BooleanAnd, BooleanIs, BooleanNot, BooleanOr,
+    Derive, derive, is, lens, LensFn, not, or, pluck, swap, Swap,
 } from './mixins';
 
 export const EMPTY_CACHE = {};
@@ -217,14 +217,24 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
         return !!this.acceptNewValue;
     }
 
-    @MixinFn(pluck) pluck!: AtomPluck<V>;
-    @MixinFn(lens) lens!: LensFn<V>;
-    @MixinFn(swap) swap!: Swap<V>;
-    @MixinFn(derive) derive!: Derive<V>;
-    @MixinProp(ValueAccessor.prototype) value!: V;
+    value!: V;
+    pluck!: AtomPluck<V>;
+    lens!: LensFn<V>;
+    swap!: Swap<V>;
+    derive!: Derive<V>;
 
-    @MixinFn(and) and!: BooleanAnd<V>;
-    @MixinFn(or) or!: BooleanOr<V>;
-    @MixinFn(not) not!: BooleanNot;
-    @MixinFn(is) is!: BooleanIs;
+    and!: BooleanAnd<V>;
+    or!: BooleanOr<V>;
+    not!: BooleanNot;
+    is!: BooleanIs;
 }
+addValueAccessors(DataSource.prototype);
+DataSource.prototype.pluck = pluck as AtomPluck<any>;
+DataSource.prototype.lens = lens;
+DataSource.prototype.swap = swap;
+DataSource.prototype.derive = derive;
+
+DataSource.prototype.and = and;
+DataSource.prototype.or = or;
+DataSource.prototype.not = not;
+DataSource.prototype.is = is;
