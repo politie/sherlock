@@ -1,4 +1,4 @@
-import { MixinFn } from 'utils';
+import { MixinFn } from '../utils';
 import { BaseDerivable, Derivable } from './derivable';
 import {
     and, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, DerivablePluck,

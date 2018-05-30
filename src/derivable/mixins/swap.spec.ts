@@ -13,7 +13,7 @@ export function testSwap(factory: <V>(value: V) => SettableDerivable<V>) {
             spy(a$, 'set');
 
             a$.swap(a => a + '!');
-            expect(a$.get).to.have.been.calledTwice;
+            expect(a$.get).to.have.been.calledOnce;
             expect(a$.set).to.have.been.calledOnce
                 .and.to.have.been.calledWithExactly('a!');
             expect(a$.get()).to.equal('a!');
