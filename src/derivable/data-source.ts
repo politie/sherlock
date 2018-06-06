@@ -4,11 +4,16 @@ import { debugMode, equals } from '../utils';
 import { BaseDerivable, SettableDerivable } from './derivable';
 import {
     addValueAccessors, and, AtomPluck, BooleanAnd, BooleanIs, BooleanNot, BooleanOr,
-    Derive, derive, is, lens, LensFn, not, or, pluck, swap, Swap,
+    Derive, deriveMethod, is, LensFn, lensMethod, not, or, pluck, swap, Swap,
 } from './mixins';
 
 export const EMPTY_CACHE = {};
 
+// TODO: Think about =>
+// This implements `SettableDerivable`, but if it would implement:
+// Derivable<V>, AtomPluckable<V>, Lensable<V>, Swappable<V>, Settable<V>
+// SettableDerivable.settable could have type: true instead of boolean, which may make
+// typecasting easier
 export abstract class DataSource<V> extends BaseDerivable<V> implements SettableDerivable<V> {
     /**
      * Optional hook that will be called when the first observer connects to this datasource.
@@ -230,9 +235,9 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
 }
 addValueAccessors(DataSource.prototype);
 DataSource.prototype.pluck = pluck as AtomPluck<any>;
-DataSource.prototype.lens = lens;
+DataSource.prototype.lens = lensMethod;
 DataSource.prototype.swap = swap;
-DataSource.prototype.derive = derive;
+DataSource.prototype.derive = deriveMethod;
 
 DataSource.prototype.and = and;
 DataSource.prototype.or = or;

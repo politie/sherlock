@@ -1,6 +1,11 @@
 import { Derivable, SettableDerivable } from '../derivable';
 
 export interface DerivablePluckable<V> {
+    /**
+     * Create a derivation that plucks the property with the given key of the current value of the Derivable.
+     *
+     * @param key the key or derivable to a key that should be used to dereference the current value
+     */
     pluck: DerivablePluck<V>;
 }
 export interface DerivablePluck<V> {
@@ -15,7 +20,7 @@ export interface DerivablePluck<V> {
 
 export interface AtomPluckable<V> {
     /**
-     * Create a derivation that plucks the property with the given key of the current value of the Derivable.
+     * Create a lens that plucks the property with the given key of the current value of the SettableDerivable.
      *
      * @param key the key or derivable to a key that should be used to dereference the current value
      */
@@ -23,7 +28,7 @@ export interface AtomPluckable<V> {
 }
 export interface AtomPluck<V> {
     /**
-     * Create a derivation that plucks the property with the given key of the current value of the Derivable.
+     * Create a lens that plucks the property with the given key of the current value of the SettableDerivable.
      *
      * @param key the key or derivable to a key that should be used to dereference the current value
      */

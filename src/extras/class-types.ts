@@ -1,5 +1,7 @@
 import { Atom, Constant, DataSource, Derivable, Derivation, Lens, SettableDerivable } from '../derivable';
 
+// TODO: Think about => All Deprecated?
+
 /**
  * Returns true iff the provided `derivable` is a Derivation.
  *
@@ -25,7 +27,7 @@ export function isLens(derivable: any) {
 /**
  * @deprecated use isSettableDerivable
  *
- * Returns true iff the provided `derivable` satisfies the Atom interface (i.e. an Atom or a Lens).
+ * Returns true iff the provided `derivable` is an Atom, Lens or a settable DataSource.
  *
  * @param derivable the object to test
  */

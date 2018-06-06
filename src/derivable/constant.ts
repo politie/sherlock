@@ -1,7 +1,7 @@
 import { BaseDerivable, Derivable } from './derivable';
 import {
     and, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, DerivablePluck,
-    derive, Derive, is, not, or, pluck,
+    Derive, deriveMethod, is, not, or, pluck,
 } from './mixins';
 
 /**
@@ -47,7 +47,7 @@ export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
     not!: BooleanNot;
     is!: BooleanIs;
 }
-Constant.prototype.derive = derive;
+Constant.prototype.derive = deriveMethod;
 Constant.prototype.pluck = pluck;
 
 Constant.prototype.and = and;

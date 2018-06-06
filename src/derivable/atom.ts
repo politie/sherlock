@@ -4,7 +4,7 @@ import { equals } from '../utils/equals';
 import { BaseDerivable, SettableDerivable } from './derivable';
 import {
     addValueAccessors, and, AtomPluck, BooleanAnd, BooleanIs, BooleanNot, BooleanOr,
-    derive, Derive, is, lens, LensFn, not, or, pluck, Swap, swap,
+    Derive, deriveMethod, is, LensFn, lensMethod, not, or, pluck, Swap, swap,
 } from './mixins';
 
 /**
@@ -77,8 +77,8 @@ export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V> {
 addValueAccessors(Atom.prototype);
 Atom.prototype.swap = swap;
 Atom.prototype.pluck = pluck as AtomPluck<any>;
-Atom.prototype.lens = lens;
-Atom.prototype.derive = derive;
+Atom.prototype.lens = lensMethod;
+Atom.prototype.derive = deriveMethod;
 Atom.prototype.and = and;
 Atom.prototype.or = or;
 Atom.prototype.not = not;

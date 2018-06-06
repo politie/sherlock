@@ -4,6 +4,10 @@ import {
     AtomPluckable, BooleanDerivable, CanDerive, DerivablePluckable, Gettable, Lensable, Settable, Swappable,
 } from './mixins/interfaces';
 
+/**
+ * The base class for all Derivable's
+ * Derivables must extend from this, to be 'tracked' and to classify as a Derivable.
+ */
 export abstract class BaseDerivable<V> implements TrackedObservable, AutoCacheable {
     /**
      * The unique ID of this Derivable. Can be used to uniquely identify this Derivable.
@@ -11,7 +15,6 @@ export abstract class BaseDerivable<V> implements TrackedObservable, AutoCacheab
     readonly id = uniqueId();
 
     /**
-     * @internal
      * The observers of this Derivable, do not use this in application code.
      */
     readonly observers: TrackedObserver[] = [];
@@ -25,7 +28,6 @@ export abstract class BaseDerivable<V> implements TrackedObservable, AutoCacheab
     autoCache() { return this; }
 
     /**
-     * @internal
      * The current version of the state. This number gets incremented every time the state changes. Setting the state to
      * an immutable object that is structurally equal to the previous immutable object is not considered a state change.
      */

@@ -259,14 +259,14 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     is!: BooleanIs;
 }
 addValueGetter(Derivation.prototype);
-Derivation.prototype.derive = derive;
+Derivation.prototype.derive = deriveMethod;
 Derivation.prototype.pluck = pluck;
 Derivation.prototype.and = and;
 Derivation.prototype.or = or;
 Derivation.prototype.not = not;
 Derivation.prototype.is = is;
 
-export function derive<V extends P, R, P>(
+export function deriveMethod<V extends P, R, P>(
     this: Derivable<V>,
     f: (v: V, ...ps: P[]) => R,
     ...ps: Array<P | Derivable<P>>,

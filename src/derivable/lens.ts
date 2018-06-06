@@ -21,12 +21,6 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
     readonly settable = true;
 
     /**
-     * @internal
-     * Not used. Only to satisfy Atom<V> interface.
-     */
-    _value: never;
-
-    /**
      * The setter that was provided in the constructor.
      */
     private setter: (newValue: V, ...args: any[]) => void;
@@ -64,11 +58,11 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
     swap!: Swap<V>;
 }
 addValueAccessors(Lens.prototype);
-Lens.prototype.lens = lens;
+Lens.prototype.lens = lensMethod;
 Lens.prototype.pluck = pluck as AtomPluck<any>;
 Lens.prototype.swap = swap;
 
-export function lens<V, W, P>(
+export function lensMethod<V, W, P>(
     this: SettableDerivable<V>, { get, set }: MonoLensDescriptor<V, W, P>,
     ...ps: Array<P | Derivable<P>>,
 ): SettableDerivable<W> {

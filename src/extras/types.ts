@@ -9,6 +9,7 @@ export function isDerivable<V>(derivable: Derivable<V>): derivable is Derivable<
 export function isDerivable(obj: any): obj is Derivable<any>;
 export function isDerivable(derivable: any) {
     return derivable instanceof BaseDerivable &&
+        // TODO: Think about => better way to check if something is a Derivable?
         typeof (derivable as Derivable<any>).get === 'function' &&
         typeof (derivable as Derivable<any>).derive === 'function';
 }
