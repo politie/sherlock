@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { SinonFakeTimers, SinonSpy, SinonStub, spy, stub, useFakeTimers } from 'sinon';
 import { setDebugMode } from '../utils';
-import { Derivable, SettableDerivable } from './derivable';
+import { Derivable, SettableDerivable } from './derivable.interface';
 import { testDerivable } from './derivable.spec';
 import { atom, derivation } from './factories';
 

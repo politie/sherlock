@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import { fromJS } from 'immutable';
 import { spy } from 'sinon';
-import { isAtom } from '../extras';
-import { Derivable, SettableDerivable } from './derivable';
+import { isSettableDerivable } from '../extras';
+import { Derivable, SettableDerivable } from './derivable.interface';
 import { Derivation } from './derivation';
 import { atom, constant, derivation } from './factories';
 import { testAccessors } from './mixins/accessors.spec';
@@ -73,7 +73,7 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
             const received: string[] = [];
             value$.react(received.push.bind(received));
             expect(received).to.deep.equal(['value']);
-            if (isAtom(value$)) {
+            if (isSettableDerivable(value$)) {
                 value$.set('another value');
                 expect(received).to.deep.equal(['value', 'another value']);
             }
@@ -83,7 +83,7 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
             const value$ = factory('value').autoCache();
             const derived$ = value$.derive(v => v + '!');
             expect(derived$.get()).to.equal('value!');
-            if (isAtom(value$)) {
+            if (isSettableDerivable(value$)) {
                 value$.set('another value');
                 expect(derived$.get()).to.equal('another value!');
             }
@@ -104,7 +104,7 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
             expect(reactions).to.equal(1);
         });
 
-        if (isAtom(value$)) {
+        if (isSettableDerivable(value$)) {
             beforeEach('reset the atom', () => resetAtomTo(value$, 'the value'));
 
             it('should react to change', () => {
@@ -141,7 +141,7 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
                 value$.set('123');
                 expect(receivedValue).to.equal('123,other value');
                 expect(reactions).to.equal(2);
-                if (isAtom(base2$)) {
+                if (isSettableDerivable(base2$)) {
                     base2$.set('456');
                     expect(receivedValue).to.equal('123,456');
                     expect(reactions).to.equal(3);
@@ -193,7 +193,7 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
             throw new Error('expected promise to reject');
         });
 
-        if (isAtom(value$)) {
+        if (isSettableDerivable(value$)) {
             beforeEach('reset the atom', () => resetAtomTo(value$, 'the value'));
 
             it('should resolve on the first reaction according to the lifecycle options', async () => {
@@ -223,7 +223,7 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
 
             expect(reactions).to.equal(0);
 
-            if (isAtom(b$)) {
+            if (isSettableDerivable(b$)) {
                 b$.set(10);
                 expect(reactions).to.equal(1);
                 expect(value).to.equal(10);
@@ -243,7 +243,7 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
     context('(stability)', () => {
         const a$ = factory(fromJS({ a: 1 })).autoCache();
 
-        if (isAtom(a$)) {
+        if (isSettableDerivable(a$)) {
             it('should not return new instances when structurally the same', () => {
                 const instance = a$.get();
                 a$.set(fromJS({ a: 1 }));

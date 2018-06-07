@@ -1,4 +1,4 @@
-import { SettableDerivable } from '../derivable';
+import { SettableDerivable } from '../derivable.interface';
 
 /**
  * The `swap` method, to add to a SettableDerivable Prototype.

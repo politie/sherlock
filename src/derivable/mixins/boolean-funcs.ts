@@ -1,7 +1,5 @@
 import { equals, unpack } from '../../utils';
-import { Derivable } from '../derivable';
-
-// Implementations:
+import { Derivable } from '../derivable.interface';
 
 /**
  * The `and` method, to add to a Derivable Prototype.

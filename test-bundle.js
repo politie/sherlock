@@ -22,7 +22,7 @@ const { statSync } = require('fs');
 
 assertBundleSize('sherlock-rxjs', 1000);
 assertBundleSize('sherlock-proxy', 15000);
-assertBundleSize('sherlock', 56000);
+assertBundleSize('sherlock', 57000);
 
 console.log('Bundle ok.');
 

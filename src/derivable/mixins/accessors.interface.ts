@@ -16,7 +16,6 @@ export interface Gettable<V> {
     readonly value: V;
 }
 
-// TODO: Cannot override with `settable:true` because `DataSource` implements `Settable` but can be read only
 export interface Settable<V> extends Gettable<V> {
     /**
      * Sets the value of this atom, fires reactors when expected.

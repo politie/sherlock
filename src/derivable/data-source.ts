@@ -1,19 +1,17 @@
 import { isRecordingObservations, recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
 import { debugMode, equals } from '../utils';
-import { BaseDerivable, SettableDerivable } from './derivable';
+import { BaseDerivable } from './derivable';
+import { SettableDerivable } from './derivable.interface';
+import { deriveMethod } from './derivation';
+import { lensMethod } from './lens';
 import {
     addValueAccessors, and, AtomPluck, BooleanAnd, BooleanIs, BooleanNot, BooleanOr,
-    Derive, deriveMethod, is, LensFn, lensMethod, not, or, pluck, swap, Swap,
+    Derive, is, LensFn, not, or, pluck, swap, Swap,
 } from './mixins';
 
-export const EMPTY_CACHE = {};
+const EMPTY_CACHE = {};
 
-// TODO: Think about =>
-// This implements `SettableDerivable`, but if it would implement:
-// Derivable<V>, AtomPluckable<V>, Lensable<V>, Swappable<V>, Settable<V>
-// SettableDerivable.settable could have type: true instead of boolean, which may make
-// typecasting easier
 export abstract class DataSource<V> extends BaseDerivable<V> implements SettableDerivable<V> {
     /**
      * Optional hook that will be called when the first observer connects to this datasource.

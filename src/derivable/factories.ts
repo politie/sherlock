@@ -1,6 +1,6 @@
 import { Atom } from './atom';
 import { Constant } from './constant';
-import { Derivable, SettableDerivable } from './derivable';
+import { Derivable, SettableDerivable } from './derivable.interface';
 import { Derivation } from './derivation';
 import { Lens } from './lens';
 import { LensDescriptor } from './lens.interface';

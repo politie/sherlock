@@ -1,10 +1,13 @@
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
 import { equals } from '../utils/equals';
-import { BaseDerivable, SettableDerivable } from './derivable';
+import { BaseDerivable } from './derivable';
+import { SettableDerivable } from './derivable.interface';
+import { deriveMethod } from './derivation';
+import { lensMethod } from './lens';
 import {
     addValueAccessors, and, AtomPluck, BooleanAnd, BooleanIs, BooleanNot, BooleanOr,
-    Derive, deriveMethod, is, LensFn, lensMethod, not, or, pluck, Swap, swap,
+    Derive, is, LensFn, not, or, pluck, Swap, swap,
 } from './mixins';
 
 /**
@@ -13,11 +16,6 @@ import {
  * with the initial state.
  */
 export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V> {
-    /**
-     * An Atom is settable
-     */
-    readonly settable = true;
-
     /**
      * @internal
      * Construct a new atom with the provided initial value.
@@ -63,6 +61,7 @@ export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V> {
         }
     }
 
+    settable!: true;
     value!: V;
     swap!: Swap<V>;
     pluck!: AtomPluck<V>;
@@ -75,6 +74,7 @@ export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V> {
     is!: BooleanIs;
 }
 addValueAccessors(Atom.prototype);
+Atom.prototype.settable = true;
 Atom.prototype.swap = swap;
 Atom.prototype.pluck = pluck as AtomPluck<any>;
 Atom.prototype.lens = lensMethod;

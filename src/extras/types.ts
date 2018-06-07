@@ -1,4 +1,5 @@
-import { BaseDerivable, Derivable, SettableDerivable } from '../derivable/derivable';
+import { BaseDerivable } from '../derivable/derivable';
+import { Derivable, SettableDerivable } from '../derivable/derivable.interface';
 
 /**
  * Returns true iff the provided `derivable` is a Derivable.
@@ -8,10 +9,7 @@ import { BaseDerivable, Derivable, SettableDerivable } from '../derivable/deriva
 export function isDerivable<V>(derivable: Derivable<V>): derivable is Derivable<V>;
 export function isDerivable(obj: any): obj is Derivable<any>;
 export function isDerivable(derivable: any) {
-    return derivable instanceof BaseDerivable &&
-        // TODO: Think about => better way to check if something is a Derivable?
-        typeof (derivable as Derivable<any>).get === 'function' &&
-        typeof (derivable as Derivable<any>).derive === 'function';
+    return derivable instanceof BaseDerivable;
 }
 
 /**

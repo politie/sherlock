@@ -1,5 +1,5 @@
 import { clone } from '../../utils';
-import { Derivable, SettableDerivable } from '../derivable';
+import { Derivable, SettableDerivable } from '../derivable.interface';
 import { Lensable } from '../lens.interface';
 
 /**

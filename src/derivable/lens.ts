@@ -1,6 +1,6 @@
 import { atomic } from '../transaction';
 import { unpack } from '../utils';
-import { Derivable, SettableDerivable } from './derivable';
+import { Derivable, SettableDerivable } from './derivable.interface';
 import { Derivation } from './derivation';
 import { LensDescriptor, LensFn, MonoLensDescriptor } from './lens.interface';
 import { addValueAccessors } from './mixins/accessors';
@@ -15,11 +15,6 @@ import { swap } from './mixins/swap';
  * transaction if one is already active) to prevent inconsistent state when an error occurs.
  */
 export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
-    /**
-     * A Lens is settable
-     */
-    readonly settable = true;
-
     /**
      * The setter that was provided in the constructor.
      */
@@ -52,12 +47,14 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
         }
     }
 
+    settable!: true;
     value!: V;
     lens!: LensFn<V>;
     pluck!: AtomPluck<V>;
     swap!: Swap<V>;
 }
 addValueAccessors(Lens.prototype);
+Lens.prototype.settable = true;
 Lens.prototype.lens = lensMethod;
 Lens.prototype.pluck = pluck as AtomPluck<any>;
 Lens.prototype.swap = swap;

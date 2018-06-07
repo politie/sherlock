@@ -1,12 +1,12 @@
-import { BaseDerivable, constant, Derivable, derivation } from '../derivable';
-import { isConstant, isDerivable } from '../extras';
+import { BaseDerivable, constant, Constant, Derivable, derivation } from '../derivable';
+import { isDerivable } from '../extras';
 import { addObserver, Observer, removeObserver, TrackedObservable } from '../tracking';
 import { debugMode, equals, uniqueId, unpack } from '../utils';
 
 // Adds the react method to Derivable.
-declare module '../derivable/derivable' {
+declare module '../derivable/derivable.extension' {
     // tslint:disable-next-line:no-shadowed-variable
-    export interface BaseDerivable<V> {
+    export interface ExtendDerivable<V> {
         /**
          * React on changes of the this derivable. Will continu to run indefinitely until either garbage collected or limited by
          * the provided lifecycle options. Returns a callback function that can be used to stop the reactor indefinitely.
@@ -26,8 +26,8 @@ declare module '../derivable/derivable' {
     }
 }
 
-const true$ = constant(true) as Derivable<true>;
-const false$ = constant(false) as Derivable<false>;
+const true$ = constant<true>(true);
+const false$ = constant<false>(false);
 
 BaseDerivable.prototype.react = function react<V>(this: Derivable<V>, reaction: (value: V) => void, options?: Partial<ReactorOptions<V>>) {
     return Reactor.create(this, reaction, options);
@@ -339,7 +339,7 @@ function combineWhenUntil<V>(parent: Derivable<V>, whenOption: ReactorOptionValu
     const when = toDerivable(whenOption, parent);
     const until = toDerivable(untilOption, parent);
 
-    if (isConstant(when) && isConstant(until)) {
+    if (when instanceof Constant && until instanceof Constant) {
         return constant({ when: when.value, until: until.value });
     }
 

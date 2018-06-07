@@ -4,7 +4,7 @@ export {
 } from './derivable';
 
 export {
-    and, firstNotNull, isAtom, isConstant, isDerivable, isDerivation, isLens, isSettableDerivable,
+    and, firstNotNull, isDerivable, isSettableDerivable,
     lift, or, scan, struct, template, wrapPreviousState,
 } from './extras';
 

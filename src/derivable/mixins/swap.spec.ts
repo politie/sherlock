@@ -1,8 +1,6 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { SettableDerivable } from '../derivable';
-
-// Covered by derivable.spec.ts.
+import { SettableDerivable } from '../derivable.interface';
 
 export function testSwap(factory: <V>(value: V) => SettableDerivable<V>) {
     describe('#swap', () => {

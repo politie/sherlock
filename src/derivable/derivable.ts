@@ -1,12 +1,10 @@
 import { AutoCacheable, TrackedObservable, TrackedObserver } from '../tracking';
 import { uniqueId } from '../utils/unique-id';
-import {
-    AtomPluckable, BooleanDerivable, CanDerive, DerivablePluckable, Gettable, Lensable, Settable, Swappable,
-} from './mixins/interfaces';
 
 /**
- * The base class for all Derivable's
- * Derivables must extend from this, to be 'tracked' and to classify as a Derivable.
+ * The base class for all Derivables. Derivables must extend from this, to be 'tracked' and to classify as a Derivable.
+ * This has to be a class in order for other parts of the library (e.g. reactor.ts) to be able to extend all Derivables.
+ * So this acts as the base prototype of all Derivables.
  */
 export abstract class BaseDerivable<V> implements TrackedObservable, AutoCacheable {
     /**
@@ -33,24 +31,3 @@ export abstract class BaseDerivable<V> implements TrackedObservable, AutoCacheab
      */
     abstract version: number;
 }
-
-/**
- * Atom is the basic state holder in a Derivable world. It contains the actual mutable state. In contrast
- * with other kinds of derivables that only store immutable (constant) or derived state. Should be constructed
- * with the initial state.
- */
-export type SettableDerivable<V> =
-    BaseDerivable<V> &
-    CanDerive<V> &
-    BooleanDerivable<V> &
-    AtomPluckable<V> &
-    Lensable<V> &
-    Swappable<V> &
-    Settable<V>;
-
-export type Derivable<V> =
-    BaseDerivable<V> &
-    CanDerive<V> &
-    Gettable<V> &
-    BooleanDerivable<V> &
-    DerivablePluckable<V>;

@@ -1,8 +1,11 @@
-export { Atom } from './atom';
-export { Constant } from './constant';
-export { DataSource } from './data-source';
-export { Derivable, SettableDerivable, BaseDerivable } from './derivable';
-export { LensDescriptor, MonoLensDescriptor } from './lens.interface';
-export { Lens } from './lens';
-export { Derivation } from './derivation';
+export * from './atom';
+export * from './constant';
+export * from './data-source';
+export * from './derivable.extension';
+export * from './derivable.interface';
+export * from './derivable';
+export * from './lens.interface';
+export * from './lens';
+export * from './derivation';
 export * from './factories';
+export * from './mixins';

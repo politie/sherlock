@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import { fromJS, Seq } from 'immutable';
-import { isAtom } from '../../extras';
+import { isSettableDerivable } from '../../extras';
 import { Atom } from '../atom';
-import { Derivable } from '../derivable';
+import { Derivable } from '../derivable.interface';
 import { Derivation } from '../derivation';
 import { atom } from '../factories';
 import { Lens } from '../lens';
@@ -45,7 +45,7 @@ export function testPluck(factory: <V>(value: V) => Derivable<V>) {
             class MyClass { constructor(public key: string) { } }
             const value$ = factory(new MyClass('value'));
 
-            if (isAtom(value$)) {
+            if (isSettableDerivable(value$)) {
                 beforeEach('reset the atom', () => value$.set(new MyClass('value')));
 
                 const plucked$ = value$.pluck('key');
@@ -53,7 +53,7 @@ export function testPluck(factory: <V>(value: V) => Derivable<V>) {
                 it('should produce an Atom if the base was also an Atom', () => {
                     expect(plucked$).to.be.an.instanceof(Derivation);
                     expect(plucked$).to.be.an.instanceof(Lens);
-                    expect(isAtom(plucked$)).to.be.true;
+                    expect(isSettableDerivable(plucked$)).to.be.true;
                 });
 
                 it('should produce a lens that can change a property (cloning the object)', () => {

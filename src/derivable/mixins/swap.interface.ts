@@ -1,4 +1,4 @@
-import { Derivable } from '../derivable';
+import { Derivable } from '../derivable.interface';
 
 export interface Swappable<V> {
     /**

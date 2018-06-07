@@ -1,8 +1,9 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { isAtom, isConstant } from '../../extras';
+import { isSettableDerivable } from '../../extras';
 import { addObserver } from '../../tracking';
-import { Derivable } from '../derivable';
+import { Constant } from '../constant';
+import { Derivable } from '../derivable.interface';
 import { constant } from '../factories';
 
 // Covered by derivable.spec.ts.
@@ -12,7 +13,7 @@ export function testAccessors(factory: <V>(value: V) => Derivable<V>) {
             const value$ = factory(123);
             expect(value$.get()).to.equal(123);
 
-            if (isAtom(value$)) {
+            if (isSettableDerivable(value$)) {
                 value$.set(456);
                 expect(value$.get()).to.equal(456);
             }
@@ -40,7 +41,7 @@ export function testAccessors(factory: <V>(value: V) => Derivable<V>) {
     describe('#value', () => {
         const a$ = factory('a');
 
-        if (!isConstant(a$)) {
+        if (!(a$ instanceof Constant)) {
             it('should call #get() when getting the #value property', () => {
                 const s = spy(a$, 'get');
 
@@ -51,7 +52,7 @@ export function testAccessors(factory: <V>(value: V) => Derivable<V>) {
             });
         }
 
-        if (isAtom(a$)) {
+        if (isSettableDerivable(a$)) {
             beforeEach('reset a$', () => a$.set('a'));
 
             it('should call #set() when setting the #value property', () => {

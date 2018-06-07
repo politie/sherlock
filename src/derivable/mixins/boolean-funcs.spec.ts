@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { List, Seq } from 'immutable';
 import { spy } from 'sinon';
-import { Derivable } from '../derivable';
+import { Derivable } from '../derivable.interface';
 import { atom } from '../factories';
 
 export function testBooleanFuncs(factory: <V>(value: V) => Derivable<V>) {

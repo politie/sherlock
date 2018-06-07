@@ -1,18 +1,15 @@
-import { BaseDerivable, Derivable } from './derivable';
+import { BaseDerivable } from './derivable';
+import { Derivable } from './derivable.interface';
+import { deriveMethod } from './derivation';
 import {
     and, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, DerivablePluck,
-    Derive, deriveMethod, is, not, or, pluck,
+    Derive, is, not, or, pluck,
 } from './mixins';
 
 /**
  * Constant represents a basic immutable building block of derivations.
  */
 export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
-    /**
-     * Constant is not settable
-     */
-    readonly settable = false;
-
     /**
      * Creates a new Constant with the give value.
      *
@@ -39,6 +36,7 @@ export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
      */
     get(): V { return this.value; }
 
+    settable!: false;
     derive!: Derive<V>;
     pluck!: DerivablePluck<V>;
 
@@ -47,6 +45,7 @@ export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
     not!: BooleanNot;
     is!: BooleanIs;
 }
+Constant.prototype.settable = false;
 Constant.prototype.derive = deriveMethod;
 Constant.prototype.pluck = pluck;
 

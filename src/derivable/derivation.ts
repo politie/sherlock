@@ -3,25 +3,20 @@ import {
     stopRecordingObservations, TrackedObservable,
 } from '../tracking';
 import { debugMode, equals, unpack } from '../utils';
-import { BaseDerivable, Derivable } from './derivable';
+import { BaseDerivable } from './derivable';
+import { Derivable } from './derivable.interface';
 import { addValueGetter } from './mixins/accessors';
 import { and, is, not, or } from './mixins/boolean-funcs';
 import { BooleanAnd, BooleanIs, BooleanNot, BooleanOr, DerivablePluck, Derive } from './mixins/interfaces';
 import { pluck } from './mixins/pluck';
 
-export const EMPTY_CACHE = {};
+const EMPTY_CACHE = {};
 
 /**
  * Derivation is the implementation of derived state. Automatically tracks other Derivables that are used in the deriver function
  * and updates when needed.
  */
 export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
-    // `as boolean`, to let `Lens` extend from `Derivation` without typing problems
-    /**
-     * A Derivation is not settable.
-     */
-    readonly settable = false as boolean;
-
     /**
      * @internal
      * The recorded dependencies of this derivation. Is only used when the derivation is connected (i.e. it is actively used to
@@ -251,6 +246,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     }
 
     readonly value!: V;
+    settable!: boolean;
     derive!: Derive<V>;
     pluck!: DerivablePluck<V>;
     and!: BooleanAnd<V>;
@@ -259,6 +255,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     is!: BooleanIs;
 }
 addValueGetter(Derivation.prototype);
+Derivation.prototype.settable = false;
 Derivation.prototype.derive = deriveMethod;
 Derivation.prototype.pluck = pluck;
 Derivation.prototype.and = and;

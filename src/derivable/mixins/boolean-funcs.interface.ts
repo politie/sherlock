@@ -1,4 +1,4 @@
-import { Derivable } from '../derivable';
+import { Derivable } from '../derivable.interface';
 
 export type BooleanAnd<V> = <W>(other: Derivable<W> | W) => Derivable<V | W>;
 export type BooleanOr<V> = <W>(other: Derivable<W> | W) => Derivable<V | W>;
