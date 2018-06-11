@@ -11,7 +11,9 @@ declare global {
 
 export function getOwnPropertyDescriptorsShim(obj: any) {
     const properties: PropertyDescriptorMap = {};
-    for (const prop of ownKeys(obj)) { properties[prop] = Object.getOwnPropertyDescriptor(obj, prop)!; }
+    // FIXME: symbol cannot be used as index after TS2.9 because of: https://github.com/Microsoft/TypeScript/issues/1863
+    // when fixed, the `as any` can be removed
+    for (const prop of ownKeys(obj)) { properties[prop as any] = Object.getOwnPropertyDescriptor(obj, prop)!; }
     return properties;
 }
 

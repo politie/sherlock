@@ -61,7 +61,7 @@ Lens.prototype.swap = swap;
 
 export function lensMethod<V, W, P>(
     this: SettableDerivable<V>, { get, set }: MonoLensDescriptor<V, W, P>,
-    ...ps: Array<P | Derivable<P>>,
+    ...ps: Array<P | Derivable<P>>
 ): SettableDerivable<W> {
 
     const atom = this;

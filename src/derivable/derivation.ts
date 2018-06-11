@@ -266,7 +266,7 @@ Derivation.prototype.is = is;
 export function deriveMethod<V extends P, R, P>(
     this: Derivable<V>,
     f: (v: V, ...ps: P[]) => R,
-    ...ps: Array<P | Derivable<P>>,
+    ...ps: Array<P | Derivable<P>>
 ): Derivable<R> {
     return new Derivation(f, [this, ...ps]);
 }

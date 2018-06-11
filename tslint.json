@@ -46,6 +46,12 @@
                 "method": "never",
                 "constructor": "never"
             }
+        ],
+        "trailing-comma": [
+            true,
+            {
+                "esSpecCompliant": true
+            }
         ]
     },
     "rulesDirectory": []
