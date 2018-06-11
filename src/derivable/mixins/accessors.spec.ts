@@ -6,7 +6,9 @@ import { Constant } from '../constant';
 import { Derivable } from '../derivable.interface';
 import { constant } from '../factories';
 
-// Covered by derivable.spec.ts.
+/**
+ * Tests the `get()` method and `value` accessors.
+ */
 export function testAccessors(factory: <V>(value: V) => Derivable<V>) {
     describe('#get', () => {
         it('should return the current state', () => {

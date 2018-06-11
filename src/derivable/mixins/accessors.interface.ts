@@ -1,11 +1,14 @@
+/**
+ * The Derivable implements `get()` method and readonly `value` getter.
+ */
 export interface Gettable<V> {
     /**
-     * Indicates if the set() method is implemented and will return a value.
+     * Indicates if the `set()` method is implemented and will return a value.
      */
     readonly settable: boolean;
 
     /**
-     * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
+     * Returns the current value of this Derivable. Automatically records the use of this Derivable when inside a Derivation.
      */
     get(): V;
 
@@ -16,16 +19,19 @@ export interface Gettable<V> {
     readonly value: V;
 }
 
+/**
+ * The Derivable implements `get()` abd `set()` method and `value` getter/setter.
+ */
 export interface Settable<V> extends Gettable<V> {
     /**
-     * Sets the value of this atom, fires reactors when expected.
+     * Sets the value of this SettableDerivable, fires reactors when expected.
      *
      * @param newValue the new state
      */
     set(newValue: V): void;
 
     /**
-     * `#value` is an alias for the `#get()` and `#set()` methods on the Atom.
+     * `#value` is an alias for the `#get()` and `#set()` methods on the SettableDerivable.
      * Getting `#value` will call `#get()` and return the value.
      * Setting `#value` will call `#set()` with the new value.
      */

@@ -4,6 +4,9 @@ import { spy } from 'sinon';
 import { Derivable } from '../derivable.interface';
 import { atom } from '../factories';
 
+/**
+ * Tests the `is()`, `or()`, `and()` and `not()` methods.
+ */
 export function testBooleanFuncs(factory: <V>(value: V) => Derivable<V>) {
     context('(boolean functions)', () => {
         const true$ = factory(true);

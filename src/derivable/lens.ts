@@ -4,7 +4,7 @@ import { Derivable, SettableDerivable } from './derivable.interface';
 import { Derivation } from './derivation';
 import { LensDescriptor, LensFn, MonoLensDescriptor } from './lens.interface';
 import { addValueAccessors } from './mixins/accessors';
-import { AtomPluck, Swap } from './mixins/interfaces';
+import { PluckLens, Swap } from './mixins/interfaces';
 import { pluck } from './mixins/pluck';
 import { swap } from './mixins/swap';
 
@@ -50,13 +50,13 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
     settable!: true;
     value!: V;
     lens!: LensFn<V>;
-    pluck!: AtomPluck<V>;
+    pluck!: PluckLens<V>;
     swap!: Swap<V>;
 }
 addValueAccessors(Lens.prototype);
 Lens.prototype.settable = true;
 Lens.prototype.lens = lensMethod;
-Lens.prototype.pluck = pluck as AtomPluck<any>;
+Lens.prototype.pluck = pluck as PluckLens<any>;
 Lens.prototype.swap = swap;
 
 export function lensMethod<V, W, P>(

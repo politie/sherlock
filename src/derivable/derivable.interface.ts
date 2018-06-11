@@ -1,24 +1,29 @@
 import { AutoCacheable, TrackedObservable } from '../tracking';
 import {
-    AtomPluck, AtomPluckable, BooleanDerivable, CanDerive, DerivablePluckable, Gettable, Lensable, Settable, Swappable,
+    BooleanDerivable, CanDerive, Gettable, Lensable, PluckLens, ReadonlyPluckable, Settable, SettablePluckable, Swappable,
 } from './mixins/interfaces';
 
+/**
+ * Derivable is the base interface of any Sherlock class.
+ *
+ * The base Derivable is not settable itself, but the SettableDerivable is a superset of this interface.
+ */
 export interface Derivable<V> extends
     TrackedObservable,
     AutoCacheable,
     CanDerive<V>,
     Gettable<V>,
     BooleanDerivable<V>,
-    DerivablePluckable<V> { }
+    ReadonlyPluckable<V> { }
 
 /**
- * SettableDerivable is the basic state holder in a Derivable world. It contains the actual mutable state. In contrast
- * with other kinds of derivables that only store immutable (constant) or derived state. Should be constructed
- * with the initial state.
+ * SettableDerivable is a Derivable that is settable.
+ *
+ * The most notable of these is the Atom.
  */
 export interface SettableDerivable<V> extends
     Derivable<V>,
-    AtomPluckable<V>,
+    SettablePluckable<V>,
     Lensable<V>,
     Swappable<V>,
     Settable<V> {
@@ -28,7 +33,7 @@ export interface SettableDerivable<V> extends
      *
      * @param key the key or derivable to a key that should be used to dereference the current value
      */
-    pluck: AtomPluck<V>;
+    pluck: PluckLens<V>;
 
     /**
      * `#value` is an alias for the `#get()` and `#set()` methods on the Atom.

@@ -5,6 +5,8 @@ import { uniqueId } from '../utils/unique-id';
  * The base class for all Derivables. Derivables must extend from this, to be 'tracked' and to classify as a Derivable.
  * This has to be a class in order for other parts of the library (e.g. reactor.ts) to be able to extend all Derivables.
  * So this acts as the base prototype of all Derivables.
+ *
+ * When extending the prototype of the BaseDerivable, don't forget to also extend the ExtendDerivable interface.
  */
 export abstract class BaseDerivable<V> implements TrackedObservable, AutoCacheable {
     /**

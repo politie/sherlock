@@ -6,8 +6,8 @@ import { SettableDerivable } from './derivable.interface';
 import { deriveMethod } from './derivation';
 import { lensMethod } from './lens';
 import {
-    addValueAccessors, and, AtomPluck, BooleanAnd, BooleanIs, BooleanNot, BooleanOr,
-    Derive, is, LensFn, not, or, pluck, swap, Swap,
+    addValueAccessors, and, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, Derive,
+    is, LensFn, not, or, pluck, PluckLens, swap, Swap,
 } from './mixins';
 
 const EMPTY_CACHE = {};
@@ -221,7 +221,7 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
     }
 
     value!: V;
-    pluck!: AtomPluck<V>;
+    pluck!: PluckLens<V>;
     lens!: LensFn<V>;
     swap!: Swap<V>;
     derive!: Derive<V>;
@@ -232,7 +232,7 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
     is!: BooleanIs;
 }
 addValueAccessors(DataSource.prototype);
-DataSource.prototype.pluck = pluck as AtomPluck<any>;
+DataSource.prototype.pluck = pluck as PluckLens<any>;
 DataSource.prototype.lens = lensMethod;
 DataSource.prototype.swap = swap;
 DataSource.prototype.derive = deriveMethod;

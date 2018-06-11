@@ -7,7 +7,7 @@ import { BaseDerivable } from './derivable';
 import { Derivable } from './derivable.interface';
 import { addValueGetter } from './mixins/accessors';
 import { and, is, not, or } from './mixins/boolean-funcs';
-import { BooleanAnd, BooleanIs, BooleanNot, BooleanOr, DerivablePluck, Derive } from './mixins/interfaces';
+import { BooleanAnd, BooleanIs, BooleanNot, BooleanOr, Derive, PluckDerivable } from './mixins/interfaces';
 import { pluck } from './mixins/pluck';
 
 const EMPTY_CACHE = {};
@@ -248,7 +248,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     readonly value!: V;
     settable!: boolean;
     derive!: Derive<V>;
-    pluck!: DerivablePluck<V>;
+    pluck!: PluckDerivable<V>;
     and!: BooleanAnd<V>;
     or!: BooleanOr<V>;
     not!: BooleanNot;

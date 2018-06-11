@@ -7,6 +7,9 @@ import { Derivation } from '../derivation';
 import { atom } from '../factories';
 import { Lens } from '../lens';
 
+/**
+ * Tests the `pluck()` method.
+ */
 export function testPluck(factory: <V>(value: V) => Derivable<V>) {
     describe('#pluck', () => {
         it('should pluck using a string or derivable string', () => {

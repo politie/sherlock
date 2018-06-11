@@ -1,5 +1,8 @@
 import { Derivable } from '../derivable.interface';
 
+/**
+ * The Derivable implements the `swap()` method.
+ */
 export interface Swappable<V> {
     /**
      * Swaps the current value of this atom using the provided swap function. Any additional arguments to this function are

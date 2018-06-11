@@ -2,8 +2,8 @@ import { BaseDerivable } from './derivable';
 import { Derivable } from './derivable.interface';
 import { deriveMethod } from './derivation';
 import {
-    and, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, DerivablePluck,
-    Derive, is, not, or, pluck,
+    and, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, Derive,
+    is, not, or, pluck, PluckDerivable,
 } from './mixins';
 
 /**
@@ -38,7 +38,7 @@ export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
 
     settable!: false;
     derive!: Derive<V>;
-    pluck!: DerivablePluck<V>;
+    pluck!: PluckDerivable<V>;
 
     and!: BooleanAnd<V>;
     or!: BooleanOr<V>;

@@ -2,6 +2,9 @@ import { expect } from 'chai';
 import { spy } from 'sinon';
 import { SettableDerivable } from '../derivable.interface';
 
+/**
+ * Tests the `swap()` method.
+ */
 export function testSwap(factory: <V>(value: V) => SettableDerivable<V>) {
     describe('#swap', () => {
         it('should invoke the swap function with the current value and delegate the work to #set', () => {
