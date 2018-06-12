@@ -1,4 +1,4 @@
-import { Derivable, derivation } from '../derivable';
+import { Derivable, derive } from '../derivable';
 import { unpack } from '../utils';
 
 /**
@@ -17,7 +17,7 @@ import { unpack } from '../utils';
  * @param args the results of the expressions inside the template literal
  */
 export function template(parts: TemplateStringsArray, ...args: any[]): Derivable<string> {
-    return derivation(() => {
+    return derive(() => {
         let s = '';
         for (let i = 0; i < parts.length; i++) {
             s += parts[i];

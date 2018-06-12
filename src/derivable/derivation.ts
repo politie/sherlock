@@ -18,14 +18,12 @@ const EMPTY_CACHE = {};
  */
 export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     /**
-     * @internal
      * The recorded dependencies of this derivation. Is only used when the derivation is connected (i.e. it is actively used to
      * power a reactor, either directly or indirectly with other derivations in between).
      */
     readonly dependencies: TrackedObservable[] = [];
 
     /**
-     * @internal
      * The versions of all dependencies that were used to calculate the currently known value. Is used to determine whether
      * the deriver function needs to be called.
      */
@@ -85,7 +83,6 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     private _version = 0;
 
     /**
-     * @internal
      * The current version of the state. This number gets incremented every time the state changes when connected. The version
      * is only guaranteed to increase on each change when connected.
      */
@@ -179,7 +176,6 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     }
 
     /**
-     * @internal
      * Mark this derivation and all observers of this derivation as "possible outdated" or "state unknown". If this derivation is already
      * in that state, all observers of this derivation are also expected to already be in that state. This invariant should never
      * be invalidated. Any reactors we encounter are pushed into the reactorSink.
@@ -196,7 +192,6 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     }
 
     /**
-     * @internal
      * Connect this derivation. It will make sure that the internal cache is kept up-to-date and all reactors are notified of changes
      * until disconnected.
      */
@@ -205,7 +200,6 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     }
 
     /**
-     * @internal
      * Disconnect this derivation when not in autoCache mode. It will disconnect all remaining observers (downstream), stop all
      * reactors that depend on this derivation and disconnect all dependencies (upstream) that have no other observers.
      *

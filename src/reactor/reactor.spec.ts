@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { SinonStub, spy, stub } from 'sinon';
-import { atom, Derivable, derivation, SettableDerivable } from '../derivable';
+import { atom, Derivable, derive, SettableDerivable } from '../derivable';
 import { $ } from '../derivable/derivable.spec';
 import { atomically } from '../transaction';
 import { setDebugMode } from '../utils';
@@ -761,7 +761,7 @@ describe('reactor/reactor efficiency', () => {
         const path1 = atom1.derive(path1Derivation);
         const path2 = atom2.derive(path2Derivation);
 
-        react(derivation(() => switcher$.get() ? path1.get() : path2.get()));
+        react(derive(() => switcher$.get() ? path1.get() : path2.get()));
 
         shouldHaveReactedOnce('a from path 1');
         shouldHaveBeenCalledOnce(path1Derivation);

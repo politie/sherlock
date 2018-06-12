@@ -1,4 +1,4 @@
-import { Derivable, derivation } from '../derivable';
+import { Derivable, derive } from '../derivable';
 import { isPlainObject } from '../utils';
 import { isDerivable } from './types';
 
@@ -27,7 +27,7 @@ export function struct(obj: any) {
     if (!Array.isArray(obj) && !isPlainObject(obj)) {
         throw new Error('"struct" only accepts Derivables, plain Objects and Arrays');
     }
-    return derivation(deepUnpack, obj);
+    return derive(deepUnpack, obj);
 }
 
 function deepUnpack(obj: any): any {

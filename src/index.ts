@@ -1,5 +1,5 @@
 export {
-    atom, constant, DataSource, Derivable, derivation,
+    atom, constant, DataSource, Derivable, derivation, derive,
     lens, LensDescriptor, MonoLensDescriptor, SettableDerivable,
 } from './derivable';
 

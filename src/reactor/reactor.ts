@@ -1,4 +1,4 @@
-import { BaseDerivable, constant, Constant, Derivable, derivation } from '../derivable';
+import { BaseDerivable, constant, Constant, Derivable, derive } from '../derivable';
 import { isDerivable } from '../extras';
 import { addObserver, Observer, removeObserver } from '../tracking';
 import { debugMode, equals, uniqueId, unpack } from '../utils';
@@ -188,7 +188,6 @@ export class Reactor<V> implements Observer {
     }
 
     /**
-     * @internal
      * During the mark phase add this reactor to the reactorSink. This way, the transaction knows we exist and we get to `reactIfNeeded`
      * later on.
      */
@@ -323,7 +322,7 @@ export function toDerivable<V>(option: ReactorOptionValue<V>, derivable: Derivab
         return option as ReactorParent<boolean>;
     }
     if (typeof option === 'function') {
-        return derivation(() => unpack(option(derivable))) as ReactorParent<boolean>;
+        return derive(() => unpack(option(derivable))) as ReactorParent<boolean>;
     }
     return option ? true$ : false$;
 }
@@ -336,7 +335,7 @@ function combineWhenUntil<V>(parent: Derivable<V>, whenOption: ReactorOptionValu
         return constant({ when: when.value, until: until.value }) as ReactorParent<WhenUntil>;
     }
 
-    return derivation(whenUntil, when, until) as ReactorParent<WhenUntil>;
+    return derive(whenUntil, when, until) as ReactorParent<WhenUntil>;
 }
 
 function whenUntil(when: boolean, until: boolean) { return { when, until }; }

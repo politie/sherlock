@@ -5,13 +5,15 @@ import { isSettableDerivable } from '../extras';
 import { BaseDerivable } from './base-derivable';
 import { Derivable, SettableDerivable } from './derivable.interface';
 import { Derivation } from './derivation';
-import { atom, constant, derivation } from './factories';
+import { atom, constant, derive } from './factories';
 import { testAccessors } from './mixins/accessors.spec';
 import { testBooleanFuncs } from './mixins/boolean-methods.spec';
 import { testPluck } from './mixins/pluck.spec';
 
 export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
     testAccessors(factory);
+    testBooleanFuncs(factory);
+    testPluck(factory);
 
     describe('#derive', () => {
         const oneGigabyte = 1024 * 1024 * 1024;
@@ -20,8 +22,8 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
         // Created with derive method
         const kiloBytes$ = bytes$.derive(orderUp);
 
-        // Created with derivation function
-        const megaBytes$ = derivation(() => orderUp(kiloBytes$.get()));
+        // Created with derive function
+        const megaBytes$ = derive(() => orderUp(kiloBytes$.get()));
 
         function orderUp(n: number, order = 1): number {
             return order > 0 ? orderUp(n / 1024, order - 1) : n;
@@ -38,7 +40,7 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
             const order$ = atom(0);
             const orderName$ = order$.derive(order => ['bytes', 'kilobytes', 'megabytes', 'gigabytes'][order]);
             const size$ = bytes$.derive(orderUp, order$);
-            const sizeString$ = derivation(() => `${size$.get()} ${orderName$.get()}`);
+            const sizeString$ = derive(() => `${size$.get()} ${orderName$.get()}`);
 
             expect(sizeString$.get()).to.equal(oneGigabyte + ' bytes');
             order$.set(1);
@@ -90,10 +92,6 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
             }
         });
     });
-
-    testBooleanFuncs(factory);
-
-    testPluck(factory);
 
     describe('#react', () => {
         const value$ = factory('the value');

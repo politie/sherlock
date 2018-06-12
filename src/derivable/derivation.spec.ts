@@ -3,14 +3,14 @@ import { SinonFakeTimers, SinonSpy, SinonStub, spy, stub, useFakeTimers } from '
 import { setDebugMode } from '../utils';
 import { Derivable, SettableDerivable } from './derivable.interface';
 import { testDerivable } from './derivable.spec';
-import { atom, derivation } from './factories';
+import { atom, derive } from './factories';
 
-describe('derivable/derivation', () => {
-    testDerivable(<V>(v: V) => derivation(() => v));
+describe('derivable/derive', () => {
+    testDerivable(<V>(v: V) => derive(() => v));
 
     it('should not generate a stacktrace on instantiation', () => {
         // tslint:disable-next-line:no-string-literal
-        expect(derivation(() => 0)['stack']).to.be.undefined;
+        expect(derive(() => 0)['stack']).to.be.undefined;
     });
 
     context('in debug mode', () => {
@@ -23,11 +23,11 @@ describe('derivable/derivation', () => {
 
         it('should generate a stacktrace on instantiation', () => {
             // tslint:disable-next-line:no-string-literal
-            expect(derivation(() => 0)['stack']).to.be.a('string');
+            expect(derive(() => 0)['stack']).to.be.a('string');
         });
 
         it('should log the recorded stacktrace on error', () => {
-            const d$ = derivation(() => { throw new Error('the Error'); });
+            const d$ = derive(() => { throw new Error('the Error'); });
             // tslint:disable-next-line:no-string-literal
             const stack = d$['stack'];
             expect(() => d$.get()).to.throw('the Error');
@@ -38,7 +38,7 @@ describe('derivable/derivation', () => {
 
     it('should not call the deriver when the cached value is known to be up to date because of a reactor', () => {
         const deriver = spy(() => 123);
-        const d$ = derivation(deriver);
+        const d$ = derive(deriver);
         d$.get();
         expect(deriver).to.have.been.calledOnce;
         d$.react(() => 0);
@@ -68,7 +68,7 @@ describe('derivable/derivation', () => {
     it('should allow error objects as valid values', () => {
         const theError = new Error('the error');
         const deriver = spy(() => theError);
-        const d$ = derivation(deriver).autoCache();
+        const d$ = derive(deriver).autoCache();
         expect(d$.get(), 'first time').to.equal(theError);
         expect(d$.get(), 'second time').to.equal(theError);
         expect(deriver).to.have.been.calledOnce;

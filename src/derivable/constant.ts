@@ -16,7 +16,6 @@ export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
      */
     constructor(
         /**
-         * @internal
          * The readonly value of this Constant.
          */
         readonly value: V,
@@ -25,16 +24,11 @@ export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
     }
 
     /**
-     * @internal
-     * The version of this Constant, should always stay at 0, because Constants never change.
-     */
-    readonly version = 0;
-
-    /**
      * Returns the value of this Constant.
      */
     get(): V { return this.value; }
 
+    readonly version!: 0;
     readonly settable!: false;
 
     readonly derive!: DeriveMethod<V>;
@@ -46,6 +40,7 @@ export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
     readonly is!: IsMethod;
 }
 Object.defineProperties(Constant.prototype, {
+    version: { value: 0 },
     settable: { value: false },
 
     derive: { value: deriveMethod },

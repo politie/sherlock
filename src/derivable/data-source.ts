@@ -38,7 +38,6 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
     protected acceptNewValue?(newValue: V): void;
 
     /**
-     * @internal
      * Not used. Only to satisfy TransactionAtom<V> interface.
      */
     _value!: never;
@@ -70,7 +69,6 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
     private readonly _stack = debugMode ? Error().stack : undefined;
 
     /**
-     * @internal
      * The current version of the state. This number gets incremented every time the state changes when connected. The version
      * is only guaranteed to increase on each change when connected.
      */
@@ -155,7 +153,6 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
     }
 
     /**
-     * @internal
      * Connect this datasource. It will make sure that the internal cache is kept up-to-date and all reactors are notified of changes
      * until disconnected.
      */
@@ -168,7 +165,6 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
     }
 
     /**
-     * @internal
      * Disconnect this datasource when not in autoCache mode. It will disconnect all remaining observers (downstream) and stop all
      * reactors that depend on this datasource.
      *

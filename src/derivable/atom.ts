@@ -17,14 +17,12 @@ import {
  */
 export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V> {
     /**
-     * @internal
      * Construct a new atom with the provided initial value.
      *
      * @param value the initial value
      */
     constructor(
         /**
-         * @internal
          * Contains the current value of this atom. Note that this field is public for transaction support, should
          * not be used in application code. Use {@link Derivable#get} and {@link Atom#set} instead.
          */
@@ -34,7 +32,6 @@ export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V> {
     }
 
     /**
-     * @internal
      * The current version of the state. This number gets incremented every time the state changes. Setting the state to
      * an immutable object that is structurally equal to the previous immutable object is not considered a state change.
      */

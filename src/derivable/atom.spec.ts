@@ -8,6 +8,7 @@ import { testSwap } from './mixins/swap.spec';
 
 describe('derivable/atom', () => {
     testDerivable(atom);
+    testSwap(atom);
 
     describe('#set', () => {
         it('should change the current state and version', () => {
@@ -41,11 +42,9 @@ describe('derivable/atom', () => {
         });
     });
 
-    testSwap(atom);
-
     context('in transactions', () => {
         it('should be restored on abort', () => {
-            const a$ = atom('a') as Atom<string>;
+            const a$ = new Atom('a');
             expect(a$._value).to.equal('a');
             expect(a$.version).to.equal(0);
             txn(abortOuter => {
@@ -67,9 +66,9 @@ describe('derivable/atom', () => {
         });
 
         it('should also be restored when only the outer txn aborts', () => {
-            const a$ = atom('a') as Atom<string>;
-            const b$ = atom('a') as Atom<string>;
-            const c$ = atom('a') as Atom<string>;
+            const a$ = new Atom('a');
+            const b$ = new Atom('a');
+            const c$ = new Atom('a');
             txn(abort => {
                 a$.set('set in outer');
                 b$.set('set in outer');
@@ -94,9 +93,9 @@ describe('derivable/atom', () => {
         });
 
         it('should not be restored on commit', () => {
-            const a$ = atom('a') as Atom<string>;
-            const b$ = atom('a') as Atom<string>;
-            const c$ = atom('a') as Atom<string>;
+            const a$ = new Atom('a');
+            const b$ = new Atom('a');
+            const c$ = new Atom('a');
 
             txn(() => {
                 a$.set('set in outer');

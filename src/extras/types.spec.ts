@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { atom, constant, DataSource, derivation } from '../derivable';
+import { atom, constant, DataSource, derive } from '../derivable';
 import { identityLens } from '../derivable/lens.spec';
 import { isDerivable, isSettableDerivable } from './types';
 
@@ -14,7 +14,7 @@ describe('extras/types', () => {
     const testCases = [
         { value: atom(123), pSettableDerivable: true, pDerivable: true },
         { value: constant(123), pSettableDerivable: false, pDerivable: true },
-        { value: derivation(() => 123), pSettableDerivable: false, pDerivable: true },
+        { value: derive(() => 123), pSettableDerivable: false, pDerivable: true },
         { value: atom(123).lens(identityLens<number>()), pSettableDerivable: true, pDerivable: true },
         { value: new ReadonlyDataSource(), pSettableDerivable: false, pDerivable: true },
         { value: new SettableDataSource(), pSettableDerivable: true, pDerivable: true },
