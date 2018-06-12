@@ -1,6 +1,7 @@
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
+import { terser } from 'rollup-plugin-terser';
 
 const libs = ['sherlock', 'sherlock-proxy', 'sherlock-rxjs'];
 
@@ -30,6 +31,7 @@ export default [].concat.apply([], libs.map(lib => {
                 sourcemaps(),
                 commonjs(),
                 resolve(),
+                terser(),
                 ...(oldVersion ? [] : [require('rollup-plugin-visualizer')({ filename: `dist/stats/${lib}.umd.html` })]),
             ],
         },
@@ -45,6 +47,7 @@ export default [].concat.apply([], libs.map(lib => {
             plugins: [
                 sourcemaps(),
                 resolve(),
+                terser({ module: true }),
                 ...(oldVersion ? [] : [require('rollup-plugin-visualizer')({ filename: `dist/stats/${lib}.html` })]),
             ],
         },
