@@ -1,4 +1,4 @@
-import { BaseDerivable, constant, Constant, Derivable, derive } from '../derivable';
+import { BaseDerivable, constant, Derivable, derive } from '../derivable';
 import { isDerivable } from '../extras';
 import { addObserver, Observer, removeObserver } from '../tracking';
 import { debugMode, equals, uniqueId, unpack } from '../utils';
@@ -230,30 +230,34 @@ export class Reactor<V> implements Observer {
 
         // Listen to when and until conditions, starting and stopping the reactor when
         // needed, and stopping the reaction and controller when until becomes true.
-        const controller = new Reactor(combineWhenUntil(parent, when, until), errorHandler, conds => {
-            if (conds.until) {
-                done();
-            } else if (conds.when) {
-                reactor.start();
-            } else if (reactor.active) {
-                reactor.stop();
-            }
-        });
+        const controller = (when === true || when === true$) && (until === false || until === false$)
+            ? undefined
+            : new Reactor(combineWhenUntil(parent, when, until), errorHandler, conds => {
+                if (conds.until) {
+                    done();
+                } else if (conds.when) {
+                    reactor.start();
+                } else if (reactor.active) {
+                    reactor.stop();
+                }
+            });
 
         // The controller needs to act before the reactor in order to ensure deterministic until and when behavior.
         reactor.controller = controller;
 
         // The starter waits until `from` to start the controller.
-        const starter = new Reactor(toDerivable(from, parent), errorHandler, value => {
-            if (value) {
-                controller.start();
-                starter.stop();
-            }
-        });
+        const starter = from === true || from === true$
+            ? undefined
+            : new Reactor(toDerivable(from, parent), errorHandler, value => {
+                if (value) {
+                    (controller || reactor).start();
+                    starter!.stop();
+                }
+            });
 
         function done() {
-            starter.stop();
-            controller.stop();
+            starter && starter.stop();
+            controller && controller.stop();
             reactor.stop();
             ended && ended();
         }
@@ -268,7 +272,7 @@ export class Reactor<V> implements Observer {
         }
 
         // Go!!!
-        starter.start();
+        (starter || controller || reactor).start();
 
         return done;
     }
@@ -328,16 +332,9 @@ export function toDerivable<V>(option: ReactorOptionValue<V>, derivable: Derivab
 }
 
 function combineWhenUntil<V>(parent: Derivable<V>, whenOption: ReactorOptionValue<V>, untilOption: ReactorOptionValue<V>) {
-    const when = toDerivable(whenOption, parent);
-    const until = toDerivable(untilOption, parent);
-
-    if (when instanceof Constant && until instanceof Constant) {
-        return constant({ when: when.value, until: until.value }) as ReactorParent<WhenUntil>;
-    }
-
-    return derive(whenUntil, when, until) as ReactorParent<WhenUntil>;
+    const when$ = toDerivable(whenOption, parent);
+    const until$ = toDerivable(untilOption, parent);
+    return derive((when, until) => ({ when, until }), when$, until$) as ReactorParent<WhenUntil>;
 }
-
-function whenUntil(when: boolean, until: boolean) { return { when, until }; }
 
 interface WhenUntil { when: boolean; until: boolean; }

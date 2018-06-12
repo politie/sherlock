@@ -10,8 +10,8 @@ import { testAccessors } from './mixins/accessors.spec';
 import { testBooleanFuncs } from './mixins/boolean-methods.spec';
 import { testPluck } from './mixins/pluck.spec';
 
-export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
-    testAccessors(factory);
+export function testDerivable(factory: <V>(value: V) => Derivable<V>, immutable: boolean) {
+    testAccessors(factory, immutable);
     testBooleanFuncs(factory);
     testPluck(factory);
 
