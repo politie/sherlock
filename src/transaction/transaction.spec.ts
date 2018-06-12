@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { Atom, atom } from '../derivable';
+import { atom, SettableDerivable } from '../derivable';
 import { template } from '../extras';
 import { atomic, atomically, transact, transaction } from './transaction';
 
@@ -60,7 +60,7 @@ describe('transaction/transaction', () => {
     });
 });
 
-export function basicTransactionsTests(atomFactory: <V>(v: V) => Atom<V>, shouldRollbackValue: boolean) {
+export function basicTransactionsTests(atomFactory: <V>(v: V) => SettableDerivable<V>, shouldRollbackValue: boolean) {
     it('should not react on abort of outer transaction', () => {
         const a$ = atomFactory('a');
         let reactions = 0;

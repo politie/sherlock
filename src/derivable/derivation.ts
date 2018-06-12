@@ -1,43 +1,29 @@
 import {
-    isRecordingObservations, Reactor, recordObservation, removeObserver, startRecordingObservations,
-    stopRecordingObservations, TrackedObservable, TrackedObserver,
+    isRecordingObservations, recordObservation, removeObserver, startRecordingObservations, stopRecordingObservations,
+    TrackedObservable, TrackedReactor,
 } from '../tracking';
-import { debugMode, equals } from '../utils';
-import { Derivable } from './derivable';
-import { unpack } from './unpack';
+import { debugMode, equals, unpack } from '../utils';
+import { BaseDerivable } from './base-derivable';
+import { Derivable } from './derivable.interface';
+import {
+    AndMethod, andMethod, DeriveMethod, isMethod, IsMethod, NotMethod, notMethod, OrMethod, orMethod, PluckMethod, pluckMethod,
+    valueGetter
+} from './mixins';
 
-// Augments the Derivable interface with the following methods:
-declare module './derivable' {
-    // tslint:disable-next-line:no-shadowed-variable
-    export interface Derivable<V> {
-        /**
-         * Create a derivation based on this Derivable and the given deriver function.
-         *
-         * @param f the deriver function
-         */
-        derive<R>(f: (v: V) => R): Derivable<R>;
-        derive<R, P1>(f: (v: V, p1: P1) => R, p1: P1 | Derivable<P1>): Derivable<R>;
-        derive<R, P1, P2>(f: (v: V, p1: P1, p2: P2) => R, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): Derivable<R>;
-        derive<R, P>(f: (v: V, ...ps: P[]) => R, ...ps: Array<P | Derivable<P>>): Derivable<R>;
-    }
-}
-
-export const EMPTY_CACHE = {};
+const EMPTY_CACHE = {};
 
 /**
  * Derivation is the implementation of derived state. Automatically tracks other Derivables that are used in the deriver function
  * and updates when needed.
  */
-export class Derivation<V> extends Derivable<V> implements TrackedObserver {
+export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     /**
-     * @internal
      * The recorded dependencies of this derivation. Is only used when the derivation is connected (i.e. it is actively used to
      * power a reactor, either directly or indirectly with other derivations in between).
      */
     readonly dependencies: TrackedObservable[] = [];
 
     /**
-     * @internal
      * The versions of all dependencies that were used to calculate the currently known value. Is used to determine whether
      * the deriver function needs to be called.
      */
@@ -97,21 +83,12 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
     private _version = 0;
 
     /**
-     * @internal
      * The current version of the state. This number gets incremented every time the state changes when connected. The version
      * is only guaranteed to increase on each change when connected.
      */
     get version() {
         this.updateIfNeeded();
         return this._version;
-    }
-
-    /**
-     * `#value` is an alias for the `#get()` method on the Derivable. Getting `#value` will return the same value as `#get()`
-     * It is readonly on derivations.
-     */
-    get value() {
-        return this.get();
     }
 
     /**
@@ -199,12 +176,11 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
     }
 
     /**
-     * @internal
      * Mark this derivation and all observers of this derivation as "possible outdated" or "state unknown". If this derivation is already
      * in that state, all observers of this derivation are also expected to already be in that state. This invariant should never
      * be invalidated. Any reactors we encounter are pushed into the reactorSink.
      */
-    mark(reactorSink: Reactor[]) {
+    mark(reactorSink: TrackedReactor[]) {
         // If we think we're up-to-date our observers might think the same, otherwise, we're good, cause our observers can never
         // believe the're up-to-date when any of their dependencies is not up-to-date.
         if (this.isUpToDate) {
@@ -216,7 +192,6 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
     }
 
     /**
-     * @internal
      * Connect this derivation. It will make sure that the internal cache is kept up-to-date and all reactors are notified of changes
      * until disconnected.
      */
@@ -225,7 +200,6 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
     }
 
     /**
-     * @internal
      * Disconnect this derivation when not in autoCache mode. It will disconnect all remaining observers (downstream), stop all
      * reactors that depend on this derivation and disconnect all dependencies (upstream) that have no other observers.
      *
@@ -264,25 +238,35 @@ export class Derivation<V> extends Derivable<V> implements TrackedObserver {
         this.autoCacheMode = true;
         return this;
     }
-}
 
-/**
- * Create a new derivation using the deriver function.
- *
- * @param deriver the deriver function
- */
-export function derivation<R>(f: () => R): Derivable<R>;
-export function derivation<R, P1>(f: (p1: P1) => R, p1: P1 | Derivable<P1>): Derivable<R>;
-export function derivation<R, P1, P2>(f: (p1: P1, p2: P2) => R, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): Derivable<R>;
-export function derivation<R, P>(f: (...ps: P[]) => R, ...ps: Array<P | Derivable<P>>): Derivable<R>;
-export function derivation<R, P>(f: (...ps: P[]) => R, ...ps: Array<P | Derivable<P>>): Derivable<R> {
-    return new Derivation(f, ps.length ? ps : undefined);
-}
+    readonly value!: V;
+    readonly settable!: boolean;
 
-Derivable.prototype.derive = function derive<V extends P, R, P>(
+    derive!: DeriveMethod<V>;
+    pluck!: PluckMethod<V>;
+
+    and!: AndMethod<V>;
+    or!: OrMethod<V>;
+    not!: NotMethod;
+    is!: IsMethod;
+}
+Object.defineProperties(Derivation.prototype, {
+    value: { get: valueGetter },
+    settable: { value: false },
+
+    derive: { value: deriveMethod },
+    pluck: { value: pluckMethod },
+
+    and: { value: andMethod },
+    or: { value: orMethod },
+    not: { value: notMethod },
+    is: { value: isMethod },
+});
+
+export function deriveMethod<V extends P, R, P>(
     this: Derivable<V>,
     f: (v: V, ...ps: P[]) => R,
-    ...ps: Array<P | Derivable<P>>,
+    ...ps: Array<P | Derivable<P>>
 ): Derivable<R> {
     return new Derivation(f, [this, ...ps]);
-};
+}

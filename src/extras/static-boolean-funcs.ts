@@ -1,4 +1,5 @@
-import { Derivable, derivation, unpack } from '../derivable';
+import { Derivable, derive } from '../derivable';
+import { unpack } from '../utils';
 
 /**
  * Performs JavaScript `&&` operation on the provided arguments after unpacking.
@@ -22,7 +23,7 @@ export const or = andOrImpl(v => !!v);
 export const firstNotNull = andOrImpl(v => v != null);
 
 function andOrImpl(breakOn: (v: any) => boolean) {
-    return <V>(...args: Array<Derivable<V> | V>) => derivation(() => {
+    return <V>(...args: Array<Derivable<V> | V>) => derive(() => {
         let value: V | undefined;
         for (const arg of args) {
             value = unpack(arg);

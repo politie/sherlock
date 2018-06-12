@@ -1,12 +1,13 @@
 import { expect } from 'chai';
 import { SinonStub, spy, stub } from 'sinon';
-import { atom, Atom, Derivable, derivation } from '../derivable';
+import { atom, Derivable, derive, SettableDerivable } from '../derivable';
+import { $ } from '../derivable/derivable.spec';
 import { atomically } from '../transaction';
 import { setDebugMode } from '../utils';
 import { Reactor, ReactorOptions, ReactorParent } from './reactor';
 
 describe('reactor/reactor', () => {
-    let a$: Atom<string>;
+    let a$: SettableDerivable<string>;
 
     beforeEach('create the base atom', () => { a$ = atom('a'); });
 
@@ -222,9 +223,9 @@ describe('reactor/reactor', () => {
     });
 
     context('with the combined use of `from`, `when` and `until` options', () => {
-        let from: Atom<boolean>;
-        let when: Atom<boolean>;
-        let until: Atom<boolean>;
+        let from: SettableDerivable<boolean>;
+        let when: SettableDerivable<boolean>;
+        let until: SettableDerivable<boolean>;
 
         beforeEach('create the atoms', () => {
             from = atom(false);
@@ -463,7 +464,7 @@ describe('reactor/reactor', () => {
 
     it('should not generate a stacktrace on instantiation', () => {
         // tslint:disable-next-line:no-string-literal
-        expect(new TestReactor(a$, () => 0)['stack']).to.be.undefined;
+        expect(new TestReactor($(a$), () => 0)['stack']).to.be.undefined;
     });
 
     context('in debug mode', () => {
@@ -476,11 +477,11 @@ describe('reactor/reactor', () => {
 
         it('should generate a stacktrace on instantiation', () => {
             // tslint:disable-next-line:no-string-literal
-            expect(new TestReactor(a$, () => 0)['stack']).to.be.a('string');
+            expect(new TestReactor($(a$), () => 0)['stack']).to.be.a('string');
         });
 
         it('should log the recorded stacktrace on error', () => {
-            const reactor = new TestReactor(a$, () => { throw new Error('the Error'); });
+            const reactor = new TestReactor($(a$), () => { throw new Error('the Error'); });
             // tslint:disable-next-line:no-string-literal
             const stack = reactor['stack'];
             expect(() => reactor.start()).to.throw('the Error');
@@ -542,7 +543,7 @@ describe('reactor/reactor with cycles', () => {
 });
 
 describe('reactor/reactor error handling', () => {
-    let a$: Atom<string>;
+    let a$: SettableDerivable<string>;
     let d$: Derivable<string>;
 
     beforeEach('setup atom and derivable', () => {
@@ -760,7 +761,7 @@ describe('reactor/reactor efficiency', () => {
         const path1 = atom1.derive(path1Derivation);
         const path2 = atom2.derive(path2Derivation);
 
-        react(derivation(() => switcher$.get() ? path1.get() : path2.get()));
+        react(derive(() => switcher$.get() ? path1.get() : path2.get()));
 
         shouldHaveReactedOnce('a from path 1');
         shouldHaveBeenCalledOnce(path1Derivation);

@@ -1,10 +1,10 @@
-import { Atom, atom, lift } from '@politie/sherlock';
+import { atom, lift, SettableDerivable } from '@politie/sherlock';
 import { expect } from 'chai';
 import './rxjs';
 
 describe('rxjs/rxjs', () => {
     describe('Derivable#toObservable', () => {
-        let a$: Atom<string>;
+        let a$: SettableDerivable<string>;
 
         beforeEach('create the atom', () => { a$ = atom('a'); });
 

@@ -1,14 +1,13 @@
-import { constant, Derivable, derivation, unpack } from '../derivable';
-import { isConstant, isDerivable } from '../extras';
-import { addObserver, Observer, removeObserver, TrackedObservable } from '../tracking';
-import { debugMode, equals, uniqueId } from '../utils';
+import { BaseDerivable, constant, Constant, Derivable, derive } from '../derivable';
+import { isDerivable } from '../extras';
+import { addObserver, Observer, removeObserver } from '../tracking';
+import { debugMode, equals, uniqueId, unpack } from '../utils';
 
-// Adds the react method to Derivable.
-declare module '../derivable/derivable' {
-    // tslint:disable-next-line:no-shadowed-variable
-    export interface Derivable<V> {
+// Adds the react and toPromise methods to Derivables.
+declare module '../derivable/extension' {
+    export interface DerivableExtension<V> {
         /**
-         * React on changes of the this derivable. Will continu to run indefinitely until either garbage collected or limited by
+         * React on changes of the this derivable. Will continue to run indefinitely until either garbage collected or limited by
          * the provided lifecycle options. Returns a callback function that can be used to stop the reactor indefinitely.
          *
          * @param reaction function to call on each reaction
@@ -26,16 +25,18 @@ declare module '../derivable/derivable' {
     }
 }
 
-const true$ = constant(true) as Derivable<true>;
-const false$ = constant(false) as Derivable<false>;
+const true$ = constant(true) as ReactorParent<true>;
+const false$ = constant(false) as ReactorParent<false>;
 
-Derivable.prototype.react = function react<V>(this: Derivable<V>, reaction: (value: V) => void, options?: Partial<ReactorOptions<V>>) {
+BaseDerivable.prototype.react = function react<V>(this: ReactorParent<V>, reaction: (v: V) => void, options?: Partial<ReactorOptions<V>>) {
     return Reactor.create(this, reaction, options);
 };
 
-Derivable.prototype.toPromise = function toPromise<V>(this: Derivable<V>, options?: Partial<ToPromiseOptions<V>>) {
+BaseDerivable.prototype.toPromise = function toPromise<V>(this: ReactorParent<V>, options?: Partial<ToPromiseOptions<V>>) {
     return new Promise((resolve, reject) => this.react(resolve, { ...options, once: true, errorHandler: reject }));
 };
+
+export interface ReactorParent<V> extends BaseDerivable<V>, Derivable<V> { }
 
 /**
  * The maximum recursion depth for a single Reactor. Is used to fail faster than JavaScripts "Maximum call stack size
@@ -187,7 +188,6 @@ export class Reactor<V> implements Observer {
     }
 
     /**
-     * @internal
      * During the mark phase add this reactor to the reactorSink. This way, the transaction knows we exist and we get to `reactIfNeeded`
      * later on.
      */
@@ -207,7 +207,7 @@ export class Reactor<V> implements Observer {
      * @param ended an optional callback that fires when the reactor is stopped indefinitely (by once or until option)
      */
     static create<W>(
-        parent: Derivable<W>,
+        parent: ReactorParent<W>,
         reaction: (value: W) => void,
         options?: Partial<ReactorOptions<W>>,
         ended?: () => void,
@@ -274,14 +274,6 @@ export class Reactor<V> implements Observer {
     }
 }
 
-/**
- * The derivable to react on should be a trackable observable with as additional requirement a get function to get the
- * actual value and to ensure connection.
- */
-export interface ReactorParent<V> extends TrackedObservable {
-    get(): V;
-}
-
 export type ReactorOptionValue<V> = boolean | Derivable<boolean> | ((d: Derivable<V>) => boolean | Derivable<boolean>);
 
 /**
@@ -325,12 +317,12 @@ export interface ReactorOptions<V> {
 
 export type ToPromiseOptions<V> = Pick<ReactorOptions<V>, 'from' | 'until' | 'when' | 'skipFirst'>;
 
-export function toDerivable<V>(option: ReactorOptionValue<V>, derivable: Derivable<V>) {
+export function toDerivable<V>(option: ReactorOptionValue<V>, derivable: Derivable<V>): ReactorParent<boolean> {
     if (isDerivable(option)) {
-        return option;
+        return option as ReactorParent<boolean>;
     }
     if (typeof option === 'function') {
-        return derivation(() => unpack(option(derivable)));
+        return derive(() => unpack(option(derivable))) as ReactorParent<boolean>;
     }
     return option ? true$ : false$;
 }
@@ -339,11 +331,13 @@ function combineWhenUntil<V>(parent: Derivable<V>, whenOption: ReactorOptionValu
     const when = toDerivable(whenOption, parent);
     const until = toDerivable(untilOption, parent);
 
-    if (isConstant(when) && isConstant(until)) {
-        return constant({ when: when.value, until: until.value });
+    if (when instanceof Constant && until instanceof Constant) {
+        return constant({ when: when.value, until: until.value }) as ReactorParent<WhenUntil>;
     }
 
-    return derivation(whenUntil, when, until);
+    return derive(whenUntil, when, until) as ReactorParent<WhenUntil>;
 }
 
 function whenUntil(when: boolean, until: boolean) { return { when, until }; }
+
+interface WhenUntil { when: boolean; until: boolean; }

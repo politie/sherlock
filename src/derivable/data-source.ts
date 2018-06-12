@@ -1,14 +1,18 @@
 import { isRecordingObservations, recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { debugMode, equals, MixinFn, MixinProp } from '../utils';
-import { Atom } from './atom';
-import { Derivable } from './derivable';
-import { Lens } from './lens';
-import { AtomPluck, pluck } from './pluck';
+import { debugMode, equals } from '../utils';
+import { BaseDerivable } from './base-derivable';
+import { SettableDerivable } from './derivable.interface';
+import { deriveMethod } from './derivation';
+import { lensMethod } from './lens';
+import {
+    andMethod, AndMethod, DeriveMethod, IsMethod, isMethod, LensMethod, notMethod, NotMethod, orMethod, OrMethod,
+    SettablePluckMethod, settablePluckMethod, swapMethod, SwapMethod, valueGetter, valueSetter
+} from './mixins';
 
-export const EMPTY_CACHE = {};
+const EMPTY_CACHE = {};
 
-export abstract class DataSource<V> extends Derivable<V> implements Atom<V> {
+export abstract class DataSource<V> extends BaseDerivable<V> implements SettableDerivable<V> {
     /**
      * Optional hook that will be called when the first observer connects to this datasource.
      */
@@ -34,7 +38,6 @@ export abstract class DataSource<V> extends Derivable<V> implements Atom<V> {
     protected acceptNewValue?(newValue: V): void;
 
     /**
-     * @internal
      * Not used. Only to satisfy TransactionAtom<V> interface.
      */
     _value!: never;
@@ -66,7 +69,6 @@ export abstract class DataSource<V> extends Derivable<V> implements Atom<V> {
     private readonly _stack = debugMode ? Error().stack : undefined;
 
     /**
-     * @internal
      * The current version of the state. This number gets incremented every time the state changes when connected. The version
      * is only guaranteed to increase on each change when connected.
      */
@@ -151,7 +153,6 @@ export abstract class DataSource<V> extends Derivable<V> implements Atom<V> {
     }
 
     /**
-     * @internal
      * Connect this datasource. It will make sure that the internal cache is kept up-to-date and all reactors are notified of changes
      * until disconnected.
      */
@@ -164,7 +165,6 @@ export abstract class DataSource<V> extends Derivable<V> implements Atom<V> {
     }
 
     /**
-     * @internal
      * Disconnect this datasource when not in autoCache mode. It will disconnect all remaining observers (downstream) and stop all
      * reactors that depend on this datasource.
      *
@@ -216,8 +216,28 @@ export abstract class DataSource<V> extends Derivable<V> implements Atom<V> {
         return !!this.acceptNewValue;
     }
 
-    @MixinFn(pluck) pluck!: AtomPluck<V>;
-    @MixinProp(Lens.prototype) lens!: Lens<V>['lens'];
-    @MixinProp(Atom.prototype) swap!: Atom<V>['swap'];
-    @MixinProp(Atom.prototype) value!: V;
+    value!: V;
+
+    pluck!: SettablePluckMethod<V>;
+    lens!: LensMethod<V>;
+    swap!: SwapMethod<V>;
+    derive!: DeriveMethod<V>;
+
+    and!: AndMethod<V>;
+    or!: OrMethod<V>;
+    not!: NotMethod;
+    is!: IsMethod;
 }
+Object.defineProperties(DataSource.prototype, {
+    value: { get: valueGetter, set: valueSetter },
+
+    pluck: { value: settablePluckMethod },
+    lens: { value: lensMethod },
+    swap: { value: swapMethod },
+    derive: { value: deriveMethod },
+
+    and: { value: andMethod },
+    or: { value: orMethod },
+    not: { value: notMethod },
+    is: { value: isMethod },
+});

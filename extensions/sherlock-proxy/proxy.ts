@@ -1,4 +1,4 @@
-import { clone, Derivable, isAtom, isDerivable, MonoLensDescriptor, ReactorOptions } from '@politie/sherlock';
+import { clone, Derivable, isDerivable, isSettableDerivable, MonoLensDescriptor, ReactorOptions } from '@politie/sherlock';
 
 /**
  * The base interface for DerivableProxies. Defines only the $-properties and $-methods. Any property accessed with a number or
@@ -103,7 +103,7 @@ export class ProxyDescriptor<V = any, T = V> {
         const pd = this.$proxyDescriptor;
         const atom = pd.$derivable;
         const expression = pd.$expression;
-        if (!isAtom(atom)) {
+        if (!isSettableDerivable(atom)) {
             throw new Error(`${expression || '$value'} is readonly`);
         }
         try {
@@ -129,7 +129,7 @@ export class ProxyDescriptor<V = any, T = V> {
         const pd = this.$proxyDescriptor;
         const atom = pd.$target;
         const expression = pd.$expression;
-        if (!isAtom(atom)) {
+        if (!isSettableDerivable(atom)) {
             throw new Error(`${expression || '$targetValue'} is readonly`);
         }
         try {
@@ -254,7 +254,7 @@ function createDerivable<V, T>(target: Derivable<T>, lens?: DerivableProxyLens<T
     if (!lens) {
         return target as any;
     }
-    if (!lens.set || !isAtom(target)) {
+    if (!lens.set || !isSettableDerivable(target)) {
         return target.derive(lens.get).autoCache();
     }
     return target.lens(lens as MonoLensDescriptor<T, V, never>).autoCache();

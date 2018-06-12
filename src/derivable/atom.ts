@@ -1,24 +1,28 @@
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { equals, MixinFn } from '../utils';
-import { Derivable } from './derivable';
-import { AtomPluck, pluck } from './pluck';
+import { equals } from '../utils/equals';
+import { BaseDerivable } from './base-derivable';
+import { SettableDerivable } from './derivable.interface';
+import { deriveMethod } from './derivation';
+import { lensMethod } from './lens';
+import {
+    andMethod, AndMethod, DeriveMethod, isMethod, IsMethod, LensMethod, notMethod, NotMethod, orMethod, OrMethod, settablePluckMethod,
+    SettablePluckMethod, swapMethod, SwapMethod, valueGetter, valueSetter
+} from './mixins';
 
 /**
  * Atom is the basic state holder in a Derivable world. It contains the actual mutable state. In contrast
  * with other kinds of derivables that only store immutable (constant) or derived state. Should be constructed
  * with the initial state.
  */
-export class Atom<V> extends Derivable<V> {
+export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V> {
     /**
-     * @internal
      * Construct a new atom with the provided initial value.
      *
      * @param value the initial value
      */
     constructor(
         /**
-         * @internal
          * Contains the current value of this atom. Note that this field is public for transaction support, should
          * not be used in application code. Use {@link Derivable#get} and {@link Atom#set} instead.
          */
@@ -28,7 +32,6 @@ export class Atom<V> extends Derivable<V> {
     }
 
     /**
-     * @internal
      * The current version of the state. This number gets incremented every time the state changes. Setting the state to
      * an immutable object that is structurally equal to the previous immutable object is not considered a state change.
      */
@@ -55,35 +58,30 @@ export class Atom<V> extends Derivable<V> {
         }
     }
 
-    /**
-     * `#value` is an alias for the `#get()` and `#set()` methods on the Atom.
-     * Getting `#value` will call `#get()` and return the value.
-     * Setting `#value` will call `#set()` with the new value.
-     */
-    get value() { return this.get(); }
-    set value(newValue: V) { this.set(newValue); }
+    value!: V;
+    readonly settable!: true;
 
-    /**
-     * Swaps the current value of this atom using the provided swap function. Any additional arguments to this function are
-     * fed to the swap function.
-     *
-     * @param f the swap function
-     */
-    swap(f: (v: V) => V): void;
-    swap<P1>(f: (v: V, p1: P1) => V, p1: P1 | Derivable<P1>): void;
-    swap<P1, P2>(f: (v: V, p1: P1, p2: P2) => V, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): void;
-    swap<P>(f: (v: V, ...ps: P[]) => V, ...ps: Array<P | Derivable<P>>): void;
-    swap(f: (oldValue: V, ...args: any[]) => V, ...args: any[]) {
-        this.set(f(this.get(), ...args));
-    }
-    @MixinFn(pluck) pluck!: AtomPluck<V>;
-}
+    readonly swap!: SwapMethod<V>;
+    readonly pluck!: SettablePluckMethod<V>;
+    readonly lens!: LensMethod<V>;
+    readonly derive!: DeriveMethod<V>;
 
-/**
- * Construct a new atom with the provided initial value.
- *
- * @param value the initial value
- */
-export function atom<V>(value: V): Atom<V> {
-    return new Atom(value);
+    readonly and!: AndMethod<V>;
+    readonly or!: OrMethod<V>;
+    readonly not!: NotMethod;
+    readonly is!: IsMethod;
 }
+Object.defineProperties(Atom.prototype, {
+    value: { get: valueGetter, set: valueSetter },
+    settable: { value: true },
+
+    swap: { value: swapMethod },
+    pluck: { value: settablePluckMethod },
+    lens: { value: lensMethod },
+    derive: { value: deriveMethod },
+
+    and: { value: andMethod },
+    or: { value: orMethod },
+    not: { value: notMethod },
+    is: { value: isMethod },
+});

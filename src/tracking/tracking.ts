@@ -114,31 +114,25 @@ export function recordObservation(dependency: TrackedObservable) {
 
 export interface Observable {
     readonly id: number;
-    /** @internal */
     version: number;
 }
 
 export interface TrackedObservable extends Observable {
-    /** @internal */
     readonly observers: Observer[];
 }
 
 export interface Observer {
-    /** @internal */
     disconnect(): void;
-    /** @internal */
-    mark(reactorSink: Reactor[]): void;
+    mark(reactorSink: TrackedReactor[]): void;
 }
 
 export interface TrackedObserver extends Observer {
     readonly id: number;
-    /** @internal */
     readonly dependencies: TrackedObservable[];
-    /** @internal */
     readonly dependencyVersions: { [id: number]: number };
 }
 
-export interface Reactor {
+export interface TrackedReactor {
     reactIfNeeded(): void;
 }
 
