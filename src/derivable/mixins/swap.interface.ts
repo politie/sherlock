@@ -10,10 +10,16 @@ export interface Swappable<V> {
      *
      * @param f the swap function
      */
-    swap: Swap<V>;
+    swap: SwapMethod<V>;
 }
 
-export interface Swap<V> {
+export interface SwapMethod<V> {
+    /**
+     * Swaps the current value of this atom using the provided swap function. Any additional arguments to this function are
+     * fed to the swap function.
+     *
+     * @param f the swap function
+     */
     (f: (v: V) => V): void;
     <P1>(f: (v: V, p1: P1) => V, p1: P1 | Derivable<P1>): void;
     <P1, P2>(f: (v: V, p1: P1, p2: P2) => V, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): void;

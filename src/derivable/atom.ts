@@ -1,13 +1,13 @@
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
 import { equals } from '../utils/equals';
-import { BaseDerivable } from './derivable';
+import { BaseDerivable } from './base-derivable';
 import { SettableDerivable } from './derivable.interface';
 import { deriveMethod } from './derivation';
 import { lensMethod } from './lens';
 import {
-    addValueAccessors, and, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, Derive,
-    is, LensFn, not, or, pluck, PluckLens, Swap, swap,
+    andMethod, AndMethod, DeriveMethod, isMethod, IsMethod, LensMethod, notMethod, NotMethod, orMethod, OrMethod, settablePluckMethod,
+    SettablePluckMethod, swapMethod, SwapMethod, valueGetter, valueSetter
 } from './mixins';
 
 /**
@@ -61,25 +61,30 @@ export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V> {
         }
     }
 
-    settable!: true;
     value!: V;
-    swap!: Swap<V>;
-    pluck!: PluckLens<V>;
-    lens!: LensFn<V>;
-    derive!: Derive<V>;
+    readonly settable!: true;
 
-    and!: BooleanAnd<V>;
-    or!: BooleanOr<V>;
-    not!: BooleanNot;
-    is!: BooleanIs;
+    readonly swap!: SwapMethod<V>;
+    readonly pluck!: SettablePluckMethod<V>;
+    readonly lens!: LensMethod<V>;
+    readonly derive!: DeriveMethod<V>;
+
+    readonly and!: AndMethod<V>;
+    readonly or!: OrMethod<V>;
+    readonly not!: NotMethod;
+    readonly is!: IsMethod;
 }
-addValueAccessors(Atom.prototype);
-Atom.prototype.settable = true;
-Atom.prototype.swap = swap;
-Atom.prototype.pluck = pluck as PluckLens<any>;
-Atom.prototype.lens = lensMethod;
-Atom.prototype.derive = deriveMethod;
-Atom.prototype.and = and;
-Atom.prototype.or = or;
-Atom.prototype.not = not;
-Atom.prototype.is = is;
+Object.defineProperties(Atom.prototype, {
+    value: { get: valueGetter, set: valueSetter },
+    settable: { value: true },
+
+    swap: { value: swapMethod },
+    pluck: { value: settablePluckMethod },
+    lens: { value: lensMethod },
+    derive: { value: deriveMethod },
+
+    and: { value: andMethod },
+    or: { value: orMethod },
+    not: { value: notMethod },
+    is: { value: isMethod },
+});

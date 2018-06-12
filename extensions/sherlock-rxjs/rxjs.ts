@@ -1,10 +1,9 @@
-import { _advanced, Derivable, Reactor, ReactorOptions } from '@politie/sherlock';
+import { _internals, ReactorOptions } from '@politie/sherlock';
 import { Observable, Subscriber } from 'rxjs';
 
 // Adds the toObservable method to Derivable.
-declare module '@politie/sherlock/derivable/derivable.extension' {
-    // tslint:disable-next-line:no-shadowed-variable
-    export interface ExtendDerivable<V> {
+declare module '@politie/sherlock/derivable/extension' {
+    export interface DerivableExtension<V> {
         /**
          * Create an RxJS Observable from this Derivable. The Observable stream can be tweaked with the same options that
          * can also be used with {@link Derivable#react}.
@@ -15,9 +14,12 @@ declare module '@politie/sherlock/derivable/derivable.extension' {
     }
 }
 
-_advanced.BaseDerivable.prototype.toObservable = function toObservable<V>(this: Derivable<V>, options?: Partial<ReactorOptions<V>>) {
+_internals.BaseDerivable.prototype.toObservable = function toObservable<V>(
+    this: _internals.ReactorParent<V>,
+    options?: Partial<ReactorOptions<V>>,
+) {
     return new Observable<V>((subscriber: Subscriber<V>) => {
-        return Reactor.create(this,
+        return _internals.Reactor.create(this,
             // onValue: notify subscriber
             value => subscriber.next(value),
             // Merge the options with the default options.

@@ -1,5 +1,6 @@
-import { AutoCacheable, TrackedObservable, TrackedObserver } from '../tracking';
+import { TrackedObservable, TrackedObserver } from '../tracking';
 import { uniqueId } from '../utils/unique-id';
+import { AutoCacheable } from './derivable.interface';
 
 /**
  * The base class for all Derivables. Derivables must extend from this, to be 'tracked' and to classify as a Derivable.

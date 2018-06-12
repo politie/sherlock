@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { testDerivable } from './derivable.spec';
+import { $, testDerivable } from './derivable.spec';
 import { atom, lens } from './factories';
-import { MonoLensDescriptor } from './lens.interface';
+import { MonoLensDescriptor } from './mixins/lens.interface';
 import { testSwap } from './mixins/swap.spec';
 
 describe('derivable/lens', () => {
@@ -58,7 +58,7 @@ describe('derivable/lens', () => {
 
     describe('#set', () => {
         it('should change the current state (and version) of the parent atom', () => {
-            const a$ = atom('a');
+            const a$ = $(atom('a'));
             const lensed$ = a$.lens(identityLens<string>());
             expect(lensed$.get()).to.equal('a');
             expect(a$.version).to.equal(0);
@@ -69,7 +69,7 @@ describe('derivable/lens', () => {
         });
 
         it('should not update the version if the new value equals the previous value', () => {
-            const a$ = atom('a');
+            const a$ = $(atom('a'));
             const lensed$ = a$.lens(identityLens<string>());
             expect(lensed$.get()).to.equal('a');
             expect(a$.version).to.equal(0);

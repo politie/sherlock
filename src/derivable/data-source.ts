@@ -1,13 +1,13 @@
 import { isRecordingObservations, recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
 import { debugMode, equals } from '../utils';
-import { BaseDerivable } from './derivable';
+import { BaseDerivable } from './base-derivable';
 import { SettableDerivable } from './derivable.interface';
 import { deriveMethod } from './derivation';
 import { lensMethod } from './lens';
 import {
-    addValueAccessors, and, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, Derive,
-    is, LensFn, not, or, pluck, PluckLens, swap, Swap,
+    andMethod, AndMethod, DeriveMethod, IsMethod, isMethod, LensMethod, notMethod, NotMethod, orMethod, OrMethod,
+    SettablePluckMethod, settablePluckMethod, swapMethod, SwapMethod, valueGetter, valueSetter
 } from './mixins';
 
 const EMPTY_CACHE = {};
@@ -221,23 +221,27 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
     }
 
     value!: V;
-    pluck!: PluckLens<V>;
-    lens!: LensFn<V>;
-    swap!: Swap<V>;
-    derive!: Derive<V>;
 
-    and!: BooleanAnd<V>;
-    or!: BooleanOr<V>;
-    not!: BooleanNot;
-    is!: BooleanIs;
+    pluck!: SettablePluckMethod<V>;
+    lens!: LensMethod<V>;
+    swap!: SwapMethod<V>;
+    derive!: DeriveMethod<V>;
+
+    and!: AndMethod<V>;
+    or!: OrMethod<V>;
+    not!: NotMethod;
+    is!: IsMethod;
 }
-addValueAccessors(DataSource.prototype);
-DataSource.prototype.pluck = pluck as PluckLens<any>;
-DataSource.prototype.lens = lensMethod;
-DataSource.prototype.swap = swap;
-DataSource.prototype.derive = deriveMethod;
+Object.defineProperties(DataSource.prototype, {
+    value: { get: valueGetter, set: valueSetter },
 
-DataSource.prototype.and = and;
-DataSource.prototype.or = or;
-DataSource.prototype.not = not;
-DataSource.prototype.is = is;
+    pluck: { value: settablePluckMethod },
+    lens: { value: lensMethod },
+    swap: { value: swapMethod },
+    derive: { value: deriveMethod },
+
+    and: { value: andMethod },
+    or: { value: orMethod },
+    not: { value: notMethod },
+    is: { value: isMethod },
+});

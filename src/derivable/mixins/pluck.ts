@@ -1,16 +1,14 @@
 import { clone } from '../../utils';
 import { Derivable, SettableDerivable } from '../derivable.interface';
-import { Lensable } from '../lens.interface';
 
-/**
- * The `pluck` method, to add to a Derivable Prototype.
- *
- * Create a derivation that plucks the property with the given key of the current value of the Derivable.
- */
-export function pluck<V>(this: Derivable<V>, key: string | number | Derivable<string | number>): Derivable<any> {
-    return hasLens(this)
-        ? this.lens({ get: plucker, set: pluckSetter }, key)
-        : this.derive(plucker, key);
+export type PluckKey = string | number | Derivable<string | number>;
+
+export function pluckMethod<V>(this: Derivable<V>, key: PluckKey): Derivable<any> {
+    return this.derive(plucker, key);
+}
+
+export function settablePluckMethod<V>(this: SettableDerivable<V>, key: PluckKey): SettableDerivable<any> {
+    return this.lens({ get: plucker, set: pluckSetter }, key);
 }
 
 function plucker(obj: any, key: string | number) {
@@ -37,8 +35,4 @@ function pluckSetter(newValue: any, object: any, key: string | number) {
 
 function hasSetter(obj: any): obj is { set(key: string | number, value: any): any } {
     return typeof obj.set === 'function';
-}
-
-function hasLens<V>(obj: Derivable<V>): obj is Derivable<V> & Lensable<V> {
-    return typeof (obj as SettableDerivable<V>).lens === 'function';
 }

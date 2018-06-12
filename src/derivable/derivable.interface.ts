@@ -1,25 +1,21 @@
-import { AutoCacheable, TrackedObservable } from '../tracking';
 import {
-    BooleanDerivable, CanDerive, Gettable, Lensable, PluckLens, ReadonlyPluckable, Settable, SettablePluckable, Swappable,
+    Gettable, HasBooleanMethods, HasDeriveMethod, Lensable, Pluckable, Settable, SettablePluckable, SettablePluckMethod, Swappable,
 } from './mixins/interfaces';
 
 /**
- * Derivable is the base interface of any Sherlock class.
+ * Derivable is the base interface of all variants of Sherlock Derivables.
  *
- * The base Derivable is not settable itself, but the SettableDerivable is a superset of this interface.
+ * The base Derivable is not settable itself. SettableDerivable is a subtype of Derivable.
  */
 export interface Derivable<V> extends
-    TrackedObservable,
     AutoCacheable,
-    CanDerive<V>,
+    HasDeriveMethod<V>,
     Gettable<V>,
-    BooleanDerivable<V>,
-    ReadonlyPluckable<V> { }
+    HasBooleanMethods<V>,
+    Pluckable<V> { }
 
 /**
- * SettableDerivable is a Derivable that is settable.
- *
- * The most notable of these is the Atom.
+ * SettableDerivable is a Derivable that is settable. Atoms, Lenses and DataSources can be settable.
  */
 export interface SettableDerivable<V> extends
     Derivable<V>,
@@ -33,7 +29,7 @@ export interface SettableDerivable<V> extends
      *
      * @param key the key or derivable to a key that should be used to dereference the current value
      */
-    pluck: PluckLens<V>;
+    pluck: SettablePluckMethod<V>;
 
     /**
      * `#value` is an alias for the `#get()` and `#set()` methods on the Atom.
@@ -41,4 +37,14 @@ export interface SettableDerivable<V> extends
      * Setting `#value` will call `#set()` with the new value.
      */
     value: V;
+}
+
+export interface AutoCacheable {
+    /**
+     * Sets this Derivable to autoCache mode. This will cache the value of this Derivable the first time {@link #get} is called every tick
+     * and release this cache some time after this tick. The value is still guaranteed to be up-to-date with respect to changes in any of
+     * its dependencies, by using the same mechanism that is used by a reactor. It has a setup cost comparable to starting a reactor every
+     * first time #get is called per tick. Starting a reactor on a Derivable with an active and up-to-date cache is cheap though.
+     */
+    autoCache(): this;
 }

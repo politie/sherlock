@@ -24,8 +24,8 @@
             "@politie/sherlock": [
                 "."
             ],
-            "@politie/sherlock/derivable/derivable.extension": [
-                "derivable/derivable.extension"
+            "@politie/sherlock/derivable/extension": [
+                "derivable/extension"
             ]
         }
     },

@@ -1,15 +1,15 @@
-import { Derivable } from './derivable.interface';
+import { Derivable } from '../derivable.interface';
 
-export interface CanDerive<V> {
+export interface HasDeriveMethod<V> {
     /**
      * Create a derivation based on this Derivable and the given deriver function.
      *
      * @param f the deriver function
      */
-    derive: Derive<V>;
+    derive: DeriveMethod<V>;
 }
 
-export interface Derive<V> {
+export interface DeriveMethod<V> {
     /**
      * Create a derivation based on this Derivable and the given deriver function.
      *

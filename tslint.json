@@ -52,7 +52,8 @@
             {
                 "esSpecCompliant": true
             }
-        ]
+        ],
+        "callable-types": false
     },
     "rulesDirectory": []
 }

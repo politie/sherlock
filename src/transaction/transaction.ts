@@ -1,4 +1,4 @@
-import { Reactor, TrackedObservable } from '../tracking';
+import { TrackedObservable, TrackedReactor } from '../tracking';
 
 let currentTransaction: Transaction | undefined;
 
@@ -21,7 +21,7 @@ export function processChangedAtom<V>(atom: TransactionAtom<V>, oldValue: V, old
     if (currentTransaction) {
         processChangedAtomInTransaction(currentTransaction, atom, oldValue, oldVersion);
     } else {
-        const reactors: Reactor[] = [];
+        const reactors: TrackedReactor[] = [];
         markObservers(atom, reactors);
         reactIfNeeded(reactors);
     }
@@ -31,7 +31,7 @@ interface Transaction {
     /** The atoms that were touched in this transaction. */
     touchedAtoms: Array<TransactionAtom<any>>;
     /** The reactors that were reached in this transaction. */
-    touchedReactors: Reactor[];
+    touchedReactors: TrackedReactor[];
     /**
      * A mapping from atom.id to its value before this transaction. All atoms in touchedAtoms will have a corresponding
      * entry in this map.
@@ -53,13 +53,13 @@ export interface TransactionAtom<V> extends TrackedObservable {
     _value: V;
 }
 
-function markObservers(changedAtom: TransactionAtom<any>, reactorSink: Reactor[]) {
+function markObservers(changedAtom: TransactionAtom<any>, reactorSink: TrackedReactor[]) {
     for (const observer of changedAtom.observers) {
         observer.mark(reactorSink);
     }
 }
 
-function reactIfNeeded(reactors: Reactor[]) {
+function reactIfNeeded(reactors: TrackedReactor[]) {
     for (const reactor of reactors) {
         reactor.reactIfNeeded();
     }

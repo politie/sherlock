@@ -1,9 +1,9 @@
 /**
- * The Derivable implements `get()` method and readonly `value` getter.
+ * All Derivables implement `get()` method and readonly `value` getter.
  */
 export interface Gettable<V> {
     /**
-     * Indicates if the `set()` method is implemented and will return a value.
+     * Indicates whether the `set()` method is implemented and whether it will accept a value.
      */
     readonly settable: boolean;
 
@@ -13,27 +13,26 @@ export interface Gettable<V> {
     get(): V;
 
     /**
-     * `#value` is an alias for the `#get()` method on the Derivable.
-     * Getting `#value` will call `#get()` and return the value.
+     * `#value` is an alternative to the use of the `#get()` method on the Derivable. Getting `#value` is equivalent to calling
+     * `#get()`. Automatically records the use of this Derivable when inside a Derivation.
      */
     readonly value: V;
 }
 
 /**
- * The Derivable implements `get()` abd `set()` method and `value` getter/setter.
+ * SettableDerivables implement `get()` and `set()` methods and `value` getter/setter.
  */
 export interface Settable<V> extends Gettable<V> {
     /**
-     * Sets the value of this SettableDerivable, fires reactors when expected.
+     * Sets the value of this SettableDerivable, firing reactors if needed.
      *
      * @param newValue the new state
      */
     set(newValue: V): void;
 
     /**
-     * `#value` is an alias for the `#get()` and `#set()` methods on the SettableDerivable.
-     * Getting `#value` will call `#get()` and return the value.
-     * Setting `#value` will call `#set()` with the new value.
+     * `#value` is an alternative to the use of the `#get()` and `#set()` methods on the SettableDerivable. Getting `#value`
+     * will call `#get()` and return the value. Setting `#value` will call `#set()` with the new value.
      */
     value: V;
 }

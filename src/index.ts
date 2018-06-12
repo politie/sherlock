@@ -9,7 +9,7 @@ export {
 } from './extras';
 
 export {
-    Reactor, ReactorOptions, ReactorOptionValue, ToPromiseOptions,
+    ReactorOptions, ReactorOptionValue, ToPromiseOptions,
 } from './reactor';
 
 export {
@@ -20,5 +20,5 @@ export {
     clone, equals, isPlainObject, setDebugMode, unpack,
 } from './utils';
 
-import * as _advanced from './derivable';
-export { _advanced };
+import * as _internals from './internals';
+export { _internals };

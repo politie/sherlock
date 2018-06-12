@@ -21,15 +21,16 @@ assert.deepStrictEqual(receivedValue, { nested: { property: 'another value' } })
 const { statSync } = require('fs');
 
 assertBundleSize('sherlock-rxjs', 1000);
-assertBundleSize('sherlock-proxy', 15000);
-assertBundleSize('sherlock', 57000);
+assertBundleSize('sherlock-proxy', 13000);
+assertBundleSize('sherlock', 56000);
 
 console.log('Bundle ok.');
 
 function toKB(size) {
-    return Math.floor(size / 1024);
+    return Math.ceil(size / 1024);
 }
 function assertBundleSize(name, expectedSize) {
     const size = statSync(`./dist/${name}/${name}.cjs.js`).size;
+    console.log(`${name}.cjs.js:\t${size}B.`);
     assert(size < expectedSize, `Unexpected bundle size for ${name}, expected ${toKB(expectedSize)}KB but it was ${toKB(size)}KB`)
 }

@@ -3,7 +3,7 @@ import { Constant } from './constant';
 import { Derivable, SettableDerivable } from './derivable.interface';
 import { Derivation } from './derivation';
 import { Lens } from './lens';
-import { LensDescriptor } from './lens.interface';
+import { LensDescriptor } from './mixins/lens.interface';
 
 /**
  * Construct a new atom with the provided initial value.
@@ -19,13 +19,15 @@ export function atom<V>(value: V): SettableDerivable<V> {
  *
  * @param deriver the deriver function
  */
-export function derivation<R>(f: () => R): Derivable<R>;
-export function derivation<R, P1>(f: (p1: P1) => R, p1: P1 | Derivable<P1>): Derivable<R>;
-export function derivation<R, P1, P2>(f: (p1: P1, p2: P2) => R, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): Derivable<R>;
-export function derivation<R, P>(f: (...ps: P[]) => R, ...ps: Array<P | Derivable<P>>): Derivable<R>;
-export function derivation<R, P>(f: (...ps: P[]) => R, ...ps: Array<P | Derivable<P>>): Derivable<R> {
+export function derive<R>(f: () => R): Derivable<R>;
+export function derive<R, P1>(f: (p1: P1) => R, p1: P1 | Derivable<P1>): Derivable<R>;
+export function derive<R, P1, P2>(f: (p1: P1, p2: P2) => R, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): Derivable<R>;
+export function derive<R, P>(f: (...ps: P[]) => R, ...ps: Array<P | Derivable<P>>): Derivable<R>;
+export function derive<R, P>(f: (...ps: P[]) => R, ...ps: Array<P | Derivable<P>>): Derivable<R> {
     return new Derivation(f, ps.length ? ps : undefined);
 }
+
+export const derivation = derive;
 
 /**
  * Creates a new Constant with the give value.

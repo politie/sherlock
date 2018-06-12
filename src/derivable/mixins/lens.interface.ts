@@ -1,4 +1,4 @@
-import { Derivable, SettableDerivable } from './derivable.interface';
+import { Derivable, SettableDerivable } from '../derivable.interface';
 
 export interface Lensable<V> {
     /**
@@ -6,9 +6,10 @@ export interface Lensable<V> {
      *
      * @param descriptor the deriver (get) and transform (set) functions
      */
-    lens: LensFn<V>;
+    lens: LensMethod<V>;
 }
-export interface LensFn<V> {
+
+export interface LensMethod<V> {
     /**
      * Create a new Lens using the provided deriver (get) and transform (set) functions.
      *

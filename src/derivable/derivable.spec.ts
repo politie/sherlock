@@ -2,11 +2,12 @@ import { expect } from 'chai';
 import { fromJS } from 'immutable';
 import { spy } from 'sinon';
 import { isSettableDerivable } from '../extras';
+import { BaseDerivable } from './base-derivable';
 import { Derivable, SettableDerivable } from './derivable.interface';
 import { Derivation } from './derivation';
 import { atom, constant, derivation } from './factories';
 import { testAccessors } from './mixins/accessors.spec';
-import { testBooleanFuncs } from './mixins/boolean-funcs.spec';
+import { testBooleanFuncs } from './mixins/boolean-methods.spec';
 import { testPluck } from './mixins/pluck.spec';
 
 export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
@@ -255,6 +256,10 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>) {
 }
 
 function resetAtomTo<V>(a$: SettableDerivable<V>, value: V) {
-    a$.observers.forEach(obs => obs.disconnect());
+    $(a$).observers.forEach(obs => obs.disconnect());
     a$.set(value);
 }
+
+export function $<V>(d: SettableDerivable<V>): SettableDerivable<V> & BaseDerivable<V>;
+export function $<V>(d: Derivable<V>): Derivable<V> & BaseDerivable<V>;
+export function $(d: any) { return d; }

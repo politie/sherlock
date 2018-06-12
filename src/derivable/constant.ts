@@ -1,9 +1,8 @@
-import { BaseDerivable } from './derivable';
+import { BaseDerivable } from './base-derivable';
 import { Derivable } from './derivable.interface';
 import { deriveMethod } from './derivation';
 import {
-    and, BooleanAnd, BooleanIs, BooleanNot, BooleanOr, Derive,
-    is, not, or, pluck, PluckDerivable,
+    andMethod, AndMethod, DeriveMethod, isMethod, IsMethod, notMethod, NotMethod, orMethod, OrMethod, PluckMethod, pluckMethod
 } from './mixins';
 
 /**
@@ -36,20 +35,24 @@ export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
      */
     get(): V { return this.value; }
 
-    settable!: false;
-    derive!: Derive<V>;
-    pluck!: PluckDerivable<V>;
+    readonly settable!: false;
 
-    and!: BooleanAnd<V>;
-    or!: BooleanOr<V>;
-    not!: BooleanNot;
-    is!: BooleanIs;
+    readonly derive!: DeriveMethod<V>;
+    readonly pluck!: PluckMethod<V>;
+
+    readonly and!: AndMethod<V>;
+    readonly or!: OrMethod<V>;
+    readonly not!: NotMethod;
+    readonly is!: IsMethod;
 }
-Constant.prototype.settable = false;
-Constant.prototype.derive = deriveMethod;
-Constant.prototype.pluck = pluck;
+Object.defineProperties(Constant.prototype, {
+    settable: { value: false },
 
-Constant.prototype.and = and;
-Constant.prototype.or = or;
-Constant.prototype.not = not;
-Constant.prototype.is = is;
+    derive: { value: deriveMethod },
+    pluck: { value: pluckMethod },
+
+    and: { value: andMethod },
+    or: { value: orMethod },
+    not: { value: notMethod },
+    is: { value: isMethod },
+});

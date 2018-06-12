@@ -1,18 +1,18 @@
 import { Derivable, SettableDerivable } from '../derivable.interface';
 
 /**
- * The Derivable implements the `pluck()` method.
- * The output of this method will be a `Derivable`.
+ * Derivables implement the `pluck()` method with a return type of `Derivable`.
  */
-export interface ReadonlyPluckable<V> {
+export interface Pluckable<V> {
     /**
      * Create a derivation that plucks the property with the given key of the current value of the Derivable.
      *
      * @param key the key or derivable to a key that should be used to dereference the current value
      */
-    pluck: PluckDerivable<V>;
+    pluck: PluckMethod<V>;
 }
-export interface PluckDerivable<V> {
+
+export interface PluckMethod<V> {
     /**
      * Create a derivation that plucks the property with the given key of the current value of the Derivable.
      *
@@ -23,8 +23,7 @@ export interface PluckDerivable<V> {
 }
 
 /**
- * The Derivable implements the `pluck()` method.
- * The output of this method will be a `SettableDerivable`.
+ * SettableDerivables implement the `pluck()` method with a return type of `SettableDerivable`.
  */
 export interface SettablePluckable<V> {
     /**
@@ -32,9 +31,10 @@ export interface SettablePluckable<V> {
      *
      * @param key the key or derivable to a key that should be used to dereference the current value
      */
-    pluck: PluckLens<V>;
+    pluck: SettablePluckMethod<V>;
 }
-export interface PluckLens<V> {
+
+export interface SettablePluckMethod<V> {
     /**
      * Create a lens that plucks the property with the given key of the current value of the SettableDerivable.
      *

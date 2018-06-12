@@ -1,14 +1,14 @@
 import {
-    isRecordingObservations, Reactor, recordObservation, removeObserver, startRecordingObservations,
-    stopRecordingObservations, TrackedObservable,
+    isRecordingObservations, recordObservation, removeObserver, startRecordingObservations, stopRecordingObservations,
+    TrackedObservable, TrackedReactor,
 } from '../tracking';
 import { debugMode, equals, unpack } from '../utils';
-import { BaseDerivable } from './derivable';
+import { BaseDerivable } from './base-derivable';
 import { Derivable } from './derivable.interface';
-import { addValueGetter } from './mixins/accessors';
-import { and, is, not, or } from './mixins/boolean-funcs';
-import { BooleanAnd, BooleanIs, BooleanNot, BooleanOr, Derive, PluckDerivable } from './mixins/interfaces';
-import { pluck } from './mixins/pluck';
+import {
+    AndMethod, andMethod, DeriveMethod, isMethod, IsMethod, NotMethod, notMethod, OrMethod, orMethod, PluckMethod, pluckMethod,
+    valueGetter
+} from './mixins';
 
 const EMPTY_CACHE = {};
 
@@ -184,7 +184,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
      * in that state, all observers of this derivation are also expected to already be in that state. This invariant should never
      * be invalidated. Any reactors we encounter are pushed into the reactorSink.
      */
-    mark(reactorSink: Reactor[]) {
+    mark(reactorSink: TrackedReactor[]) {
         // If we think we're up-to-date our observers might think the same, otherwise, we're good, cause our observers can never
         // believe the're up-to-date when any of their dependencies is not up-to-date.
         if (this.isUpToDate) {
@@ -246,22 +246,28 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     }
 
     readonly value!: V;
-    settable!: boolean;
-    derive!: Derive<V>;
-    pluck!: PluckDerivable<V>;
-    and!: BooleanAnd<V>;
-    or!: BooleanOr<V>;
-    not!: BooleanNot;
-    is!: BooleanIs;
+    readonly settable!: boolean;
+
+    derive!: DeriveMethod<V>;
+    pluck!: PluckMethod<V>;
+
+    and!: AndMethod<V>;
+    or!: OrMethod<V>;
+    not!: NotMethod;
+    is!: IsMethod;
 }
-addValueGetter(Derivation.prototype);
-Derivation.prototype.settable = false;
-Derivation.prototype.derive = deriveMethod;
-Derivation.prototype.pluck = pluck;
-Derivation.prototype.and = and;
-Derivation.prototype.or = or;
-Derivation.prototype.not = not;
-Derivation.prototype.is = is;
+Object.defineProperties(Derivation.prototype, {
+    value: { get: valueGetter },
+    settable: { value: false },
+
+    derive: { value: deriveMethod },
+    pluck: { value: pluckMethod },
+
+    and: { value: andMethod },
+    or: { value: orMethod },
+    not: { value: notMethod },
+    is: { value: isMethod },
+});
 
 export function deriveMethod<V extends P, R, P>(
     this: Derivable<V>,

@@ -4,6 +4,7 @@ import { isSettableDerivable } from '../../extras';
 import { addObserver } from '../../tracking';
 import { Constant } from '../constant';
 import { Derivable } from '../derivable.interface';
+import { $ } from '../derivable.spec';
 import { constant } from '../factories';
 
 /**
@@ -22,9 +23,9 @@ export function testAccessors(factory: <V>(value: V) => Derivable<V>) {
         });
 
         it(`should ${factory === constant ? 'not ' : ''}be recorded inside a derivation'`, () => {
-            const value$ = factory(123);
+            const value$ = $(factory(123));
             expect(value$.observers).to.be.empty;
-            const derived$ = value$.derive(value => value + 876);
+            const derived$ = $(value$.derive(value => value + 876));
             expect(value$.observers).to.be.empty;
 
             // Simulate being observed to force derived$ to go into connected state.

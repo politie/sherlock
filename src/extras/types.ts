@@ -1,4 +1,4 @@
-import { BaseDerivable } from '../derivable/derivable';
+import { BaseDerivable } from '../derivable/base-derivable';
 import { Derivable, SettableDerivable } from '../derivable/derivable.interface';
 
 /**

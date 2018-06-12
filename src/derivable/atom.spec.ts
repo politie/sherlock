@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { Seq } from 'immutable';
 import { txn } from '../transaction/transaction.spec';
 import { Atom } from './atom';
-import { testDerivable } from './derivable.spec';
+import { $, testDerivable } from './derivable.spec';
 import { atom } from './factories';
 import { testSwap } from './mixins/swap.spec';
 
@@ -11,7 +11,7 @@ describe('derivable/atom', () => {
 
     describe('#set', () => {
         it('should change the current state and version', () => {
-            const a$ = atom('a');
+            const a$ = $(atom('a'));
             expect(a$.get()).to.equal('a');
             expect(a$.version).to.equal(0);
 
@@ -21,7 +21,7 @@ describe('derivable/atom', () => {
         });
 
         it('should not update the version if the new value equals the previous value', () => {
-            const a$ = atom('a');
+            const a$ = $(atom('a'));
             expect(a$.get()).to.equal('a');
             expect(a$.version).to.equal(0);
             a$.set('a');
@@ -29,7 +29,7 @@ describe('derivable/atom', () => {
             expect(a$.version).to.equal(0);
 
             // Using the utils.equals function
-            const imm$ = atom(Seq.Indexed.of(1, 2, 3));
+            const imm$ = $(atom(Seq.Indexed.of(1, 2, 3)));
             expect(imm$.get()).to.equal(Seq.of(1, 2, 3));
             expect(imm$.version).to.equal(0);
             imm$.set(Seq.of(1, 2).concat(3).toIndexedSeq());

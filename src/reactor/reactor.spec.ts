@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { SinonStub, spy, stub } from 'sinon';
 import { atom, Derivable, derivation, SettableDerivable } from '../derivable';
+import { $ } from '../derivable/derivable.spec';
 import { atomically } from '../transaction';
 import { setDebugMode } from '../utils';
 import { Reactor, ReactorOptions, ReactorParent } from './reactor';
@@ -463,7 +464,7 @@ describe('reactor/reactor', () => {
 
     it('should not generate a stacktrace on instantiation', () => {
         // tslint:disable-next-line:no-string-literal
-        expect(new TestReactor(a$, () => 0)['stack']).to.be.undefined;
+        expect(new TestReactor($(a$), () => 0)['stack']).to.be.undefined;
     });
 
     context('in debug mode', () => {
@@ -476,11 +477,11 @@ describe('reactor/reactor', () => {
 
         it('should generate a stacktrace on instantiation', () => {
             // tslint:disable-next-line:no-string-literal
-            expect(new TestReactor(a$, () => 0)['stack']).to.be.a('string');
+            expect(new TestReactor($(a$), () => 0)['stack']).to.be.a('string');
         });
 
         it('should log the recorded stacktrace on error', () => {
-            const reactor = new TestReactor(a$, () => { throw new Error('the Error'); });
+            const reactor = new TestReactor($(a$), () => { throw new Error('the Error'); });
             // tslint:disable-next-line:no-string-literal
             const stack = reactor['stack'];
             expect(() => reactor.start()).to.throw('the Error');

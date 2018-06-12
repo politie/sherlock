@@ -2,11 +2,10 @@ import { atomic } from '../transaction';
 import { unpack } from '../utils';
 import { Derivable, SettableDerivable } from './derivable.interface';
 import { Derivation } from './derivation';
-import { LensDescriptor, LensFn, MonoLensDescriptor } from './lens.interface';
-import { addValueAccessors } from './mixins/accessors';
-import { PluckLens, Swap } from './mixins/interfaces';
-import { pluck } from './mixins/pluck';
-import { swap } from './mixins/swap';
+import {
+    LensDescriptor, LensMethod, MonoLensDescriptor, settablePluckMethod, SettablePluckMethod, swapMethod, SwapMethod, valueGetter,
+    valueSetter
+} from './mixins';
 
 /**
  * A Lens is a Derivation that is also settable. It satisfies the Atom interface and can be created using an
@@ -47,26 +46,30 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
         }
     }
 
-    settable!: true;
     value!: V;
-    lens!: LensFn<V>;
-    pluck!: PluckLens<V>;
-    swap!: Swap<V>;
+    readonly settable!: true;
+
+    readonly lens!: LensMethod<V>;
+    readonly pluck!: SettablePluckMethod<V>;
+    readonly swap!: SwapMethod<V>;
 }
-addValueAccessors(Lens.prototype);
-Lens.prototype.settable = true;
-Lens.prototype.lens = lensMethod;
-Lens.prototype.pluck = pluck as PluckLens<any>;
-Lens.prototype.swap = swap;
+Object.defineProperties(Lens.prototype, {
+    value: { get: valueGetter, set: valueSetter },
+    settable: { value: true },
+    lens: { value: lensMethod },
+    pluck: { value: settablePluckMethod },
+    swap: { value: swapMethod },
+});
 
 export function lensMethod<V, W, P>(
-    this: SettableDerivable<V>, { get, set }: MonoLensDescriptor<V, W, P>,
+    this: SettableDerivable<V>,
+    { get, set }: MonoLensDescriptor<V, W, P>,
     ...ps: Array<P | Derivable<P>>
 ): SettableDerivable<W> {
 
-    const atom = this;
+    const base = this;
     return new Lens({
         get,
-        set() { atom.set(set.apply(undefined, arguments)); },
-    }, [atom, ...ps]);
+        set() { base.set(set.apply(undefined, arguments)); },
+    }, [base, ...ps]);
 }
