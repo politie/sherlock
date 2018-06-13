@@ -1,4 +1,4 @@
-import { atom, constant, Derivable, equals, isDerivable } from '@politie/sherlock';
+import { atom, constant, Derivable, isDerivable, utils } from '@politie/sherlock';
 import { expect } from 'chai';
 import { fromJS, Seq } from 'immutable';
 import { spy } from 'sinon';
@@ -7,7 +7,7 @@ import { DerivableProxy, extendExpression, isDerivableProxy, ProxyDescriptor } f
 typeof Proxy !== 'undefined' && describe('proxy', () => {
 
     type ProxyType<Structure, Extras = {}> = DerivableProxy<Structure>
-        & {[P in keyof Structure]: ProxyType<Structure[P], Extras>}
+        & { [P in keyof Structure]: ProxyType<Structure[P], Extras> }
         & Extras;
 
     function createForObject<T>(obj: T): ProxyType<T> {
@@ -149,10 +149,10 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
             const pdA = descriptor.$create(sourceA);
             const pdB = descriptor.$create(sourceB);
 
-            expect(equals(pdA, pdA)).to.be.true;
-            expect(equals(pdB, pdB)).to.be.true;
+            expect(utils.equals(pdA, pdA)).to.be.true;
+            expect(utils.equals(pdB, pdB)).to.be.true;
 
-            expect(equals(pdA, pdB)).to.be.false;
+            expect(utils.equals(pdA, pdB)).to.be.false;
         });
 
         it('should not apply any transformation by default', () => {

@@ -8,3 +8,4 @@ export * from './factories';
 export * from './interfaces';
 export * from './lens';
 export * from './mixins';
+export * from './unpack';

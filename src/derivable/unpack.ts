@@ -1,5 +1,4 @@
-import { Derivable } from '../derivable/interfaces';
-import { isDerivable } from '../extras/types';
+import { Derivable, isDerivable } from './interfaces';
 
 /**
  * Unpacks a derivable or does nothing if `v` is not a derivable.

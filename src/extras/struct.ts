@@ -1,6 +1,5 @@
-import { Derivable, derive } from '../derivable';
+import { Derivable, derive, isDerivable } from '../derivable';
 import { isPlainObject } from '../utils';
-import { isDerivable } from './types';
 
 /**
  * Converts a map or array of Derivables or any nested structure containing maps, arrays and Derivables into a single

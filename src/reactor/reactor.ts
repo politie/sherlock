@@ -1,7 +1,6 @@
-import { BaseDerivable, constant, Derivable, derive } from '../derivable';
-import { isDerivable } from '../extras';
+import { BaseDerivable, constant, Derivable, derive, isDerivable, unpack } from '../derivable';
 import { addObserver, Observer, removeObserver } from '../tracking';
-import { debugMode, equals, uniqueId, unpack } from '../utils';
+import { config, equals, uniqueId } from '../utils';
 
 // Adds the react and toPromise methods to Derivables.
 declare module '../derivable/extension' {
@@ -74,7 +73,7 @@ export class Reactor<V> implements Observer {
     /**
      * Used for debugging. A stack that shows the location where this derivation was created.
      */
-    private readonly stack = debugMode ? new Error().stack : undefined;
+    private readonly stack = config.debugMode ? new Error().stack : undefined;
 
     /**
      * The value of the parent when this reactor last reacted. Is used to determine whether it should react again or not.

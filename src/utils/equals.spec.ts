@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { Seq, Set as ISet } from 'immutable';
-import { atom } from '../derivable';
-import { unpack } from '../utils';
+import { atom, unpack } from '../derivable';
 import { equals } from './equals';
 
 describe('util/equals', () => {

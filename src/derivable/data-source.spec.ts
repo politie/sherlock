@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { SinonFakeTimers, SinonStub, spy, stub, useFakeTimers } from 'sinon';
 import { basicTransactionsTests } from '../transaction/transaction.spec';
-import { setDebugMode } from '../utils';
+import { config } from '../utils';
 import { testDerivable } from './base-derivable.spec';
 import { DataSource } from './data-source';
 
@@ -180,8 +180,8 @@ describe('derivable/data-source', () => {
             }
         }
 
-        before('setDebugMode', () => setDebugMode(true));
-        after('resetDebugMode', () => setDebugMode(false));
+        before('setDebugMode', () => { config.debugMode = true; });
+        after('resetDebugMode', () => { config.debugMode = false; });
 
         let consoleErrorStub: SinonStub;
         beforeEach('stub console.error', () => { consoleErrorStub = stub(console, 'error'); });

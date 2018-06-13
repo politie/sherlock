@@ -19,18 +19,29 @@ value$.set('another value');
 
 assert.deepStrictEqual(receivedValue, { nested: { property: 'another value' } });
 
-const { readFileSync } = require('fs');
+const fs = require('fs');
+const gzipSize = require('gzip-size');
 
-assertBundleSize('sherlock-rxjs', 1);
-assertBundleSize('sherlock-proxy', 5);
-assertBundleSize('sherlock', 15);
+(console.table || console.log)({
+    'sherlock': assertBundleSize('sherlock', 15),
+    'sherlock-proxy': assertBundleSize('sherlock-proxy', 5),
+    'sherlock-rxjs': assertBundleSize('sherlock-rxjs', 1),
+});
 
 console.log('Bundle ok.');
 
 function assertBundleSize(name, expectedSize) {
-    const file = readFileSync(`./dist/${name}/${name}.cjs.js`, 'utf8');
+    const filename = `./dist/${name}/${name}.esm.js`;
+    const file = fs.readFileSync(filename, 'utf8');
     const minified = terser.minify(file, { module: true }).code;
     const size = minified.length;
-    console.log(`${name}.cjs.js:\t${file.length}B\t(${size}B minified).`);
+
     assert(size < expectedSize * 1024, `Unexpected minified bundle size for ${name}, expected ${expectedSize}KB but it was ${Math.ceil(size / 1024)}KB`)
+
+    return {
+        filename: filename,
+        filesize: file.length,
+        minified: size,
+        gzipped: gzipSize.sync(minified),
+    };
 }

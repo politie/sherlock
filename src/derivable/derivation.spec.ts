@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { SinonFakeTimers, SinonSpy, SinonStub, spy, stub, useFakeTimers } from 'sinon';
-import { setDebugMode } from '../utils';
+import { config } from '../utils';
 import { testDerivable } from './base-derivable.spec';
 import { atom, constant, derive } from './factories';
 import { Derivable, SettableDerivable } from './interfaces';
@@ -24,8 +24,8 @@ describe('derivable/derive', () => {
     });
 
     context('in debug mode', () => {
-        before('setDebugMode', () => setDebugMode(true));
-        after('resetDebugMode', () => setDebugMode(false));
+        before('setDebugMode', () => { config.debugMode = true; });
+        after('resetDebugMode', () => { config.debugMode = false; });
 
         let consoleErrorStub: SinonStub;
         beforeEach('stub console.error', () => { consoleErrorStub = stub(console, 'error'); });

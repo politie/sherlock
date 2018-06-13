@@ -167,7 +167,7 @@ function commitTransaction() {
     const ctx = currentTransaction;
     // istanbul ignore if: should never happen!
     if (!ctx) {
-        throw new Error('No active transaction!');
+        throw new Error();
     }
     currentTransaction = ctx.parentTransaction;
 
@@ -195,7 +195,7 @@ function rollbackTransaction() {
     const ctx = currentTransaction;
     // istanbul ignore if: should never happen!
     if (!ctx) {
-        throw new Error('No active transaction!');
+        throw new Error();
     }
     currentTransaction = ctx.parentTransaction;
 

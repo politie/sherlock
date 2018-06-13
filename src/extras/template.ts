@@ -1,5 +1,4 @@
-import { Derivable, derive } from '../derivable';
-import { unpack } from '../utils';
+import { Derivable, derive, unpack } from '../derivable';
 
 /**
  * A template literal tag to create a string derivation using a template literal.

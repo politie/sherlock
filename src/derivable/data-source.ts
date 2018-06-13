@@ -1,6 +1,6 @@
 import { isRecordingObservations, recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { debugMode, equals } from '../utils';
+import { config, equals } from '../utils';
 import { BaseDerivable } from './base-derivable';
 import { deriveMethod, maybeDisconnectInNextTick } from './derivation';
 import { SettableDerivable } from './interfaces';
@@ -63,7 +63,7 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
     /**
      * Used for debugging. A stack that shows the location where this datasource was created.
      */
-    private readonly _stack = debugMode ? Error().stack : undefined;
+    private readonly _stack = config.debugMode ? Error().stack : undefined;
 
     /**
      * The current version of the state. This number gets incremented every time the state changes when connected. The version

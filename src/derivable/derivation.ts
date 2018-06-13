@@ -1,10 +1,11 @@
 import {
     isRecordingObservations, recordObservation, removeObserver, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedReactor
 } from '../tracking';
-import { debugMode, equals, unpack } from '../utils';
+import { config, equals } from '../utils';
 import { BaseDerivable } from './base-derivable';
 import { Derivable } from './interfaces';
 import { andMethod, isMethod, notMethod, orMethod, pluckMethod, valueGetter } from './mixins';
+import { unpack } from './unpack';
 
 const EMPTY_CACHE = {};
 
@@ -56,7 +57,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     /**
      * Used for debugging. A stack that shows the location where this derivation was created.
      */
-    private readonly stack = debugMode ? Error().stack : undefined;
+    private readonly stack = config.debugMode ? Error().stack : undefined;
 
     /**
      * Create a new Derivation using the deriver function.

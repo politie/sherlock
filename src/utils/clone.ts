@@ -19,6 +19,6 @@ function cloneArray<T extends any[]>(obj: T): T {
         return Object.defineProperties(new (obj.constructor as any)(), getOwnPropertyDescriptors(obj));
     } catch (e) {
         // istanbul ignore next: for debug purposes
-        throw Object.assign(new Error('could not construct a clone of the provided Array: ' + (e && e.message)), { jse_cause: e });
+        throw Object.assign(new Error('could not clone Array: ' + (e && e.message)), { jse_cause: e });
     }
 }
