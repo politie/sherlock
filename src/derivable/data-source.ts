@@ -3,7 +3,7 @@ import { processChangedAtom } from '../transaction';
 import { debugMode, equals } from '../utils';
 import { BaseDerivable } from './base-derivable';
 import { SettableDerivable } from './derivable.interface';
-import { deriveMethod } from './derivation';
+import { deriveMethod, maybeDisconnectInNextTick } from './derivation';
 import { lensMethod } from './lens';
 import {
     andMethod, AndMethod, DeriveMethod, IsMethod, isMethod, LensMethod, notMethod, NotMethod, orMethod, OrMethod,
@@ -84,7 +84,7 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
                 // We will connect because of autoCacheMode, after a tick we may need to disconnect (if no reactor was started
                 // in this tick).
                 this.connect();
-                this.maybeDisconnectInNextTick();
+                maybeDisconnectInNextTick(this);
             } else if (isRecordingObservations()) {
                 // We know we need to connect if isRecordingObservations() returns true (in which case our observer is connecting
                 // and therefore recording its dependencies).
@@ -172,20 +172,16 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
      */
     disconnect() {
         if (this._autoCacheMode) {
-            this.maybeDisconnectInNextTick();
+            maybeDisconnectInNextTick(this);
         } else {
             this.disconnectNow();
         }
     }
 
-    private maybeDisconnectInNextTick() {
-        setTimeout(() => this.observers.length || this.disconnectNow(), 0);
-    }
-
     /**
      * Force disconnect.
      */
-    protected disconnectNow() {
+    disconnectNow() {
         // Disconnecting any remaining observers will in turn call this method again.
         if (!this.connected) { return; }
 
