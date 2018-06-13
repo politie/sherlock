@@ -5,7 +5,7 @@ export {
 
 export {
     and, firstNotNull, isDerivable, isSettableDerivable,
-    lift, or, scan, struct, template, wrapPreviousState,
+    lift, or, scan, struct, template, pairwise, wrapPreviousState,
 } from './extras';
 
 export {
