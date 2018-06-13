@@ -101,7 +101,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
                 // We will connect because of autoCacheMode, after a tick we may need to disconnect (if no reactor was started
                 // in this tick).
                 this.connect();
-                this.maybeDisconnectInNextTick();
+                maybeDisconnectInNextTick(this);
             } else if (isRecordingObservations()) {
                 // We know we need to connect if isRecordingObservations() returns true (in which case our observer is connecting
                 // and therefore recording its dependencies).
@@ -114,9 +114,13 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
             return this.callDeriver();
         }
 
-        // We are connected, so we should record this instance as a dependency of our observers.
-        recordObservation(this);
         this.updateIfNeeded();
+        // We are connected, so we should record this instance as a dependency of our observers, but only if we have dependencies.
+        // If we don't have any dependencies we are effectively immutable (because derivations must be pure functions), therefore we
+        // don't record this observation to our observer.
+        if (this.dependencies.length) {
+            recordObservation(this);
+        }
         if (this.cachedError) {
             throw this.cachedError;
         }
@@ -207,20 +211,16 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
      */
     disconnect() {
         if (this.autoCacheMode) {
-            this.maybeDisconnectInNextTick();
+            maybeDisconnectInNextTick(this);
         } else {
             this.disconnectNow();
         }
     }
 
-    private maybeDisconnectInNextTick() {
-        setTimeout(() => this.observers.length || this.disconnectNow(), 0);
-    }
-
     /**
      * Force disconnect.
      */
-    protected disconnectNow() {
+    disconnectNow() {
         this.isUpToDate = false;
         this.connected = false;
         this.cachedValue = EMPTY_CACHE as V;
@@ -262,6 +262,10 @@ Object.defineProperties(Derivation.prototype, {
     not: { value: notMethod },
     is: { value: isMethod },
 });
+
+export function maybeDisconnectInNextTick(derivation: TrackedObservable & { disconnectNow(): void }) {
+    setTimeout(() => derivation.observers.length || derivation.disconnectNow(), 0);
+}
 
 export function deriveMethod<V extends P, R, P>(
     this: Derivable<V>,

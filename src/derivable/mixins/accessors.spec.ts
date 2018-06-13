@@ -5,12 +5,11 @@ import { addObserver } from '../../tracking';
 import { Constant } from '../constant';
 import { Derivable } from '../derivable.interface';
 import { $ } from '../derivable.spec';
-import { constant } from '../factories';
 
 /**
  * Tests the `get()` method and `value` accessors.
  */
-export function testAccessors(factory: <V>(value: V) => Derivable<V>) {
+export function testAccessors(factory: <V>(value: V) => Derivable<V>, immutable: boolean) {
     describe('#get', () => {
         it('should return the current state', () => {
             const value$ = factory(123);
@@ -22,7 +21,7 @@ export function testAccessors(factory: <V>(value: V) => Derivable<V>) {
             }
         });
 
-        it(`should ${factory === constant ? 'not ' : ''}be recorded inside a derivation'`, () => {
+        it(`should ${immutable ? 'not ' : ''}be recorded inside a derivation'`, () => {
             const value$ = $(factory(123));
             expect(value$.observers).to.be.empty;
             const derived$ = $(value$.derive(value => value + 876));
@@ -32,7 +31,7 @@ export function testAccessors(factory: <V>(value: V) => Derivable<V>) {
             addObserver(derived$, {} as any);
             derived$.get();
 
-            if (factory === constant) {
+            if (immutable) {
                 expect(value$.observers).to.be.empty;
             } else {
                 expect(value$.observers).to.have.length(1);

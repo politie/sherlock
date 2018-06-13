@@ -3,10 +3,20 @@ import { SinonFakeTimers, SinonSpy, SinonStub, spy, stub, useFakeTimers } from '
 import { setDebugMode } from '../utils';
 import { Derivable, SettableDerivable } from './derivable.interface';
 import { testDerivable } from './derivable.spec';
-import { atom, derive } from './factories';
+import { atom, constant, derive } from './factories';
 
 describe('derivable/derive', () => {
-    testDerivable(<V>(v: V) => derive(() => v));
+    context('(standalone)', () => {
+        testDerivable(<V>(v: V) => derive(() => v), true);
+    });
+
+    context('(based on atom)', () => {
+        testDerivable(<V>(v: V) => atom(v).derive(d => d), false);
+    });
+
+    context('(based on constant)', () => {
+        testDerivable(<V>(v: V) => constant(v).derive(d => d), true);
+    });
 
     it('should not generate a stacktrace on instantiation', () => {
         // tslint:disable-next-line:no-string-literal

@@ -9,7 +9,7 @@ describe('derivable/lens', () => {
         testDerivable(<V>(v: V) => atom({ value: v }).lens<V>({
             get: obj => obj.value,
             set: value => ({ value }),
-        }));
+        }), false);
     });
 
     context('(mono with params)', () => {
@@ -17,7 +17,7 @@ describe('derivable/lens', () => {
         testDerivable(<V>(v: V) => atom({ [propName]: v }).lens<V, string>({
             get: (obj, prop) => obj[prop],
             set: (newValue, obj, prop) => ({ ...obj, [prop]: newValue }),
-        }, propName));
+        }, propName), false);
     });
 
     context('(standalone)', () => {
@@ -35,7 +35,7 @@ describe('derivable/lens', () => {
                     b$.set(x);
                 },
             });
-        });
+        }, false);
     });
 
     context('(standalone with params)', () => {
@@ -53,7 +53,7 @@ describe('derivable/lens', () => {
                     obj2$.swap(obj => ({ ...obj, [prop2]: newValue }));
                 },
             }, 'prop1', 'prop2');
-        });
+        }, false);
     });
 
     describe('#set', () => {

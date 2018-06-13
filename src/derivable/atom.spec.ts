@@ -7,7 +7,7 @@ import { atom } from './factories';
 import { testSwap } from './mixins/swap.spec';
 
 describe('derivable/atom', () => {
-    testDerivable(atom);
+    testDerivable(atom, false);
     testSwap(atom);
 
     describe('#set', () => {

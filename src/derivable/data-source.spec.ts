@@ -19,16 +19,16 @@ describe('derivable/data-source', () => {
     }
 
     context('(simple)', () => {
-        testDerivable(<V>(v: V) => new SimpleDataSource(v));
+        testDerivable(<V>(v: V) => new SimpleDataSource(v), false);
     });
     context('(derived)', () => {
-        testDerivable(<V>(v: V) => new SimpleDataSource({ value: v }).derive(obj => obj.value));
+        testDerivable(<V>(v: V) => new SimpleDataSource({ value: v }).derive(obj => obj.value), false);
     });
     context('(lensed)', () => {
         testDerivable(<V>(v: V) => new SimpleDataSource({ value: v }).lens<V>({
             get: obj => obj.value,
             set: value => ({ value }),
-        }));
+        }), false);
     });
 
     context('(in transactions)', () => {
