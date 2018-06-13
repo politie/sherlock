@@ -28,7 +28,7 @@ export function derive<R, P>(f: (...ps: P[]) => R, ...ps: Array<P | Derivable<P>
 }
 
 /**
- * @deprecated use `derive` instead
+ * @deprecated use `derive` instead, will be removed in 2.0 final
  */
 export const derivation = derive;
 
