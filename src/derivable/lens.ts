@@ -1,7 +1,7 @@
 import { atomic } from '../transaction';
 import { unpack } from '../utils';
 import { Derivation } from './derivation';
-import { Derivable, SettableDerivable, StandaloneLensDescriptor, TargettedLensDescriptor } from './interfaces';
+import { Derivable, SettableDerivable, StandaloneLensDescriptor, TargetedLensDescriptor } from './interfaces';
 import { settablePluckMethod, swapMethod, valueGetter, valueSetter } from './mixins';
 
 /**
@@ -60,7 +60,7 @@ Object.defineProperties(Lens.prototype, {
 
 export function lensMethod<V, W, P>(
     this: SettableDerivable<V>,
-    { get, set }: TargettedLensDescriptor<V, W, P>,
+    { get, set }: TargetedLensDescriptor<V, W, P>,
     ...ps: Array<P | Derivable<P>>
 ): SettableDerivable<W> {
 

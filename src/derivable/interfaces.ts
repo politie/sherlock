@@ -92,10 +92,10 @@ export interface SettableDerivable<V> extends Derivable<V> {
      *
      * @param descriptor the deriver (get) and transform (set) functions
      */
-    lens<W>(descriptor: TargettedLensDescriptor<V, W, never>): SettableDerivable<W>;
-    lens<W, P1>(descriptor: TargettedLensDescriptor<V, W, P1>, p1: P1 | Derivable<P1>): SettableDerivable<W>;
-    lens<W, P1, P2>(descriptor: TargettedLensDescriptor<V, W, P1 | P2>, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): SettableDerivable<W>;
-    lens<W, P>(descriptor: TargettedLensDescriptor<V, W, P>, ...ps: Array<P | Derivable<P>>): SettableDerivable<W>;
+    lens<W>(descriptor: TargetedLensDescriptor<V, W, never>): SettableDerivable<W>;
+    lens<W, P1>(descriptor: TargetedLensDescriptor<V, W, P1>, p1: P1 | Derivable<P1>): SettableDerivable<W>;
+    lens<W, P1, P2>(descriptor: TargetedLensDescriptor<V, W, P1 | P2>, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): SettableDerivable<W>;
+    lens<W, P>(descriptor: TargetedLensDescriptor<V, W, P>, ...ps: Array<P | Derivable<P>>): SettableDerivable<W>;
 
     /**
      * Create a lens that plucks the property with the given key of the current value of the SettableDerivable.
@@ -123,7 +123,7 @@ export interface SettableDerivable<V> extends Derivable<V> {
  * with the provided deriver (get) and transform (set) functions. Can be used with the {@link SettableDerivable#lens} function to create
  * a new Lens.
  */
-export interface TargettedLensDescriptor<T, V, P> {
+export interface TargetedLensDescriptor<T, V, P> {
     get(targetValue: T, ...ps: P[]): V;
     set(newValue: V, targetValue: T, ...ps: P[]): T;
 }
