@@ -1,5 +1,5 @@
 import { BaseDerivable } from '../derivable/base-derivable';
-import { Derivable, SettableDerivable } from '../derivable/derivable.interface';
+import { Derivable, SettableDerivable } from '../derivable/interfaces';
 
 /**
  * Returns true iff the provided `derivable` is a Derivable.

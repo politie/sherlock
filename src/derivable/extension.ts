@@ -9,7 +9,7 @@
  */
 export interface DerivableExtension<V> { }
 
-declare module './derivable.interface' {
+declare module './interfaces' {
     export interface Derivable<V> extends DerivableExtension<V> { }
 }
 declare module './base-derivable' {

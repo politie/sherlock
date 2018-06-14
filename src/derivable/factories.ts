@@ -1,9 +1,8 @@
 import { Atom } from './atom';
 import { Constant } from './constant';
-import { Derivable, SettableDerivable } from './derivable.interface';
 import { Derivation } from './derivation';
+import { Derivable, SettableDerivable, StandaloneLensDescriptor } from './interfaces';
 import { Lens } from './lens';
-import { LensDescriptor } from './mixins/lens.interface';
 
 /**
  * Construct a new atom with the provided initial value.
@@ -47,11 +46,11 @@ export function constant<V>(value: V): Derivable<V> {
  *
  * @param descriptor the get and set functions
  */
-export function lens<V>(descriptor: LensDescriptor<V, never>): SettableDerivable<V>;
-export function lens<V, P1>(descriptor: LensDescriptor<V, P1>, p1: P1 | Derivable<P1>): SettableDerivable<V>;
+export function lens<V>(descriptor: StandaloneLensDescriptor<V, never>): SettableDerivable<V>;
+export function lens<V, P1>(descriptor: StandaloneLensDescriptor<V, P1>, p1: P1 | Derivable<P1>): SettableDerivable<V>;
 export function lens<V, P1, P2>(
-    descriptor: LensDescriptor<V, P1 | P2>, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): SettableDerivable<V>;
-export function lens<V, P>(descriptor: LensDescriptor<V, P>, ...ps: Array<P | Derivable<P>>): SettableDerivable<V>;
-export function lens<V, P>(descriptor: LensDescriptor<V, P>, ...ps: Array<P | Derivable<P>>): SettableDerivable<V> {
+    descriptor: StandaloneLensDescriptor<V, P1 | P2>, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): SettableDerivable<V>;
+export function lens<V, P>(descriptor: StandaloneLensDescriptor<V, P>, ...ps: Array<P | Derivable<P>>): SettableDerivable<V>;
+export function lens<V, P>(descriptor: StandaloneLensDescriptor<V, P>, ...ps: Array<P | Derivable<P>>): SettableDerivable<V> {
     return new Lens(descriptor, ps.length ? ps : undefined);
 }

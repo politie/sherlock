@@ -25,18 +25,16 @@ declare module '../derivable/extension' {
     }
 }
 
-const true$ = constant(true) as ReactorParent<true>;
-const false$ = constant(false) as ReactorParent<false>;
+const true$ = constant(true) as BaseDerivable<true>;
+const false$ = constant(false) as BaseDerivable<false>;
 
-BaseDerivable.prototype.react = function react<V>(this: ReactorParent<V>, reaction: (v: V) => void, options?: Partial<ReactorOptions<V>>) {
+BaseDerivable.prototype.react = function react<V>(this: BaseDerivable<V>, reaction: (v: V) => void, options?: Partial<ReactorOptions<V>>) {
     return Reactor.create(this, reaction, options);
 };
 
-BaseDerivable.prototype.toPromise = function toPromise<V>(this: ReactorParent<V>, options?: Partial<ToPromiseOptions<V>>) {
+BaseDerivable.prototype.toPromise = function toPromise<V>(this: BaseDerivable<V>, options?: Partial<ToPromiseOptions<V>>) {
     return new Promise((resolve, reject) => this.react(resolve, { ...options, once: true, errorHandler: reject }));
 };
-
-export interface ReactorParent<V> extends BaseDerivable<V>, Derivable<V> { }
 
 /**
  * The maximum recursion depth for a single Reactor. Is used to fail faster than JavaScripts "Maximum call stack size
@@ -93,7 +91,7 @@ export class Reactor<V> implements Observer {
         /**
          * The derivable that is observed to determine changes.
          */
-        private readonly parent: ReactorParent<V>,
+        private readonly parent: BaseDerivable<V>,
 
         /**
          * The error handler, is called when either the observed derivable or the reactor throws.
@@ -207,7 +205,7 @@ export class Reactor<V> implements Observer {
      * @param ended an optional callback that fires when the reactor is stopped indefinitely (by once or until option)
      */
     static create<W>(
-        parent: ReactorParent<W>,
+        parent: BaseDerivable<W>,
         reaction: (value: W) => void,
         options?: Partial<ReactorOptions<W>>,
         ended?: () => void,
@@ -321,12 +319,12 @@ export interface ReactorOptions<V> {
 
 export type ToPromiseOptions<V> = Pick<ReactorOptions<V>, 'from' | 'until' | 'when' | 'skipFirst'>;
 
-export function toDerivable<V>(option: ReactorOptionValue<V>, derivable: Derivable<V>): ReactorParent<boolean> {
+export function toDerivable<V>(option: ReactorOptionValue<V>, derivable: Derivable<V>): BaseDerivable<boolean> {
     if (isDerivable(option)) {
-        return option as ReactorParent<boolean>;
+        return option as BaseDerivable<boolean>;
     }
     if (typeof option === 'function') {
-        return derive(() => unpack(option(derivable))) as ReactorParent<boolean>;
+        return derive(() => unpack(option(derivable))) as BaseDerivable<boolean>;
     }
     return option ? true$ : false$;
 }
@@ -334,7 +332,7 @@ export function toDerivable<V>(option: ReactorOptionValue<V>, derivable: Derivab
 function combineWhenUntil<V>(parent: Derivable<V>, whenOption: ReactorOptionValue<V>, untilOption: ReactorOptionValue<V>) {
     const when$ = toDerivable(whenOption, parent);
     const until$ = toDerivable(untilOption, parent);
-    return derive((when, until) => ({ when, until }), when$, until$) as ReactorParent<WhenUntil>;
+    return derive((when, until) => ({ when, until }), when$, until$) as BaseDerivable<WhenUntil>;
 }
 
 interface WhenUntil { when: boolean; until: boolean; }

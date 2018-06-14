@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { Seq } from 'immutable';
 import { txn } from '../transaction/transaction.spec';
 import { Atom } from './atom';
-import { $, testDerivable } from './derivable.spec';
+import { $, testDerivable } from './base-derivable.spec';
 import { atom } from './factories';
 import { testSwap } from './mixins/swap.spec';
 

@@ -1,4 +1,3 @@
-
 // istanbul ignore next: cannot be tested in a modern Node environment
 export const getOwnPropertyDescriptors = Object.getOwnPropertyDescriptors || getOwnPropertyDescriptorsShim;
 

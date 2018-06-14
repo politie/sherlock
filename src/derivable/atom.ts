@@ -2,13 +2,10 @@ import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
 import { equals } from '../utils/equals';
 import { BaseDerivable } from './base-derivable';
-import { SettableDerivable } from './derivable.interface';
 import { deriveMethod } from './derivation';
+import { SettableDerivable } from './interfaces';
 import { lensMethod } from './lens';
-import {
-    andMethod, AndMethod, DeriveMethod, isMethod, IsMethod, LensMethod, notMethod, NotMethod, orMethod, OrMethod, settablePluckMethod,
-    SettablePluckMethod, swapMethod, SwapMethod, valueGetter, valueSetter
-} from './mixins';
+import { andMethod, isMethod, notMethod, orMethod, settablePluckMethod, swapMethod, valueGetter, valueSetter } from './mixins';
 
 /**
  * Atom is the basic state holder in a Derivable world. It contains the actual mutable state. In contrast
@@ -24,7 +21,7 @@ export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V> {
     constructor(
         /**
          * Contains the current value of this atom. Note that this field is public for transaction support, should
-         * not be used in application code. Use {@link Derivable#get} and {@link Atom#set} instead.
+         * not be used in application code. Use {@link Derivable#get} and {@link SettableDerivable#set} instead.
          */
         public _value: V,
     ) {
@@ -61,15 +58,15 @@ export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V> {
     value!: V;
     readonly settable!: true;
 
-    readonly swap!: SwapMethod<V>;
-    readonly pluck!: SettablePluckMethod<V>;
-    readonly lens!: LensMethod<V>;
-    readonly derive!: DeriveMethod<V>;
+    readonly swap!: SettableDerivable<V>['swap'];
+    readonly pluck!: SettableDerivable<V>['pluck'];
+    readonly lens!: SettableDerivable<V>['lens'];
+    readonly derive!: SettableDerivable<V>['derive'];
 
-    readonly and!: AndMethod<V>;
-    readonly or!: OrMethod<V>;
-    readonly not!: NotMethod;
-    readonly is!: IsMethod;
+    readonly and!: SettableDerivable<V>['and'];
+    readonly or!: SettableDerivable<V>['or'];
+    readonly not!: SettableDerivable<V>['not'];
+    readonly is!: SettableDerivable<V>['is'];
 }
 Object.defineProperties(Atom.prototype, {
     value: { get: valueGetter, set: valueSetter },

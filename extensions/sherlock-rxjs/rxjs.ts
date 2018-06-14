@@ -15,7 +15,7 @@ declare module '@politie/sherlock/derivable/extension' {
 }
 
 _internals.BaseDerivable.prototype.toObservable = function toObservable<V>(
-    this: _internals.ReactorParent<V>,
+    this: _internals.BaseDerivable<V>,
     options?: Partial<ReactorOptions<V>>,
 ) {
     return new Observable<V>((subscriber: Subscriber<V>) => {

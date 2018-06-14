@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import { SinonStub, spy, stub } from 'sinon';
-import { atom, Derivable, derive, SettableDerivable } from '../derivable';
-import { $ } from '../derivable/derivable.spec';
+import { atom, BaseDerivable, Derivable, derive, SettableDerivable } from '../derivable';
+import { $ } from '../derivable/base-derivable.spec';
 import { atomically } from '../transaction';
 import { setDebugMode } from '../utils';
-import { Reactor, ReactorOptions, ReactorParent } from './reactor';
+import { Reactor, ReactorOptions } from './reactor';
 
 describe('reactor/reactor', () => {
     let a$: SettableDerivable<string>;
@@ -460,7 +460,7 @@ describe('reactor/reactor', () => {
         shouldHaveReactedOnce('c');
     });
 
-    class TestReactor<V> extends Reactor<V> { constructor(p: ReactorParent<V>, r: (value: V) => void) { super(p, e => { throw e; }, r); } }
+    class TestReactor<V> extends Reactor<V> { constructor(p: BaseDerivable<V>, r: (value: V) => void) { super(p, e => { throw e; }, r); } }
 
     it('should not generate a stacktrace on instantiation', () => {
         // tslint:disable-next-line:no-string-literal
