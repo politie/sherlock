@@ -1,5 +1,6 @@
-import { equals, unpack } from '../../utils';
+import { equals } from '../../utils';
 import { Derivable } from '../interfaces';
+import { unpack } from '../unpack';
 
 export function andMethod<V, W>(this: Derivable<V>, other: Derivable<W> | W): Derivable<W | V> {
     return this.derive(v => v && unpack(other));

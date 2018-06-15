@@ -1,8 +1,8 @@
 import { atomic } from '../transaction';
-import { unpack } from '../utils';
 import { Derivation } from './derivation';
 import { Derivable, SettableDerivable, StandaloneLensDescriptor, TargetedLensDescriptor } from './interfaces';
 import { settablePluckMethod, swapMethod, valueGetter, valueSetter } from './mixins';
+import { unpack } from './unpack';
 
 /**
  * A Lens is a Derivation that is also settable. It satisfies the Atom interface and can be created using an

@@ -1,4 +1,4 @@
-import { clone, Derivable, isDerivable, isSettableDerivable, ReactorOptions, TargetedLensDescriptor } from '@politie/sherlock';
+import { Derivable, isDerivable, isSettableDerivable, ReactorOptions, TargetedLensDescriptor, utils } from '@politie/sherlock';
 
 /**
  * The base interface for DerivableProxies. Defines only the $-properties and $-methods. Any property accessed with a number or
@@ -160,7 +160,7 @@ export class ProxyDescriptor<V = any, T = V> {
      * @param path the new path to the created DerivableProxy
      */
     $create(obj: Derivable<T>, expression?: string, path?: Array<string | number>): DerivableProxy<V> {
-        const descriptor: ProxyDescriptor = clone(this.$proxyDescriptor);
+        const descriptor: ProxyDescriptor = utils.clone(this.$proxyDescriptor);
         descriptor.$target = obj;
         Object.getOwnPropertyNames(descriptor)
             .filter(prop => prop.startsWith('$$'))

@@ -1,6 +1,6 @@
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { equals } from '../utils/equals';
+import { equals } from '../utils';
 import { BaseDerivable } from './base-derivable';
 import { deriveMethod } from './derivation';
 import { SettableDerivable } from './interfaces';

@@ -1,11 +1,10 @@
 import { expect } from 'chai';
 import { fromJS } from 'immutable';
 import { spy } from 'sinon';
-import { isSettableDerivable } from '../extras';
 import { BaseDerivable } from './base-derivable';
 import { Derivation } from './derivation';
 import { atom, constant, derive } from './factories';
-import { Derivable, SettableDerivable } from './interfaces';
+import { Derivable, isSettableDerivable, SettableDerivable } from './interfaces';
 import { testAccessors } from './mixins/accessors.spec';
 import { testBooleanFuncs } from './mixins/boolean-methods.spec';
 import { testPluck } from './mixins/pluck.spec';

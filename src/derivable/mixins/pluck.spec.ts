@@ -1,10 +1,9 @@
 import { expect } from 'chai';
 import { fromJS, Seq } from 'immutable';
-import { isSettableDerivable } from '../../extras';
 import { Atom } from '../atom';
 import { Derivation } from '../derivation';
 import { atom } from '../factories';
-import { Derivable } from '../interfaces';
+import { Derivable, isSettableDerivable } from '../interfaces';
 import { Lens } from '../lens';
 
 /**

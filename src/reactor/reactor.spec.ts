@@ -3,7 +3,7 @@ import { SinonStub, spy, stub } from 'sinon';
 import { atom, BaseDerivable, Derivable, derive, SettableDerivable } from '../derivable';
 import { $ } from '../derivable/base-derivable.spec';
 import { atomically } from '../transaction';
-import { setDebugMode } from '../utils';
+import { config } from '../utils';
 import { Reactor, ReactorOptions } from './reactor';
 
 describe('reactor/reactor', () => {
@@ -468,8 +468,8 @@ describe('reactor/reactor', () => {
     });
 
     context('in debug mode', () => {
-        before('setDebugMode', () => setDebugMode(true));
-        after('resetDebugMode', () => setDebugMode(false));
+        before('setDebugMode', () => { config.debugMode = true; });
+        after('resetDebugMode', () => { config.debugMode = false; });
 
         let consoleErrorStub: SinonStub;
         beforeEach('stub console.error', () => { consoleErrorStub = stub(console, 'error'); });

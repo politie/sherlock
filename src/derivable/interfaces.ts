@@ -1,3 +1,5 @@
+import { BaseDerivable } from './base-derivable';
+
 /**
  * Derivable is the base interface of all variants of Sherlock Derivables.
  *
@@ -116,6 +118,28 @@ export interface SettableDerivable<V> extends Derivable<V> {
     swap<P1, P2>(f: (v: V, p1: P1, p2: P2) => V, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): void;
     swap<P>(f: (v: V, ...ps: P[]) => V, ...ps: Array<P | Derivable<P>>): void;
     swap(f: (oldValue: V, ...args: any[]) => V, ...args: any[]): void;
+}
+
+/**
+ * Returns true iff the provided `derivable` is a Derivable.
+ *
+ * @param derivable the object to test
+ */
+export function isDerivable<V>(derivable: Derivable<V>): derivable is Derivable<V>;
+export function isDerivable(obj: any): obj is Derivable<any>;
+export function isDerivable(derivable: any) {
+    return derivable instanceof BaseDerivable;
+}
+
+/**
+ * Returns true iff the provided `derivable` is a SettableDerivable.
+ *
+ * @param derivable the object to test
+ */
+export function isSettableDerivable<V>(derivable: Derivable<V>): derivable is SettableDerivable<V>;
+export function isSettableDerivable(obj: any): obj is SettableDerivable<any>;
+export function isSettableDerivable(derivable: any) {
+    return isDerivable(derivable) && derivable.settable;
 }
 
 /**
