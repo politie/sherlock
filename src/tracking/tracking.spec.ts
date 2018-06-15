@@ -1,8 +1,7 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
 import {
-    isRecordingObservations, Observer, recordObservation, startRecordingObservations, stopRecordingObservations, TrackedObservable,
-    TrackedObserver,
+    isRecordingObservations, Observer, recordObservation, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedObserver
 } from './tracking';
 
 describe('tracking/tracking', () => {

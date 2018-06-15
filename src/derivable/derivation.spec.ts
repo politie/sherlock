@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 import { SinonFakeTimers, SinonSpy, SinonStub, spy, stub, useFakeTimers } from 'sinon';
 import { setDebugMode } from '../utils';
-import { Derivable, SettableDerivable } from './derivable.interface';
-import { testDerivable } from './derivable.spec';
+import { testDerivable } from './base-derivable.spec';
 import { atom, constant, derive } from './factories';
+import { Derivable, SettableDerivable } from './interfaces';
 
 describe('derivable/derive', () => {
     context('(standalone)', () => {

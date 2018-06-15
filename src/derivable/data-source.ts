@@ -2,13 +2,10 @@ import { isRecordingObservations, recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
 import { debugMode, equals } from '../utils';
 import { BaseDerivable } from './base-derivable';
-import { SettableDerivable } from './derivable.interface';
 import { deriveMethod, maybeDisconnectInNextTick } from './derivation';
+import { SettableDerivable } from './interfaces';
 import { lensMethod } from './lens';
-import {
-    andMethod, AndMethod, DeriveMethod, IsMethod, isMethod, LensMethod, notMethod, NotMethod, orMethod, OrMethod,
-    SettablePluckMethod, settablePluckMethod, swapMethod, SwapMethod, valueGetter, valueSetter
-} from './mixins';
+import { andMethod, isMethod, notMethod, orMethod, settablePluckMethod, swapMethod, valueGetter, valueSetter } from './mixins';
 
 const EMPTY_CACHE = {};
 
@@ -214,15 +211,15 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
 
     value!: V;
 
-    pluck!: SettablePluckMethod<V>;
-    lens!: LensMethod<V>;
-    swap!: SwapMethod<V>;
-    derive!: DeriveMethod<V>;
+    readonly pluck!: SettableDerivable<V>['pluck'];
+    readonly lens!: SettableDerivable<V>['lens'];
+    readonly swap!: SettableDerivable<V>['swap'];
+    readonly derive!: SettableDerivable<V>['derive'];
 
-    and!: AndMethod<V>;
-    or!: OrMethod<V>;
-    not!: NotMethod;
-    is!: IsMethod;
+    readonly and!: SettableDerivable<V>['and'];
+    readonly or!: SettableDerivable<V>['or'];
+    readonly not!: SettableDerivable<V>['not'];
+    readonly is!: SettableDerivable<V>['is'];
 }
 Object.defineProperties(DataSource.prototype, {
     value: { get: valueGetter, set: valueSetter },

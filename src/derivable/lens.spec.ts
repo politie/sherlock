@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { $, testDerivable } from './derivable.spec';
+import { $, testDerivable } from './base-derivable.spec';
 import { atom, lens } from './factories';
-import { MonoLensDescriptor } from './mixins/lens.interface';
+import { TargetedLensDescriptor } from './interfaces';
 import { testSwap } from './mixins/swap.spec';
 
 describe('derivable/lens', () => {
@@ -82,7 +82,7 @@ describe('derivable/lens', () => {
     testSwap(<V>(val: V) => atom(val).lens(identityLens<V>()));
 });
 
-export function identityLens<V>(): MonoLensDescriptor<V, V, never> {
+export function identityLens<V>(): TargetedLensDescriptor<V, V, never> {
     return {
         get: v => v,
         set: v => v,

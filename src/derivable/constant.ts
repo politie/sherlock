@@ -1,9 +1,7 @@
 import { BaseDerivable } from './base-derivable';
-import { Derivable } from './derivable.interface';
 import { deriveMethod } from './derivation';
-import {
-    andMethod, AndMethod, DeriveMethod, isMethod, IsMethod, notMethod, NotMethod, orMethod, OrMethod, PluckMethod, pluckMethod
-} from './mixins';
+import { Derivable } from './interfaces';
+import { andMethod, isMethod, notMethod, orMethod, pluckMethod } from './mixins';
 
 /**
  * Constant represents a basic immutable building block of derivations.
@@ -31,13 +29,13 @@ export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
     readonly version!: 0;
     readonly settable!: false;
 
-    readonly derive!: DeriveMethod<V>;
-    readonly pluck!: PluckMethod<V>;
+    readonly derive!: Derivable<V>['derive'];
+    readonly pluck!: Derivable<V>['pluck'];
 
-    readonly and!: AndMethod<V>;
-    readonly or!: OrMethod<V>;
-    readonly not!: NotMethod;
-    readonly is!: IsMethod;
+    readonly and!: Derivable<V>['and'];
+    readonly or!: Derivable<V>['or'];
+    readonly not!: Derivable<V>['not'];
+    readonly is!: Derivable<V>['is'];
 }
 Object.defineProperties(Constant.prototype, {
     version: { value: 0 },

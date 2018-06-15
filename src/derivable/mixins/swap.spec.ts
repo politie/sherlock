@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { SettableDerivable } from '../derivable.interface';
+import { SettableDerivable } from '../interfaces';
 
 /**
  * Tests the `swap()` method.

@@ -1,14 +1,10 @@
 import {
-    isRecordingObservations, recordObservation, removeObserver, startRecordingObservations, stopRecordingObservations,
-    TrackedObservable, TrackedReactor,
+    isRecordingObservations, recordObservation, removeObserver, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedReactor
 } from '../tracking';
 import { debugMode, equals, unpack } from '../utils';
 import { BaseDerivable } from './base-derivable';
-import { Derivable } from './derivable.interface';
-import {
-    AndMethod, andMethod, DeriveMethod, isMethod, IsMethod, NotMethod, notMethod, OrMethod, orMethod, PluckMethod, pluckMethod,
-    valueGetter
-} from './mixins';
+import { Derivable } from './interfaces';
+import { andMethod, isMethod, notMethod, orMethod, pluckMethod, valueGetter } from './mixins';
 
 const EMPTY_CACHE = {};
 
@@ -242,13 +238,13 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     readonly value!: V;
     readonly settable!: boolean;
 
-    derive!: DeriveMethod<V>;
-    pluck!: PluckMethod<V>;
+    readonly derive!: Derivable<V>['derive'];
+    readonly pluck!: Derivable<V>['pluck'];
 
-    and!: AndMethod<V>;
-    or!: OrMethod<V>;
-    not!: NotMethod;
-    is!: IsMethod;
+    readonly and!: Derivable<V>['and'];
+    readonly or!: Derivable<V>['or'];
+    readonly not!: Derivable<V>['not'];
+    readonly is!: Derivable<V>['is'];
 }
 Object.defineProperties(Derivation.prototype, {
     value: { get: valueGetter },

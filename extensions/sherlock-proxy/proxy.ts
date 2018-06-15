@@ -1,4 +1,4 @@
-import { clone, Derivable, isDerivable, isSettableDerivable, MonoLensDescriptor, ReactorOptions } from '@politie/sherlock';
+import { clone, Derivable, isDerivable, isSettableDerivable, ReactorOptions, TargetedLensDescriptor } from '@politie/sherlock';
 
 /**
  * The base interface for DerivableProxies. Defines only the $-properties and $-methods. Any property accessed with a number or
@@ -257,12 +257,12 @@ function createDerivable<V, T>(target: Derivable<T>, lens?: DerivableProxyLens<T
     if (!lens.set || !isSettableDerivable(target)) {
         return target.derive(lens.get).autoCache();
     }
-    return target.lens(lens as MonoLensDescriptor<T, V, never>).autoCache();
+    return target.lens(lens as TargetedLensDescriptor<T, V, never>).autoCache();
 }
 
 export interface DerivableProxyLens<T, V> {
-    get: MonoLensDescriptor<T, V, never>['get'];
-    set?: MonoLensDescriptor<T, V, never>['set'];
+    get: TargetedLensDescriptor<T, V, never>['get'];
+    set?: TargetedLensDescriptor<T, V, never>['set'];
 }
 
 export type MaybePacked<T> = T | Derivable<T> | DerivableProxy<T>;

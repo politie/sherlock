@@ -1,6 +1,6 @@
 import { TrackedObservable, TrackedObserver } from '../tracking';
 import { uniqueId } from '../utils/unique-id';
-import { AutoCacheable } from './derivable.interface';
+import { Derivable } from './interfaces';
 
 /**
  * The base class for all Derivables. Derivables must extend from this, to be 'tracked' and to classify as a Derivable.
@@ -9,7 +9,7 @@ import { AutoCacheable } from './derivable.interface';
  *
  * When extending the prototype of the BaseDerivable, don't forget to also extend the ExtendDerivable interface.
  */
-export abstract class BaseDerivable<V> implements TrackedObservable, AutoCacheable {
+export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V> {
     /**
      * The unique ID of this Derivable. Can be used to uniquely identify this Derivable.
      */
@@ -33,4 +33,16 @@ export abstract class BaseDerivable<V> implements TrackedObservable, AutoCacheab
      * an immutable object that is structurally equal to the previous immutable object is not considered a state change.
      */
     abstract version: number;
+
+    abstract get(): V;
+    abstract value: Derivable<V>['value'];
+    abstract settable: Derivable<V>['settable'];
+
+    abstract derive: Derivable<V>['derive'];
+    abstract pluck: Derivable<V>['pluck'];
+
+    abstract and: Derivable<V>['and'];
+    abstract or: Derivable<V>['or'];
+    abstract not: Derivable<V>['not'];
+    abstract is: Derivable<V>['is'];
 }

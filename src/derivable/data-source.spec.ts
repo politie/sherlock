@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import { SinonFakeTimers, SinonStub, spy, stub, useFakeTimers } from 'sinon';
 import { basicTransactionsTests } from '../transaction/transaction.spec';
 import { setDebugMode } from '../utils';
+import { testDerivable } from './base-derivable.spec';
 import { DataSource } from './data-source';
-import { testDerivable } from './derivable.spec';
 
 describe('derivable/data-source', () => {
 

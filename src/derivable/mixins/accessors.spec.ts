@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import { spy } from 'sinon';
 import { isSettableDerivable } from '../../extras';
 import { addObserver } from '../../tracking';
+import { $ } from '../base-derivable.spec';
 import { Constant } from '../constant';
-import { Derivable } from '../derivable.interface';
-import { $ } from '../derivable.spec';
+import { Derivable } from '../interfaces';
 
 /**
  * Tests the `get()` method and `value` accessors.

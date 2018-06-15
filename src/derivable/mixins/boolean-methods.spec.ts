@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import { List, Seq } from 'immutable';
 import { spy } from 'sinon';
-import { Derivable } from '../derivable.interface';
 import { atom } from '../factories';
+import { Derivable } from '../interfaces';
 
 /**
  * Tests the `is()`, `or()`, `and()` and `not()` methods.
