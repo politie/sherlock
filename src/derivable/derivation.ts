@@ -1,13 +1,13 @@
+import { Derivable } from '../interfaces';
 import {
     isRecordingObservations, recordObservation, removeObserver, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedReactor
 } from '../tracking';
 import { config, equals } from '../utils';
 import { BaseDerivable } from './base-derivable';
-import { Derivable } from './interfaces';
-import { andMethod, isMethod, notMethod, orMethod, pluckMethod, valueGetter } from './mixins';
-import { unpack } from './unpack';
+import { emptyCache, getValueOrUnresolved, unresolved } from './symbols';
+import { unwrap } from './unwrap';
 
-const EMPTY_CACHE = {};
+export let derivationStackDepth = 0;
 
 /**
  * Derivation is the implementation of derived state. Automatically tracks other Derivables that are used in the deriver function
@@ -42,7 +42,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     /**
      * The last value that was calculated for this derivation. Is only used when connected.
      */
-    private cachedValue = EMPTY_CACHE as V;
+    private cachedValue: V | typeof unresolved | typeof emptyCache = emptyCache;
 
     /**
      * The error that was caught while calculating the derivation. Is only used when connected.
@@ -68,9 +68,9 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
         /**
          * The deriver function that is used to calculate the value of this derivation.
          */
-        private readonly deriver: (...args: any[]) => V,
+        private readonly deriver: (...args: any[]) => V | typeof unresolved,
         /**
-         * Arguments that will be passed unpacked to the deriver function.
+         * Arguments that will be passed unwrapped to the deriver function.
          */
         protected readonly args?: any[],
     ) {
@@ -91,7 +91,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     /**
      * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
-    get(): V {
+    [getValueOrUnresolved](): V | typeof unresolved {
         // Should we connect now?
         if (!this.connected) {
             if (this.autoCacheMode) {
@@ -121,7 +121,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
         if (this.cachedError) {
             throw this.cachedError;
         }
-        return this.cachedValue;
+        return this.cachedValue as V | typeof unresolved;
     }
 
     /**
@@ -154,13 +154,19 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
      * Call the deriver function without `this` context and log debug stack traces when applicable.
      */
     private callDeriver() {
+        ++derivationStackDepth;
         try {
             const { deriver, args } = this;
-            return args ? deriver(...args.map(unpack)) : deriver();
+            return args ? deriver(...args.map(unwrap)) : deriver();
         } catch (e) {
+            if (e === unresolved) {
+                return unresolved;
+            }
             // tslint:disable-next-line:no-console - console.error is only called when debugMode is set to true
             this.stack && console.error(e.message, this.stack);
             throw e;
+        } finally {
+            --derivationStackDepth;
         }
     }
 
@@ -170,7 +176,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
      */
     private shouldUpdate() {
         // Update the isUpToDate boolean only when it is false and we know all our dependencies (c.q. the cache is not empty).
-        if (!this.isUpToDate && this.cachedValue !== EMPTY_CACHE) {
+        if (!this.isUpToDate && this.cachedValue !== emptyCache) {
             this.isUpToDate = this.dependencies.every(obs => this.dependencyVersions[obs.id] === obs.version);
         }
         return !this.isUpToDate;
@@ -220,7 +226,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     disconnectNow() {
         this.isUpToDate = false;
         this.connected = false;
-        this.cachedValue = EMPTY_CACHE as V;
+        this.cachedValue = emptyCache;
         // Disconnect all observers. When an observer disconnects it removes itself from this array.
         for (let i = this.observers.length - 1; i >= 0; i--) {
             this.observers[i].disconnect();
@@ -235,30 +241,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
         this.autoCacheMode = true;
         return this;
     }
-
-    readonly value!: V;
-    readonly settable!: boolean;
-
-    readonly derive!: Derivable<V>['derive'];
-    readonly pluck!: Derivable<V>['pluck'];
-
-    readonly and!: Derivable<V>['and'];
-    readonly or!: Derivable<V>['or'];
-    readonly not!: Derivable<V>['not'];
-    readonly is!: Derivable<V>['is'];
 }
-Object.defineProperties(Derivation.prototype, {
-    value: { get: valueGetter },
-    settable: { value: false },
-
-    derive: { value: deriveMethod },
-    pluck: { value: pluckMethod },
-
-    and: { value: andMethod },
-    or: { value: orMethod },
-    not: { value: notMethod },
-    is: { value: isMethod },
-});
 
 export function maybeDisconnectInNextTick(derivation: TrackedObservable & { disconnectNow(): void }) {
     setTimeout(() => derivation.observers.length || derivation.disconnectNow(), 0);

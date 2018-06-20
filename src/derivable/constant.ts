@@ -1,7 +1,6 @@
+import { Derivable } from '../interfaces';
 import { BaseDerivable } from './base-derivable';
-import { deriveMethod } from './derivation';
-import { Derivable } from './interfaces';
-import { andMethod, isMethod, notMethod, orMethod, pluckMethod } from './mixins';
+import { getValueOrUnresolved, unresolved } from './symbols';
 
 /**
  * Constant represents a basic immutable building block of derivations.
@@ -16,36 +15,17 @@ export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
         /**
          * The readonly value of this Constant.
          */
-        readonly value: V,
+        private readonly _value: V | typeof unresolved,
     ) {
         super();
     }
 
-    /**
-     * Returns the value of this Constant.
-     */
-    get(): V { return this.value; }
+    [getValueOrUnresolved]() { return this._value; }
 
     readonly version!: 0;
     readonly settable!: false;
-
-    readonly derive!: Derivable<V>['derive'];
-    readonly pluck!: Derivable<V>['pluck'];
-
-    readonly and!: Derivable<V>['and'];
-    readonly or!: Derivable<V>['or'];
-    readonly not!: Derivable<V>['not'];
-    readonly is!: Derivable<V>['is'];
 }
 Object.defineProperties(Constant.prototype, {
     version: { value: 0 },
     settable: { value: false },
-
-    derive: { value: deriveMethod },
-    pluck: { value: pluckMethod },
-
-    and: { value: andMethod },
-    or: { value: orMethod },
-    not: { value: notMethod },
-    is: { value: isMethod },
 });

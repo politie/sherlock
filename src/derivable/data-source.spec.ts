@@ -1,15 +1,19 @@
 import { expect } from 'chai';
 import { SinonFakeTimers, SinonStub, spy, stub, useFakeTimers } from 'sinon';
+import { Derivable } from '../interfaces';
+import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from '../reactor/reactor.spec';
 import { basicTransactionsTests } from '../transaction/transaction.spec';
 import { config } from '../utils';
 import { testDerivable } from './base-derivable.spec';
 import { DataSource } from './data-source';
+import { derive } from './factories';
+import { unresolved } from './symbols';
 
 describe('derivable/data-source', () => {
 
     class SimpleDataSource<V> extends DataSource<V> {
-        constructor(private currentValue: V) { super(); }
-        calculateCurrentValue(): V {
+        constructor(private currentValue: V | typeof unresolved) { super(); }
+        calculateCurrentValue(): V | typeof unresolved {
             return this.currentValue;
         }
         protected acceptNewValue(newValue: V) {
@@ -19,13 +23,13 @@ describe('derivable/data-source', () => {
     }
 
     context('(simple)', () => {
-        testDerivable(<V>(v: V) => new SimpleDataSource(v), false);
+        testDerivable(v => new SimpleDataSource(v), false);
     });
     context('(derived)', () => {
-        testDerivable(<V>(v: V) => new SimpleDataSource({ value: v }).derive(obj => obj.value), false);
+        testDerivable(v => new SimpleDataSource(v === unresolved ? v : { value: v }).derive(obj => obj.value), false);
     });
     context('(lensed)', () => {
-        testDerivable(<V>(v: V) => new SimpleDataSource({ value: v }).lens<V>({
+        testDerivable(<V>(v: V | typeof unresolved) => new SimpleDataSource(v === unresolved ? v : { value: v }).lens<V>({
             get: obj => obj.value,
             set: value => ({ value }),
         }), false);
@@ -77,11 +81,11 @@ describe('derivable/data-source', () => {
 
     });
 
-    describe('#autoCache', () => {
-        let clock: SinonFakeTimers;
-        beforeEach('use fake timers', () => { clock = useFakeTimers(); });
-        afterEach('restore timers', () => { clock.restore(); });
+    let clock: SinonFakeTimers;
+    beforeEach('use fake timers', () => { clock = useFakeTimers(); });
+    afterEach('restore timers', () => { clock.restore(); });
 
+    describe('#autoCache', () => {
         let ds$: SimpleDataSource<string>;
         beforeEach('create the datasource', () => {
             ds$ = new SimpleDataSource('value');
@@ -202,30 +206,29 @@ describe('derivable/data-source', () => {
         });
     });
 
-    context('(usecase: timer)', () => {
+    context('(usecase: simple timer)', () => {
         class Timer extends DataSource<number> {
             readonly startTime = Date.now();
+
+            private intervalId?: NodeJS.Timer;
+
             calculateCurrentValue() {
-                if (this.connected) {
-                    setTimeout(() => this.checkForChanges(), 1000);
-                }
                 return Math.trunc((Date.now() - this.startTime) / 1000);
+            }
+
+            onConnect() {
+                expect(this.connected).to.be.true;
+                this.intervalId = setInterval(() => this.checkForChanges(), 1000);
+            }
+            onDisconnect() {
+                expect(this.connected).to.be.false;
+                clearInterval(this.intervalId!);
             }
 
             // expose
             connected!: boolean;
-            onConnect() {
-                expect(this.connected).to.be.true;
-            }
-            onDisconnect() {
-                expect(this.connected).to.be.false;
-            }
             disconnectNow() { super.disconnectNow(); }
         }
-
-        let clock: SinonFakeTimers;
-        beforeEach('use fake timers', () => { clock = useFakeTimers(); });
-        afterEach('restore timers', () => { clock.restore(); });
 
         let timer$: Timer;
         beforeEach('create the timer', () => { timer$ = new Timer(); });
@@ -250,15 +253,9 @@ describe('derivable/data-source', () => {
 
         context('when used in a reactor', () => {
             let done: () => void;
-            let reactions: number;
-            let value: number;
             beforeEach('connect', () => {
-                reactions = 0;
                 expect(timer$.onConnect).to.not.have.been.called;
-                done = timer$.react(v => {
-                    reactions++;
-                    value = v;
-                });
+                done = react(timer$);
             });
             afterEach('disconnect', () => {
                 done();
@@ -272,23 +269,19 @@ describe('derivable/data-source', () => {
             });
 
             it('should react once every second', () => {
-                expect(reactions).to.equal(1);
-                expect(value).to.equal(0);
+                shouldHaveReactedOnce(0);
 
                 clock.tick(950);
 
-                expect(reactions).to.equal(1);
-                expect(value).to.equal(0);
+                shouldNotHaveReacted();
 
                 clock.tick(50);
 
-                expect(reactions).to.equal(2);
-                expect(value).to.equal(1);
+                shouldHaveReactedOnce(1);
 
                 clock.tick(1000);
 
-                expect(reactions).to.equal(3);
-                expect(value).to.equal(2);
+                shouldHaveReactedOnce(2);
             });
 
             it('should cache the value when connected', () => {
@@ -309,9 +302,137 @@ describe('derivable/data-source', () => {
                 expect(timer$.connected).to.be.false;
                 expect(timer$.onDisconnect).to.have.been.calledOnce;
                 clock.tick(2000);
-                expect(reactions).to.equal(1);
+                shouldHaveReactedOnce(0);
             });
 
+        });
+    });
+
+    context('(usecase: clock)', () => {
+        function currentTime() { return new Date().toLocaleTimeString('nl-NL'); }
+
+        class Clock extends DataSource<string> {
+            calculateCurrentValue() {
+                if (this.connected) {
+                    setTimeout(() => {
+                        this.checkForChanges();
+                    }, 1000 - (Date.now() % 1000));
+                }
+                return currentTime();
+            }
+        }
+
+        context('when used in a reactor', () => {
+            it('should tell the time', () => {
+                const done = react(new Clock);
+                shouldHaveReactedOnce(currentTime());
+                clock.next();
+                shouldHaveReactedOnce(currentTime());
+                done();
+            });
+        });
+    });
+
+    context('(usecase: derivable promise)', () => {
+        const error = Symbol();
+        class DerivablePromise<V> extends DataSource<V> {
+            private result: V | typeof unresolved | typeof error = unresolved;
+            private error?: any;
+
+            constructor(work: ((resolve: (v: V) => void, reject: (e: any) => void) => void)) {
+                super();
+                work(
+                    v => {
+                        this.result = v;
+                        this.checkForChanges();
+                    },
+                    e => {
+                        this.result = error;
+                        this.error = e;
+                        this.checkForChanges();
+                    },
+                );
+            }
+
+            calculateCurrentValue() {
+                if (this.result === error) {
+                    throw this.error;
+                }
+                return this.result;
+            }
+        }
+
+        let a$: DerivablePromise<number>;
+        let b$: DerivablePromise<number>;
+        let c$: Derivable<number>;
+        beforeEach('create the derivable promises', () => {
+            a$ = new DerivablePromise(resolve => {
+                setTimeout(() => resolve(15), 500);
+            });
+            b$ = new DerivablePromise(resolve => {
+                setTimeout(() => resolve(27), 1000);
+            });
+            c$ = derive(() => a$.get() + b$.get());
+        });
+
+        it('should expose the result asynchronously', () => {
+            expect(a$.value).to.be.undefined;
+            expect(() => a$.get()).to.throw();
+
+            clock.tick(500);
+            expect(a$.value).to.equal(15);
+            expect(a$.get()).to.equal(15);
+        });
+
+        it('should propagate resolved status', () => {
+            expect(c$.resolved).to.be.false;
+            clock.tick(500);
+            expect(c$.resolved).to.be.false;
+            clock.tick(500);
+            expect(c$.resolved).to.be.true;
+
+            expect(c$.get()).to.equal(42);
+        });
+
+        it('should propagate error status', async () => {
+            const e$ = new DerivablePromise<number>((_, reject) => setTimeout(() => reject(new Error('my error')), 0));
+            const f$ = e$.derive(v => v + 1);
+
+            const promise = f$.toPromise();
+
+            clock.next();
+
+            try {
+                await promise;
+                throw new Error('should have thrown an error');
+            } catch (e) {
+                expect(e.message).to.equal('my error');
+            }
+
+            expect(() => f$.value).to.throw('my error');
+            expect(() => f$.get()).to.throw('my error');
+        });
+
+        context('when used in a reactor', () => {
+            it('should only react when all values are available', () => {
+                react(c$);
+
+                shouldNotHaveReacted();
+                clock.tick(500);
+                shouldNotHaveReacted();
+                clock.tick(500);
+                shouldHaveReactedOnce(42);
+            });
+
+            it('should switch from unresolved', () => {
+                react(derive(() => c$.getOr('unresolved')));
+
+                shouldHaveReactedOnce('unresolved');
+                clock.tick(500);
+                shouldNotHaveReacted();
+                clock.tick(500);
+                shouldHaveReactedOnce(42);
+            });
         });
     });
 });

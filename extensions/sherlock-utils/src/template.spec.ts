@@ -1,9 +1,9 @@
+import { atom } from '@politie/sherlock';
 import { expect } from 'chai';
-import { atom } from '../derivable';
 import { template } from './template';
 
-describe('extras/template', () => {
-    it('should convert a tagged string literal to a Derivable with unpacked values', () => {
+describe('sherlock-utils/template', () => {
+    it('should convert a tagged string literal to a Derivable with unwrapped values', () => {
         const a$ = atom('a');
         const b$ = atom('a');
         const s$ = template`a$: ${a$}, b$: ${b$}`;

@@ -23,9 +23,10 @@ const fs = require('fs');
 const gzipSize = require('gzip-size');
 
 (console.table || console.log)({
-    'sherlock': assertBundleSize('sherlock', 15),
+    'sherlock': assertBundleSize('sherlock', 14),
     'sherlock-proxy': assertBundleSize('sherlock-proxy', 5),
-    'sherlock-rxjs': assertBundleSize('sherlock-rxjs', 1),
+    'sherlock-rxjs': assertBundleSize('sherlock-rxjs', 2),
+    'sherlock-utils': assertBundleSize('sherlock-utils', 2),
 });
 
 console.log('Bundle ok.');
@@ -37,6 +38,7 @@ function assertBundleSize(name, expectedSize) {
     const size = minified.length;
 
     assert(size < expectedSize * 1024, `Unexpected minified bundle size for ${name}, expected ${expectedSize}KB but it was ${Math.ceil(size / 1024)}KB`)
+    assert(size >= (expectedSize - 1) * 1024, `Unexpected minified bundle size for ${name}, expected ${expectedSize}KB but it was ${Math.ceil(size / 1024)}KB`)
 
     return {
         filename: filename,

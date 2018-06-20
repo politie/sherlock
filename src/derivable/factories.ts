@@ -1,16 +1,24 @@
+import { Derivable, SettableDerivable, StandaloneLensDescriptor, Unsettable } from '../interfaces';
 import { Atom } from './atom';
 import { Constant } from './constant';
 import { Derivation } from './derivation';
-import { Derivable, SettableDerivable, StandaloneLensDescriptor } from './interfaces';
 import { Lens } from './lens';
+import { unresolved as unresolvedSymbol } from './symbols';
+
+// tslint:disable:no-namespace
 
 /**
  * Construct a new atom with the provided initial value.
  *
  * @param value the initial value
  */
-export function atom<V>(value: V): SettableDerivable<V> {
+export function atom<V>(value: V): SettableDerivable<V> & Unsettable {
     return new Atom(value);
+}
+export namespace atom {
+    export function unresolved<V>(): SettableDerivable<V> {
+        return new Atom<V>(unresolvedSymbol);
+    }
 }
 
 /**
@@ -18,18 +26,13 @@ export function atom<V>(value: V): SettableDerivable<V> {
  *
  * @param deriver the deriver function
  */
-export function derive<R>(f: () => R): Derivable<R>;
-export function derive<R, P1>(f: (p1: P1) => R, p1: P1 | Derivable<P1>): Derivable<R>;
-export function derive<R, P1, P2>(f: (p1: P1, p2: P2) => R, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): Derivable<R>;
-export function derive<R, P>(f: (...ps: P[]) => R, ...ps: Array<P | Derivable<P>>): Derivable<R>;
-export function derive<R, P>(f: (...ps: P[]) => R, ...ps: Array<P | Derivable<P>>): Derivable<R> {
+export function derive<R>(f: () => R | typeof unresolvedSymbol): Derivable<R>;
+export function derive<R, P1>(f: (p1: P1) => R | typeof unresolvedSymbol, p1: P1 | Derivable<P1>): Derivable<R>;
+export function derive<R, P1, P2>(f: (p1: P1, p2: P2) => R | typeof unresolvedSymbol, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): Derivable<R>;
+export function derive<R, P>(f: (...ps: P[]) => R | typeof unresolvedSymbol, ...ps: Array<P | Derivable<P>>): Derivable<R>;
+export function derive<R, P>(f: (...ps: P[]) => R | typeof unresolvedSymbol, ...ps: Array<P | Derivable<P>>): Derivable<R> {
     return new Derivation(f, ps.length ? ps : undefined);
 }
-
-/**
- * @deprecated use `derive` instead, will be removed in 2.0 final
- */
-export const derivation = derive;
 
 /**
  * Creates a new Constant with the give value.
@@ -38,6 +41,11 @@ export const derivation = derive;
  */
 export function constant<V>(value: V): Derivable<V> {
     return new Constant(value);
+}
+export namespace constant {
+    export function unresolved<V>(): Derivable<V> {
+        return new Constant<V>(unresolvedSymbol);
+    }
 }
 
 /**

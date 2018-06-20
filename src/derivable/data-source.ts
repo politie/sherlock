@@ -1,13 +1,10 @@
+import { SettableDerivable } from '../interfaces';
 import { isRecordingObservations, recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
 import { config, equals } from '../utils';
 import { BaseDerivable } from './base-derivable';
-import { deriveMethod, maybeDisconnectInNextTick } from './derivation';
-import { SettableDerivable } from './interfaces';
-import { lensMethod } from './lens';
-import { andMethod, isMethod, notMethod, orMethod, settablePluckMethod, swapMethod, valueGetter, valueSetter } from './mixins';
-
-const EMPTY_CACHE = {};
+import { maybeDisconnectInNextTick } from './derivation';
+import { emptyCache, getValueOrUnresolved, unresolved } from './symbols';
 
 export abstract class DataSource<V> extends BaseDerivable<V> implements SettableDerivable<V> {
     /**
@@ -25,7 +22,7 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
      * `get()` is called when not connected. When connected, it will be called once and then only whenever `checkForChanges()`
      * was called.
      */
-    protected abstract calculateCurrentValue(): V;
+    protected abstract calculateCurrentValue(): V | typeof unresolved;
 
     /**
      * When implemented this datasource will become settable and any value that is presented to `set()` will
@@ -48,7 +45,7 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
     /**
      * The last value that was calculated for this datasource. Is only used when connected.
      */
-    private _cachedValue = EMPTY_CACHE as V;
+    private _cachedValue: V | typeof unresolved | typeof emptyCache = emptyCache;
 
     /**
      * The error that was caught while calculating the value for this datasource. Is only used when connected.
@@ -74,7 +71,7 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
     /**
      * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
-    get(): V {
+    [getValueOrUnresolved](): V | typeof unresolved {
         // Should we connect now?
         if (!this.connected) {
             if (this._autoCacheMode) {
@@ -99,7 +96,7 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
         if (this._cachedError) {
             throw this._cachedError;
         }
-        return this._cachedValue;
+        return this._cachedValue as V | typeof unresolved;
     }
 
     /**
@@ -128,11 +125,11 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
             this._cachedError = undefined;
             if (!equals(newValue, oldValue)) {
                 this._cachedValue = newValue;
-                processChangedAtom(this, oldValue, this.version++);
+                processChangedAtom(this, undefined, this.version++);
             }
         } catch (error) {
             this._cachedError = error;
-            this.version++;
+            processChangedAtom(this, undefined, this.version++);
         }
     }
 
@@ -183,7 +180,7 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
         if (!this.connected) { return; }
 
         this.connected = false;
-        this._cachedValue = EMPTY_CACHE as V;
+        this._cachedValue = emptyCache;
         this.onDisconnect && this.onDisconnect();
         // Disconnect all observers. When an observer disconnects it removes itself from this array.
         for (let i = this.observers.length - 1; i >= 0; i--) {
@@ -208,29 +205,4 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
     get settable() {
         return !!this.acceptNewValue;
     }
-
-    value!: V;
-
-    readonly pluck!: SettableDerivable<V>['pluck'];
-    readonly lens!: SettableDerivable<V>['lens'];
-    readonly swap!: SettableDerivable<V>['swap'];
-    readonly derive!: SettableDerivable<V>['derive'];
-
-    readonly and!: SettableDerivable<V>['and'];
-    readonly or!: SettableDerivable<V>['or'];
-    readonly not!: SettableDerivable<V>['not'];
-    readonly is!: SettableDerivable<V>['is'];
 }
-Object.defineProperties(DataSource.prototype, {
-    value: { get: valueGetter, set: valueSetter },
-
-    pluck: { value: settablePluckMethod },
-    lens: { value: lensMethod },
-    swap: { value: swapMethod },
-    derive: { value: deriveMethod },
-
-    and: { value: andMethod },
-    or: { value: orMethod },
-    not: { value: notMethod },
-    is: { value: isMethod },
-});

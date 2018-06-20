@@ -1,5 +1,5 @@
+import { Derivable, SettableDerivable } from '../../interfaces';
 import { config } from '../../utils';
-import { Derivable, SettableDerivable } from '../interfaces';
 
 export type PluckKey = string | number | Derivable<string | number>;
 

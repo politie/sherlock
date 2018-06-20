@@ -1,8 +1,8 @@
+import { constant } from '@politie/sherlock';
 import { expect } from 'chai';
-import { constant } from '../derivable';
 import { lift } from './lift';
 
-describe('extras/lift', () => {
+describe('sherlock-utils/lift', () => {
     const niladic = () => 'niladic';
     const monadic = (s: string) => `monadic (${s})`;
     const dyadic = (s: string, n: number) => `dyadic (${s},${n})`;
@@ -13,7 +13,7 @@ describe('extras/lift', () => {
         expect(f().get()).to.equal('niladic');
     });
 
-    it('should unpack parameters before handing them over to the provided function', () => {
+    it('should unwrap parameters before handing them over to the provided function', () => {
         const a$ = constant('a');
         const b$ = constant('b');
         const n$ = constant(123);

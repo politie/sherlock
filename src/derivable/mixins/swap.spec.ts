@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { SettableDerivable } from '../interfaces';
+import { SettableDerivable } from '../../interfaces';
+import { constant } from '../factories';
 
 /**
  * Tests the `swap()` method.
@@ -10,11 +11,9 @@ export function testSwap(factory: <V>(value: V) => SettableDerivable<V>) {
         it('should invoke the swap function with the current value and delegate the work to #set', () => {
             const a$ = factory('a');
 
-            spy(a$, 'get');
             spy(a$, 'set');
 
             a$.swap(a => a + '!');
-            expect(a$.get).to.have.been.calledOnce;
             expect(a$.set).to.have.been.calledOnce
                 .and.to.have.been.calledWithExactly('a!');
             expect(a$.get()).to.equal('a!');
@@ -26,6 +25,9 @@ export function testSwap(factory: <V>(value: V) => SettableDerivable<V>) {
 
             a$.swap(add, '!');
             expect(a$.get()).to.equal('a!');
+
+            a$.swap(add, constant('!'));
+            expect(a$.get()).to.equal('a!!');
         });
     });
 }

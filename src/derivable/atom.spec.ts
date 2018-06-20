@@ -5,9 +5,10 @@ import { Atom } from './atom';
 import { $, testDerivable } from './base-derivable.spec';
 import { atom } from './factories';
 import { testSwap } from './mixins/swap.spec';
+import { unresolved } from './symbols';
 
 describe('derivable/atom', () => {
-    testDerivable(atom, false);
+    testDerivable(v => v === unresolved ? atom.unresolved() : atom(v), false);
     testSwap(atom);
 
     describe('#set', () => {
@@ -39,6 +40,30 @@ describe('derivable/atom', () => {
             imm$.set(Seq.of(1, 2));
             expect(imm$.get()).to.equal(Seq.of(1, 2));
             expect(imm$.version).to.equal(1);
+        });
+
+        it('should reset the unresolved status', () => {
+            const a$ = atom.unresolved<string>();
+            expect(a$.resolved).to.be.false;
+            a$.set('value');
+            expect(a$.resolved).to.be.true;
+        });
+    });
+
+    describe('#unset', () => {
+        let a$: Atom<string>;
+        beforeEach('create the derivable', () => { a$ = new Atom('a'); });
+
+        it('should be able to `unset`', () => {
+            expect(a$.get()).to.equal('a');
+            a$.unset();
+            expect(() => a$.get()).to.throw();
+        });
+
+        it('should be able to re`set` an `unset` atom', () => {
+            a$.unset();
+            a$.set('b');
+            expect(a$.get()).to.equal('b');
         });
     });
 

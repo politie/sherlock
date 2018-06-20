@@ -87,6 +87,6 @@
         "ts-node": "^6.0.3",
         "tsconfig-paths": "^3.3.2",
         "tslint": "^5.10.0",
-        "typescript": "^2.8.3"
+        "typescript": "^2.9.2"
     }
 }

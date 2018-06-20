@@ -1,6 +1,7 @@
+import { Derivable } from '../interfaces';
 import { TrackedObservable, TrackedObserver } from '../tracking';
-import { uniqueId } from '../utils/unique-id';
-import { Derivable } from './interfaces';
+import { uniqueId } from '../utils';
+import { getValueOrUnresolved, unresolved } from './symbols';
 
 /**
  * The base class for all Derivables. Derivables must extend from this, to be 'tracked' and to classify as a Derivable.
@@ -32,17 +33,7 @@ export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V
      * The current version of the state. This number gets incremented every time the state changes. Setting the state to
      * an immutable object that is structurally equal to the previous immutable object is not considered a state change.
      */
-    abstract version: number;
+    abstract readonly version: number;
 
-    abstract get(): V;
-    abstract value: Derivable<V>['value'];
-    abstract settable: Derivable<V>['settable'];
-
-    abstract derive: Derivable<V>['derive'];
-    abstract pluck: Derivable<V>['pluck'];
-
-    abstract and: Derivable<V>['and'];
-    abstract or: Derivable<V>['or'];
-    abstract not: Derivable<V>['not'];
-    abstract is: Derivable<V>['is'];
+    abstract [getValueOrUnresolved](): V | typeof unresolved;
 }

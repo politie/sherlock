@@ -1,10 +1,11 @@
 import { expect } from 'chai';
 import { fromJS, Seq } from 'immutable';
+import { Derivable } from '../../interfaces';
 import { Atom } from '../atom';
 import { Derivation } from '../derivation';
 import { atom } from '../factories';
-import { Derivable, isSettableDerivable } from '../interfaces';
 import { Lens } from '../lens';
+import { isSettableDerivable } from '../typeguards';
 
 /**
  * Tests the `pluck()` method.

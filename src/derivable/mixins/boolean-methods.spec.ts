@@ -1,8 +1,10 @@
 import { expect } from 'chai';
 import { List, Seq } from 'immutable';
 import { spy } from 'sinon';
+import { Derivable } from '../../interfaces';
+import { $ } from '../base-derivable.spec';
 import { atom } from '../factories';
-import { Derivable } from '../interfaces';
+import { getValueOrUnresolved } from '../symbols';
 
 /**
  * Tests the `is()`, `or()`, `and()` and `not()` methods.
@@ -53,7 +55,7 @@ export function testBooleanFuncs(factory: <V>(value: V) => Derivable<V>) {
             });
 
             it('should not observe the right operand when the left operand is truthy', () => {
-                const s = spy(bool$, 'get');
+                const s = spy($(bool$), getValueOrUnresolved);
                 trueOrBool$.get();
                 expect(s).not.to.have.been.called;
                 falseOrBool$.get();
@@ -75,7 +77,7 @@ export function testBooleanFuncs(factory: <V>(value: V) => Derivable<V>) {
             });
 
             it('should not observe the right operand when the left operand is falsey', () => {
-                const s = spy(bool$, 'get');
+                const s = spy($(bool$), getValueOrUnresolved);
                 falseAndBool$.get();
                 expect(s).not.to.have.been.called;
                 trueAndBool$.get();
