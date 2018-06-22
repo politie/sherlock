@@ -1,9 +1,10 @@
-import { Derivable, SettableDerivable, StandaloneLensDescriptor, Unsettable } from '../interfaces';
+import { Derivable, DerivableAtom, SettableDerivable, StandaloneLensDescriptor, State } from '../interfaces';
+import { unresolved as unresolvedSymbol } from '../symbols';
+import { ErrorWrapper } from '../utils';
 import { Atom } from './atom';
 import { Constant } from './constant';
 import { Derivation } from './derivation';
 import { Lens } from './lens';
-import { unresolved as unresolvedSymbol } from './symbols';
 
 // tslint:disable:no-namespace
 
@@ -12,12 +13,15 @@ import { unresolved as unresolvedSymbol } from './symbols';
  *
  * @param value the initial value
  */
-export function atom<V>(value: V): SettableDerivable<V> & Unsettable {
+export function atom<V>(value: V): SettableDerivable<V> & DerivableAtom {
     return new Atom(value);
 }
 export namespace atom {
-    export function unresolved<V>(): SettableDerivable<V> {
+    export function unresolved<V>(): SettableDerivable<V> & DerivableAtom {
         return new Atom<V>(unresolvedSymbol);
+    }
+    export function error<V>(err: any): SettableDerivable<V> & DerivableAtom {
+        return new Atom<V>(new ErrorWrapper(err));
     }
 }
 
@@ -26,11 +30,11 @@ export namespace atom {
  *
  * @param deriver the deriver function
  */
-export function derive<R>(f: () => R | typeof unresolvedSymbol): Derivable<R>;
-export function derive<R, P1>(f: (p1: P1) => R | typeof unresolvedSymbol, p1: P1 | Derivable<P1>): Derivable<R>;
-export function derive<R, P1, P2>(f: (p1: P1, p2: P2) => R | typeof unresolvedSymbol, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): Derivable<R>;
-export function derive<R, P>(f: (...ps: P[]) => R | typeof unresolvedSymbol, ...ps: Array<P | Derivable<P>>): Derivable<R>;
-export function derive<R, P>(f: (...ps: P[]) => R | typeof unresolvedSymbol, ...ps: Array<P | Derivable<P>>): Derivable<R> {
+export function derive<R>(f: () => State<R>): Derivable<R>;
+export function derive<R, P1>(f: (p1: P1) => State<R>, p1: P1 | Derivable<P1>): Derivable<R>;
+export function derive<R, P1, P2>(f: (p1: P1, p2: P2) => State<R>, p1: P1 | Derivable<P1>, p2: P2 | Derivable<P2>): Derivable<R>;
+export function derive<R, P>(f: (...ps: P[]) => State<R>, ...ps: Array<P | Derivable<P>>): Derivable<R>;
+export function derive<R, P>(f: (...ps: P[]) => State<R>, ...ps: Array<P | Derivable<P>>): Derivable<R> {
     return new Derivation(f, ps.length ? ps : undefined);
 }
 
@@ -45,6 +49,9 @@ export function constant<V>(value: V): Derivable<V> {
 export namespace constant {
     export function unresolved<V>(): Derivable<V> {
         return new Constant<V>(unresolvedSymbol);
+    }
+    export function error<V>(err: any): Derivable<V> {
+        return new Constant<V>(new ErrorWrapper(err));
     }
 }
 

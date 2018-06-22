@@ -1,3 +1,5 @@
+import { dependencies, dependencyVersions, mark, observers } from '../symbols';
+
 let currentRecording: Recording | undefined;
 
 /**
@@ -36,16 +38,17 @@ export function stopRecordingObservations() {
     }
     currentRecording = recording.previousRecording;
     const { confirmed, observer } = recording;
-    const { dependencies, dependencyVersions } = observer;
+    const deps = observer[dependencies];
+    const depVersions = observer[dependencyVersions];
 
     // Any previous dependency that was not confirmed during the recording can be removed now.
-    for (let i = confirmed, n = dependencies.length; i < n; i++) {
-        removeObserver(dependencies[i], observer);
+    for (let i = confirmed, n = deps.length; i < n; i++) {
+        removeObserver(deps[i], observer);
     }
-    dependencies.length = confirmed;
+    deps.length = confirmed;
 
-    for (const dep of dependencies) {
-        dependencyVersions[dep.id] = dep.version;
+    for (const dep of deps) {
+        depVersions[dep.id] = dep.version;
     }
 }
 
@@ -68,11 +71,11 @@ export function recordObservation(dependency: TrackedObservable) {
     }
 
     const { observer } = currentRecording;
-    const { dependencies } = observer;
+    const deps = observer[dependencies];
     // Invariants:
     // - dependencies[0..currentRecording.confirmed) have been recorded (confirmed) as dependencies
     // - dependencies[currentRecording.confirmed..n) have not yet been recorded (confirmed)
-    if (dependencies[currentRecording.confirmed] === dependency) {
+    if (deps[currentRecording.confirmed] === dependency) {
         // This is the expected branch almost everytime we rerecord a derivation. The dependencies are often encountered in the
         // same order as before. So we found our dependency at dependencies[currentRecording.confirmed]. We can keep our invariant and
         // include our latest observation by incrementing the confirmed counter. Our observer is already registered at this
@@ -82,19 +85,19 @@ export function recordObservation(dependency: TrackedObservable) {
     } else {
         // This branch means this is either the first recording, this dependency is new, or the dependencies are out of order
         // compared to last time.
-        const index = dependencies.indexOf(dependency);
+        const index = deps.indexOf(dependency);
         if (index < 0) {
             // dependency not yet present in dependencies array. This means we have to register the observer at
             // the dependency and add the dependency to the observer (both ways).
             addObserver(dependency, observer);
-            if (currentRecording.confirmed === dependencies.length) {
+            if (currentRecording.confirmed === deps.length) {
                 // We don't have to reorder dependencies, because it is empty to the right of currentRecording.confirmed.
-                dependencies.push(dependency);
+                deps.push(dependency);
             } else {
                 // Simple way to keep the invariant, move the current item to the end and
                 // insert the new dependency in the current position.
-                dependencies.push(dependencies[currentRecording.confirmed]);
-                dependencies[currentRecording.confirmed] = dependency;
+                deps.push(deps[currentRecording.confirmed]);
+                deps[currentRecording.confirmed] = dependency;
             }
             // dependencies[0..currentRecording.confirmed) are dependencies and dependencies[currentRecording.confirmed] is a dependency
             currentRecording.confirmed++;
@@ -102,8 +105,8 @@ export function recordObservation(dependency: TrackedObservable) {
 
         } else if (index > currentRecording.confirmed) {
             // dependency is present in dependencies, but we were not expecting it yet, swap places
-            dependencies[index] = dependencies[currentRecording.confirmed];
-            dependencies[currentRecording.confirmed] = dependency;
+            deps[index] = deps[currentRecording.confirmed];
+            deps[currentRecording.confirmed] = dependency;
             currentRecording.confirmed++;
         }
         // else: index >= 0 && index < currentRecording.confirmed, i.e. already seen before and already confirmed. Do nothing.
@@ -118,18 +121,18 @@ export interface Observable {
 }
 
 export interface TrackedObservable extends Observable {
-    readonly observers: Observer[];
+    readonly [observers]: Observer[];
 }
 
 export interface Observer {
     disconnect(): void;
-    mark(reactorSink: TrackedReactor[]): void;
+    [mark](reactorSink: TrackedReactor[]): void;
 }
 
 export interface TrackedObserver extends Observer {
     readonly id: number;
-    readonly dependencies: TrackedObservable[];
-    readonly dependencyVersions: { [id: number]: number };
+    readonly [dependencies]: TrackedObservable[];
+    readonly [dependencyVersions]: { [id: number]: number };
 }
 
 export interface TrackedReactor {
@@ -144,9 +147,9 @@ export interface TrackedReactor {
  * @param observer the observer that should be registered
  */
 export function addObserver(observable: TrackedObservable, observer: Observer) {
-    const { observers } = observable;
-    observers.push(observer);
-    if (observers.length === 1 && isConnectable(observable)) {
+    const obs = observable[observers];
+    obs.push(observer);
+    if (obs.length === 1 && isConnectable(observable)) {
         observable.connect();
     }
 }
@@ -159,15 +162,15 @@ export function addObserver(observable: TrackedObservable, observer: Observer) {
  * @param observer the observer that has to be removed
  */
 export function removeObserver(observable: TrackedObservable, observer: Observer) {
-    const { observers } = observable;
-    const i = observers.indexOf(observer);
+    const obs = observable[observers];
+    const i = obs.indexOf(observer);
     // istanbul ignore if: should never happen!
     if (i < 0) {
         throw new Error('Inconsistent state!');
     }
-    observers.splice(i, 1);
+    obs.splice(i, 1);
     // If the dependency is itself another observer and is not observed anymore, we should disconnect it.
-    if (observers.length === 0 && isDisconnectable(observable)) {
+    if (obs.length === 0 && isDisconnectable(observable)) {
         observable.disconnect();
     }
 }

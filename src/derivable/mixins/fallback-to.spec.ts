@@ -1,13 +1,13 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { Derivable } from '../../interfaces';
+import { observers, unresolved } from '../../symbols';
 import { Atom } from '../atom';
+import { Factory } from '../base-derivable.spec';
 import { atom } from '../factories';
-import { unresolved } from '../symbols';
 import { isSettableDerivable } from '../typeguards';
-import { isUnsettable } from './accessors.spec';
+import { isAtom } from './accessors.spec';
 
-export function testFallbackTo(factory: <V>(value: V | typeof unresolved) => Derivable<V>) {
+export function testFallbackTo(factory: Factory) {
     describe('#fallbackTo', () => {
         it('fallback to the result of the provided function', () => {
             const a$ = factory<string>(unresolved);
@@ -22,7 +22,7 @@ export function testFallbackTo(factory: <V>(value: V | typeof unresolved) => Der
                 expect(b$.get()).to.equal('a value');
                 expect(fallback).to.have.been.calledOnce;
 
-                if (isUnsettable(a$)) {
+                if (isAtom(a$)) {
                     a$.unset();
                     expect(b$.get()).to.equal(42);
                     expect(fallback).to.have.been.calledTwice;
@@ -44,7 +44,7 @@ export function testFallbackTo(factory: <V>(value: V | typeof unresolved) => Der
                 expect(b$.get()).to.equal('a value');
                 expect(fallback$.get).to.have.been.calledOnce;
 
-                if (isUnsettable(a$)) {
+                if (isAtom(a$)) {
                     a$.unset();
                     expect(b$.get()).to.equal(42);
                     expect(fallback$.get).to.have.been.calledTwice;
@@ -57,19 +57,19 @@ export function testFallbackTo(factory: <V>(value: V | typeof unresolved) => Der
             const fallback$ = new Atom(42);
             const b$ = a$.fallbackTo(fallback$);
 
-            expect(fallback$.observers).to.be.empty;
+            expect(fallback$[observers]).to.be.empty;
             expect(b$.autoCache().get()).to.equal(42);
-            expect(fallback$.observers).to.have.length(1);
+            expect(fallback$[observers]).to.have.length(1);
 
             if (isSettableDerivable(a$)) {
                 a$.set('a value');
                 b$.get();
-                expect(fallback$.observers).to.be.empty;
+                expect(fallback$[observers]).to.be.empty;
 
-                if (isUnsettable(a$)) {
+                if (isAtom(a$)) {
                     a$.unset();
                     b$.get();
-                    expect(fallback$.observers).to.have.length(1);
+                    expect(fallback$[observers]).to.have.length(1);
                 }
             }
         });
@@ -84,7 +84,7 @@ export function testFallbackTo(factory: <V>(value: V | typeof unresolved) => Der
                 a$.set('a value');
                 expect(b$.get()).to.equal('a value');
 
-                if (isUnsettable(a$)) {
+                if (isAtom(a$)) {
                     a$.unset();
                     expect(b$.get()).to.equal(42);
                 }

@@ -1,4 +1,4 @@
-import { atom, SettableDerivable } from '@politie/sherlock';
+import { _internal, atom, SettableDerivable } from '@politie/sherlock';
 import { expect } from 'chai';
 import { Subject } from 'rxjs';
 import { fromObservable } from './rxjs';
@@ -54,9 +54,9 @@ describe('rxjs/rxjs', () => {
 
         it('should stop the internal reactor when the Observable is unobserved', () => {
             const sub = a$.toObservable().subscribe();
-            expect((a$ as any).observers).not.to.be.empty;
+            expect(a$[_internal.symbols.observers]).not.to.be.empty;
             sub.unsubscribe();
-            expect((a$ as any).observers).to.be.empty;
+            expect(a$[_internal.symbols.observers]).to.be.empty;
         });
 
         it('should support multiple subscriptions to the returned Observable', () => {
@@ -169,10 +169,10 @@ describe('rxjs/rxjs', () => {
             expect(value).to.equal(false);
         });
 
-        it('should use the fallback when given and not connected', () => {
+        it('should work with a fallback when given and not connected', () => {
             const subj = new Subject<string>();
             const f$ = atom('fallback');
-            const d$ = fromObservable(subj, f$);
+            const d$ = fromObservable(subj).fallbackTo(f$);
             expect(d$.get()).to.equal('fallback');
             expect(subj.observers).to.be.empty;
 

@@ -1,10 +1,10 @@
-import { SettableDerivable } from '../interfaces';
+import { SettableDerivable, State } from '../interfaces';
+import { emptyCache, getState, observers } from '../symbols';
 import { isRecordingObservations, recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { config, equals } from '../utils';
+import { config, equals, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 import { maybeDisconnectInNextTick } from './derivation';
-import { emptyCache, getValueOrUnresolved, unresolved } from './symbols';
 
 export abstract class DataSource<V> extends BaseDerivable<V> implements SettableDerivable<V> {
     /**
@@ -22,7 +22,7 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
      * `get()` is called when not connected. When connected, it will be called once and then only whenever `checkForChanges()`
      * was called.
      */
-    protected abstract calculateCurrentValue(): V | typeof unresolved;
+    protected abstract calculateCurrentValue(): State<V>;
 
     /**
      * When implemented this datasource will become settable and any value that is presented to `set()` will
@@ -30,11 +30,6 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
      * be changed in order to notify any observer.
      */
     protected acceptNewValue?(newValue: V): void;
-
-    /**
-     * Not used. Only to satisfy TransactionAtom<V> interface.
-     */
-    _value!: never;
 
     /**
      * Indicates whether the datasource is actively used to power a reactor, either directly or indirectly with other derivations in
@@ -45,12 +40,7 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
     /**
      * The last value that was calculated for this datasource. Is only used when connected.
      */
-    private _cachedValue: V | typeof unresolved | typeof emptyCache = emptyCache;
-
-    /**
-     * The error that was caught while calculating the value for this datasource. Is only used when connected.
-     */
-    private _cachedError?: Error;
+    private _cachedState: State<V> | typeof emptyCache = emptyCache;
 
     /**
      * Indicates whether the datasource is in autoCache mode.
@@ -71,7 +61,7 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
     /**
      * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
-    [getValueOrUnresolved](): V | typeof unresolved {
+    [getState]() {
         // Should we connect now?
         if (!this.connected) {
             if (this._autoCacheMode) {
@@ -93,10 +83,7 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
 
         // We are connected, so we should record our dependencies.
         recordObservation(this);
-        if (this._cachedError) {
-            throw this._cachedError;
-        }
-        return this._cachedValue as V | typeof unresolved;
+        return this._cachedState as State<V>;
     }
 
     /**
@@ -119,16 +106,9 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
             return;
         }
 
-        try {
-            const oldValue = this._cachedValue;
-            const newValue = this.callCalculationFn();
-            this._cachedError = undefined;
-            if (!equals(newValue, oldValue)) {
-                this._cachedValue = newValue;
-                processChangedAtom(this, undefined, this.version++);
-            }
-        } catch (error) {
-            this._cachedError = error;
+        const newValue = this.callCalculationFn();
+        if (!equals(newValue, this._cachedState)) {
+            this._cachedState = newValue;
             processChangedAtom(this, undefined, this.version++);
         }
     }
@@ -142,7 +122,7 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
         } catch (e) {
             // tslint:disable-next-line:no-console - console.error is only called when debugMode is set to true
             this._stack && console.error(e.message, this._stack);
-            throw e;
+            return new ErrorWrapper(e);
         }
     }
 
@@ -180,11 +160,12 @@ export abstract class DataSource<V> extends BaseDerivable<V> implements Settable
         if (!this.connected) { return; }
 
         this.connected = false;
-        this._cachedValue = emptyCache;
+        this._cachedState = emptyCache;
         this.onDisconnect && this.onDisconnect();
         // Disconnect all observers. When an observer disconnects it removes itself from this array.
-        for (let i = this.observers.length - 1; i >= 0; i--) {
-            this.observers[i].disconnect();
+        const obs = this[observers];
+        for (let i = obs.length - 1; i >= 0; i--) {
+            obs[i].disconnect();
         }
     }
 

@@ -1,23 +1,23 @@
 import { expect } from 'chai';
 import { SinonFakeTimers, SinonStub, spy, stub, useFakeTimers } from 'sinon';
-import { Derivable } from '../interfaces';
+import { Derivable, State } from '../interfaces';
 import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from '../reactor/reactor.spec';
+import { unresolved } from '../symbols';
 import { basicTransactionsTests } from '../transaction/transaction.spec';
-import { config } from '../utils';
+import { config, ErrorWrapper } from '../utils';
 import { testDerivable } from './base-derivable.spec';
 import { DataSource } from './data-source';
 import { derive } from './factories';
-import { unresolved } from './symbols';
 
 describe('derivable/data-source', () => {
 
     class SimpleDataSource<V> extends DataSource<V> {
-        constructor(private currentValue: V | typeof unresolved) { super(); }
-        calculateCurrentValue(): V | typeof unresolved {
-            return this.currentValue;
+        constructor(private _value: State<V>) { super(); }
+        calculateCurrentValue() {
+            return this._value;
         }
         protected acceptNewValue(newValue: V) {
-            this.currentValue = newValue;
+            this._value = newValue;
             this.checkForChanges();
         }
     }
@@ -26,13 +26,16 @@ describe('derivable/data-source', () => {
         testDerivable(v => new SimpleDataSource(v), false);
     });
     context('(derived)', () => {
-        testDerivable(v => new SimpleDataSource(v === unresolved ? v : { value: v }).derive(obj => obj.value), false);
+        testDerivable(v => new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v }).derive(obj => obj.value), false);
     });
     context('(lensed)', () => {
-        testDerivable(<V>(v: V | typeof unresolved) => new SimpleDataSource(v === unresolved ? v : { value: v }).lens<V>({
-            get: obj => obj.value,
-            set: value => ({ value }),
-        }), false);
+        testDerivable(<V>(v: State<V>) =>
+            new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v })
+                .lens<V>({
+                    get: obj => obj.value,
+                    set: value => ({ value }),
+                }),
+            false);
     });
 
     context('(in transactions)', () => {
@@ -334,31 +337,28 @@ describe('derivable/data-source', () => {
     });
 
     context('(usecase: derivable promise)', () => {
-        const error = Symbol();
         class DerivablePromise<V> extends DataSource<V> {
-            private result: V | typeof unresolved | typeof error = unresolved;
-            private error?: any;
+            private _value: State<V> = unresolved;
 
             constructor(work: ((resolve: (v: V) => void, reject: (e: any) => void) => void)) {
                 super();
                 work(
                     v => {
-                        this.result = v;
+                        this._value = v;
                         this.checkForChanges();
                     },
                     e => {
-                        this.result = error;
-                        this.error = e;
+                        this._value = new ErrorWrapper(e);
                         this.checkForChanges();
                     },
                 );
             }
 
             calculateCurrentValue() {
-                if (this.result === error) {
-                    throw this.error;
+                if (this._value instanceof ErrorWrapper) {
+                    throw this._value.error;
                 }
-                return this.result;
+                return this._value;
             }
         }
 
@@ -409,7 +409,7 @@ describe('derivable/data-source', () => {
                 expect(e.message).to.equal('my error');
             }
 
-            expect(() => f$.value).to.throw('my error');
+            expect(f$.value).to.be.undefined;
             expect(() => f$.get()).to.throw('my error');
         });
 

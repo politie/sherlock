@@ -1,26 +1,28 @@
-import { Derivable } from '../interfaces';
+import { Derivable, State } from '../interfaces';
+import { getState } from '../symbols';
 import { BaseDerivable } from './base-derivable';
-import { getValueOrUnresolved, unresolved } from './symbols';
 
 /**
  * Constant represents a basic immutable building block of derivations.
  */
 export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
     /**
-     * Creates a new Constant with the give value.
+     * Creates a new Constant with the given state.
      *
-     * @param value the readonly value of this Constant
+     * @param _state the readonly state of this Constant
      */
     constructor(
         /**
-         * The readonly value of this Constant.
+         * The readonly state of this Constant.
          */
-        private readonly _value: V | typeof unresolved,
+        private readonly _state: State<V>,
     ) {
         super();
     }
 
-    [getValueOrUnresolved]() { return this._value; }
+    [getState]() {
+        return this._state;
+    }
 
     readonly version!: 0;
     readonly settable!: false;

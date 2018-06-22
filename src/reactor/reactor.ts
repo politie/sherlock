@@ -1,7 +1,8 @@
-import { BaseDerivable, Constant, Derivation, symbols, unwrap } from '../derivable';
+import { BaseDerivable, Constant, Derivation, unwrap } from '../derivable';
 import { Derivable, ReactorOptions, ReactorOptionValue, ToPromiseOptions } from '../interfaces';
+import { emptyCache, getState, mark, unresolved } from '../symbols';
 import { addObserver, Observer, removeObserver } from '../tracking';
-import { config, equals, uniqueId } from '../utils';
+import { config, equals, ErrorWrapper, uniqueId } from '../utils';
 
 // Adds the react and toPromise methods to Derivables.
 declare module '../derivable/extension' {
@@ -86,7 +87,7 @@ export class Reactor<V> implements Observer {
     /**
      * The value of the parent when this reactor last reacted. Is used to determine whether it should react again or not.
      */
-    private lastValue: V | typeof symbols.emptyCache | typeof symbols.unresolved = symbols.emptyCache;
+    private lastValue: V | typeof emptyCache | typeof unresolved = emptyCache;
 
     /**
      * Create a new instance of Reactor, do not use this directly, use {@link Reactor.create} instead.
@@ -141,15 +142,13 @@ export class Reactor<V> implements Observer {
             return;
         }
 
-        try {
-            const { lastValue } = this;
-            const nextValue = this.parent[symbols.getValueOrUnresolved]();
-            if (nextValue !== symbols.unresolved && !equals(lastValue, nextValue)) {
-                this.lastValue = nextValue;
-                this.react(nextValue);
-            }
-        } catch (err) {
-            this.errorHandler(err);
+        const { lastValue } = this;
+        const nextValue = this.parent[getState]();
+        if (nextValue instanceof ErrorWrapper) {
+            this.errorHandler(nextValue.error);
+        } else if (nextValue !== unresolved && !equals(lastValue, nextValue)) {
+            this.lastValue = nextValue;
+            this.react(nextValue);
         }
     }
 
@@ -167,7 +166,7 @@ export class Reactor<V> implements Observer {
         } catch (e) {
             // tslint:disable-next-line:no-console - console.error is only called when debugMode is set to true
             this.stack && console.error(e.message, this.stack);
-            throw e;
+            this.errorHandler(e);
         } finally {
             this.reactionDepth--;
         }
@@ -196,7 +195,7 @@ export class Reactor<V> implements Observer {
      * During the mark phase add this reactor to the reactorSink. This way, the transaction knows we exist and we get to `reactIfNeeded`
      * later on.
      */
-    mark(reactorSink: Array<Reactor<any>>): void {
+    [mark](reactorSink: Array<Reactor<any>>): void {
         if (reactorSink.indexOf(this) < 0) {
             reactorSink.push(this);
         }

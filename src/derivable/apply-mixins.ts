@@ -5,17 +5,21 @@ import { DataSource } from './data-source';
 import { deriveMethod } from './derivation';
 import { Lens, lensMethod } from './lens';
 import {
-    andMethod, fallbackToMethod, getMethod, getOrMethod, isMethod, notMethod, orMethod, pluckMethod, resolvedGetter, settablePluckMethod,
-    swapMethod, valueGetter, valueSetter,
+    andMethod, erroredGetter, errorGetter, fallbackToMethod, getMethod, getOrMethod, isMethod, notMethod, orMethod, pluckMethod,
+    resolvedGetter, settablePluckMethod, swapMethod, valueGetter, valueSetter,
 } from './mixins';
 
 declare module './base-derivable' {
     export interface BaseDerivable<V> {
         get(): V;
         getOr<T>(t: T): V;
+
         readonly value: Derivable<V>['value'];
         readonly resolved: Derivable<V>['resolved'];
         readonly settable: Derivable<V>['settable'];
+
+        readonly errored: Derivable<V>['errored'];
+        readonly error: Derivable<V>['error'];
 
         readonly derive: Derivable<V>['derive'];
         readonly pluck: Derivable<V>['pluck'];
@@ -29,11 +33,15 @@ declare module './base-derivable' {
 }
 
 Object.defineProperties(BaseDerivable.prototype, {
-    value: { get: valueGetter },
     get: { value: getMethod },
     getOr: { value: getOrMethod },
+
+    value: { get: valueGetter },
     resolved: { get: resolvedGetter },
     settable: { value: false },
+
+    errored: { get: erroredGetter },
+    error: { get: errorGetter },
 
     derive: { value: deriveMethod },
     pluck: { value: pluckMethod },

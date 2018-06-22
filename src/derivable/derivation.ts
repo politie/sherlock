@@ -1,10 +1,10 @@
-import { Derivable } from '../interfaces';
+import { Derivable, State } from '../interfaces';
+import { dependencies, dependencyVersions, emptyCache, getState, mark, observers, unresolved } from '../symbols';
 import {
     isRecordingObservations, recordObservation, removeObserver, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedReactor
 } from '../tracking';
-import { config, equals } from '../utils';
+import { config, equals, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
-import { emptyCache, getValueOrUnresolved, unresolved } from './symbols';
 import { unwrap } from './unwrap';
 
 export let derivationStackDepth = 0;
@@ -18,13 +18,13 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
      * The recorded dependencies of this derivation. Is only used when the derivation is connected (i.e. it is actively used to
      * power a reactor, either directly or indirectly with other derivations in between).
      */
-    readonly dependencies: TrackedObservable[] = [];
+    readonly [dependencies]: TrackedObservable[] = [];
 
     /**
      * The versions of all dependencies that were used to calculate the currently known value. Is used to determine whether
      * the deriver function needs to be called.
      */
-    readonly dependencyVersions: { [id: number]: number } = {};
+    readonly [dependencyVersions]: { [id: number]: number } = {};
 
     /**
      * Indicates whether the derivation is actively used to power a reactor, either directly or indirectly with other derivations in
@@ -42,12 +42,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     /**
      * The last value that was calculated for this derivation. Is only used when connected.
      */
-    private cachedValue: V | typeof unresolved | typeof emptyCache = emptyCache;
-
-    /**
-     * The error that was caught while calculating the derivation. Is only used when connected.
-     */
-    private cachedError?: Error;
+    private cachedState: State<V> | typeof emptyCache = emptyCache;
 
     /**
      * Indicates whether the derivation is in autoCache mode.
@@ -68,7 +63,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
         /**
          * The deriver function that is used to calculate the value of this derivation.
          */
-        private readonly deriver: (...args: any[]) => V | typeof unresolved,
+        private readonly deriver: (...args: any[]) => State<V>,
         /**
          * Arguments that will be passed unwrapped to the deriver function.
          */
@@ -91,7 +86,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     /**
      * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
-    [getValueOrUnresolved](): V | typeof unresolved {
+    [getState]() {
         // Should we connect now?
         if (!this.connected) {
             if (this.autoCacheMode) {
@@ -115,13 +110,10 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
         // We are connected, so we should record this instance as a dependency of our observers, but only if we have dependencies.
         // If we don't have any dependencies we are effectively immutable (because derivations must be pure functions), therefore we
         // don't record this observation to our observer.
-        if (this.dependencies.length) {
+        if (this[dependencies].length) {
             recordObservation(this);
         }
-        if (this.cachedError) {
-            throw this.cachedError;
-        }
-        return this.cachedValue as V | typeof unresolved;
+        return this.cachedState as State<V>;
     }
 
     /**
@@ -133,18 +125,13 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
         }
 
         startRecordingObservations(this);
-        const oldValue = this.cachedValue;
         try {
             const newValue = this.callDeriver();
-            this.cachedError = undefined;
             this.isUpToDate = true;
-            if (!equals(newValue, oldValue)) {
-                this.cachedValue = newValue;
+            if (!equals(newValue, this.cachedState)) {
+                this.cachedState = newValue;
                 this._version++;
             }
-        } catch (error) {
-            this.cachedError = error;
-            this._version++;
         } finally {
             stopRecordingObservations();
         }
@@ -164,7 +151,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
             }
             // tslint:disable-next-line:no-console - console.error is only called when debugMode is set to true
             this.stack && console.error(e.message, this.stack);
-            throw e;
+            return new ErrorWrapper(e);
         } finally {
             --derivationStackDepth;
         }
@@ -176,8 +163,8 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
      */
     private shouldUpdate() {
         // Update the isUpToDate boolean only when it is false and we know all our dependencies (c.q. the cache is not empty).
-        if (!this.isUpToDate && this.cachedValue !== emptyCache) {
-            this.isUpToDate = this.dependencies.every(obs => this.dependencyVersions[obs.id] === obs.version);
+        if (!this.isUpToDate && this.cachedState !== emptyCache) {
+            this.isUpToDate = this[dependencies].every(obs => this[dependencyVersions][obs.id] === obs.version);
         }
         return !this.isUpToDate;
     }
@@ -187,13 +174,13 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
      * in that state, all observers of this derivation are also expected to already be in that state. This invariant should never
      * be invalidated. Any reactors we encounter are pushed into the reactorSink.
      */
-    mark(reactorSink: TrackedReactor[]) {
+    [mark](reactorSink: TrackedReactor[]) {
         // If we think we're up-to-date our observers might think the same, otherwise, we're good, cause our observers can never
         // believe the're up-to-date when any of their dependencies is not up-to-date.
         if (this.isUpToDate) {
             this.isUpToDate = false;
-            for (const observer of this.observers) {
-                observer.mark(reactorSink);
+            for (const observer of this[observers]) {
+                observer[mark](reactorSink);
             }
         }
     }
@@ -226,15 +213,15 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     disconnectNow() {
         this.isUpToDate = false;
         this.connected = false;
-        this.cachedValue = emptyCache;
+        this.cachedState = emptyCache;
         // Disconnect all observers. When an observer disconnects it removes itself from this array.
-        for (let i = this.observers.length - 1; i >= 0; i--) {
-            this.observers[i].disconnect();
+        for (let i = this[observers].length - 1; i >= 0; i--) {
+            this[observers][i].disconnect();
         }
-        for (const dep of this.dependencies) {
+        for (const dep of this[dependencies]) {
             removeObserver(dep, this);
         }
-        this.dependencies.length = 0;
+        this[dependencies].length = 0;
     }
 
     autoCache() {
@@ -244,7 +231,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
 }
 
 export function maybeDisconnectInNextTick(derivation: TrackedObservable & { disconnectNow(): void }) {
-    setTimeout(() => derivation.observers.length || derivation.disconnectNow(), 0);
+    setTimeout(() => derivation[observers].length || derivation.disconnectNow(), 0);
 }
 
 export function deriveMethod<V extends P, R, P>(

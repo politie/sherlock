@@ -1,7 +1,7 @@
-import { Derivable } from '../interfaces';
+import { Derivable, State } from '../interfaces';
+import { getState, observers } from '../symbols';
 import { TrackedObservable, TrackedObserver } from '../tracking';
 import { uniqueId } from '../utils';
-import { getValueOrUnresolved, unresolved } from './symbols';
 
 /**
  * The base class for all Derivables. Derivables must extend from this, to be 'tracked' and to classify as a Derivable.
@@ -19,11 +19,11 @@ export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V
     /**
      * The observers of this Derivable, do not use this in application code.
      */
-    readonly observers: TrackedObserver[] = [];
+    readonly [observers]: TrackedObserver[] = [];
 
     /**
-     * Sets this Derivable to autoCache mode. This will cache the value of this Derivable the first time {@link #get} is called every tick
-     * and release this cache some time after this tick. The value is still guaranteed to be up-to-date with respect to changes in any of
+     * Sets this Derivable to autoCache mode. This will cache the state of this Derivable the first time {@link #get} is called every tick
+     * and release this cache some time after this tick. The state is still guaranteed to be up-to-date with respect to changes in any of
      * its dependencies, by using the same mechanism that is used by a reactor. It has a setup cost comparable to starting a reactor every
      * first time #get is called per tick. Starting a reactor on a Derivable with an active and up-to-date cache is cheap though.
      */
@@ -35,5 +35,5 @@ export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V
      */
     abstract readonly version: number;
 
-    abstract [getValueOrUnresolved](): V | typeof unresolved;
+    abstract [getState](): State<V>;
 }

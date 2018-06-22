@@ -1,4 +1,4 @@
-import { _internals, DataSource, Derivable, Fallback, ReactorOptions, symbols, utils } from '@politie/sherlock';
+import { _internal, DataSource, Derivable, ReactorOptions, State } from '@politie/sherlock';
 import { Observable, Subscriber, Subscription } from 'rxjs';
 
 // Adds the toObservable method to Derivable.
@@ -14,12 +14,12 @@ declare module '@politie/sherlock/derivable/extension' {
     }
 }
 
-_internals.BaseDerivable.prototype.toObservable = function toObservable<V>(
-    this: _internals.BaseDerivable<V>,
+_internal.BaseDerivable.prototype.toObservable = function toObservable<V>(
+    this: _internal.BaseDerivable<V>,
     options?: Partial<ReactorOptions<V>>,
 ) {
     return new Observable<V>((subscriber: Subscriber<V>) => {
-        return _internals.Reactor.create(this,
+        return _internal.Reactor.create(this,
             // onValue: notify subscriber
             value => subscriber.next(value),
             // Merge the options with the default options.
@@ -30,27 +30,20 @@ _internals.BaseDerivable.prototype.toObservable = function toObservable<V>(
     });
 };
 
-const error = Symbol('error');
-
 class FromObservable<V> extends DataSource<V> {
-    private currentValue: V | typeof symbols.unresolved | typeof error = symbols.unresolved;
-    private currentError?: any;
+    private _state: State<V> = _internal.symbols.unresolved;
     private subscription?: Subscription;
 
-    constructor(
-        private readonly observable: Observable<V>,
-        private readonly fallback?: Fallback<V>,
-    ) { super(); }
+    constructor(private readonly observable: Observable<V>) { super(); }
 
     onConnect() {
         this.subscription = this.observable.subscribe(
             value => {
-                this.currentValue = value;
+                this._state = value;
                 this.checkForChanges();
             },
             err => {
-                this.currentValue = error;
-                this.currentError = err;
+                this._state = new _internal.ErrorWrapper(err);
                 this.checkForChanges();
             }
         );
@@ -59,21 +52,14 @@ class FromObservable<V> extends DataSource<V> {
     onDisconnect() {
         this.subscription!.unsubscribe();
         this.subscription = undefined;
-        this.currentValue = symbols.unresolved;
-        this.currentError = undefined;
+        this._state = _internal.symbols.unresolved;
     }
 
     calculateCurrentValue() {
-        if (this.currentValue === error) {
-            throw this.currentError;
-        }
-        if (this.currentValue === symbols.unresolved && this.fallback) {
-            return utils.resolveFallback(this.fallback);
-        }
-        return this.currentValue;
+        return this._state;
     }
 }
 
-export function fromObservable<V>(observable: Observable<V>, fallback?: Fallback<V>): Derivable<V> {
-    return new FromObservable(observable, fallback);
+export function fromObservable<V>(observable: Observable<V>): Derivable<V> {
+    return new FromObservable(observable);
 }

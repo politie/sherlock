@@ -6,20 +6,20 @@ export {
     isDerivable,
     isSettableDerivable,
     lens,
-    symbols,
     unwrap,
 } from './derivable';
 
 export {
     Derivable,
+    DerivableAtom,
     Fallback,
     ReactorOptions,
     ReactorOptionValue,
     SettableDerivable,
     StandaloneLensDescriptor,
+    State,
     TargetedLensDescriptor,
     ToPromiseOptions,
-    Unsettable,
     Unwrappable,
 } from './interfaces';
 
@@ -35,7 +35,7 @@ export {
     config,
 } from './utils';
 
-import * as _internals from './internals';
+import * as _internal from './internal';
 
 import { resolveFallback } from './derivable';
 import { clone, equals, isPlainObject } from './utils';
@@ -48,5 +48,5 @@ const utils = {
 
 export {
     utils,
-    _internals,
+    _internal,
 };

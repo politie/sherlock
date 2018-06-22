@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { SinonFakeTimers, SinonSpy, SinonStub, spy, stub, useFakeTimers } from 'sinon';
 import { Derivable, SettableDerivable } from '../interfaces';
-import { config } from '../utils';
+import { config, ErrorWrapper } from '../utils';
 import { Atom } from './atom';
 import { testDerivable } from './base-derivable.spec';
 import { Constant } from './constant';
@@ -9,7 +9,7 @@ import { atom, derive } from './factories';
 
 describe('derivable/derive', () => {
     context('(standalone)', () => {
-        testDerivable(v => derive(() => v), true);
+        testDerivable(v => derive(() => { if (v instanceof ErrorWrapper) { throw v.error; } return v; }), true);
     });
 
     context('(based on atom)', () => {

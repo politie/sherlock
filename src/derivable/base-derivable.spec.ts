@@ -1,18 +1,20 @@
 import { expect } from 'chai';
 import { fromJS } from 'immutable';
 import { spy } from 'sinon';
-import { Derivable, SettableDerivable } from '../interfaces';
+import { Derivable, SettableDerivable, State } from '../interfaces';
+import { observers, unresolved } from '../symbols';
 import { BaseDerivable } from './base-derivable';
 import { Derivation } from './derivation';
 import { atom, constant, derive } from './factories';
-import { isUnsettable, testAccessors } from './mixins/accessors.spec';
+import { isAtom, testAccessors } from './mixins/accessors.spec';
 import { testBooleanFuncs } from './mixins/boolean-methods.spec';
 import { testFallbackTo } from './mixins/fallback-to.spec';
 import { testPluck } from './mixins/pluck.spec';
-import { unresolved } from './symbols';
 import { isSettableDerivable } from './typeguards';
 
-export function testDerivable(factory: <V>(value: V | typeof unresolved) => Derivable<V>, immutable: boolean) {
+export type Factory = <V>(state: State<V>) => Derivable<V>;
+
+export function testDerivable(factory: Factory, immutable: boolean) {
     testAccessors(factory, immutable);
     testFallbackTo(factory);
     testBooleanFuncs(factory);
@@ -227,7 +229,7 @@ export function testDerivable(factory: <V>(value: V | typeof unresolved) => Deri
                 expect(await promise).to.equal('as promised');
             });
 
-            if (isUnsettable(value$)) {
+            if (isAtom(value$)) {
                 it('should resolve on the first resolved value', async () => {
                     value$.unset();
                     value$.set('some other value');
@@ -296,7 +298,7 @@ export function testDerivable(factory: <V>(value: V | typeof unresolved) => Deri
 }
 
 function resetAtomTo<V>(a$: SettableDerivable<V>, value: V) {
-    $(a$).observers.forEach(obs => obs.disconnect());
+    $(a$)[observers].forEach(obs => obs.disconnect());
     a$.set(value);
 }
 

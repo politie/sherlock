@@ -1,5 +1,4 @@
 import './apply-mixins';
-import * as symbols from './symbols';
 
 export * from './atom';
 export * from './base-derivable';
@@ -13,4 +12,3 @@ export * from './mixins';
 export * from './resolve-fallback';
 export * from './typeguards';
 export * from './unwrap';
-export { symbols };

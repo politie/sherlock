@@ -1,20 +1,24 @@
 import { Fallback, SettableDerivable } from '../../interfaces';
+import { getState, unresolved } from '../../symbols';
+import { ErrorWrapper } from '../../utils';
 import { BaseDerivable } from '../base-derivable';
 import { derivationStackDepth } from '../derivation';
 import { resolveFallback } from '../resolve-fallback';
-import { getValueOrUnresolved, unresolved } from '../symbols';
 
-export function valueGetter<V>(this: BaseDerivable<V>) {
-    const value = this[getValueOrUnresolved]();
-    return value === unresolved ? undefined : value;
+export function valueGetter<V>(this: BaseDerivable<V>): V | undefined {
+    const state = this[getState]();
+    return state === unresolved || state instanceof ErrorWrapper ? undefined : state;
 }
 
 export function valueSetter<V>(this: SettableDerivable<V>, newValue: V) { return this.set(newValue); }
 
 export function getMethod<V>(this: BaseDerivable<V>): V {
-    const value = this[getValueOrUnresolved]();
-    if (value !== unresolved) {
-        return value;
+    const state = this[getState]();
+    if (state instanceof ErrorWrapper) {
+        throw state.error;
+    }
+    if (state !== unresolved) {
+        return state;
     }
     if (derivationStackDepth > 0) {
         throw unresolved;
@@ -23,10 +27,22 @@ export function getMethod<V>(this: BaseDerivable<V>): V {
 }
 
 export function getOrMethod<V, T>(this: BaseDerivable<V>, fallback: Fallback<T>): V | T {
-    const value = this[getValueOrUnresolved]();
-    return value === unresolved ? resolveFallback(fallback) : value;
+    const state = this[getState]();
+    if (state instanceof ErrorWrapper) {
+        throw state.error;
+    }
+    return state === unresolved ? resolveFallback(fallback) : state;
 }
 
-export function resolvedGetter(this: BaseDerivable<any>) {
-    return this[getValueOrUnresolved]() !== unresolved;
+export function resolvedGetter(this: BaseDerivable<any>): boolean {
+    return this[getState]() !== unresolved;
+}
+
+export function erroredGetter(this: BaseDerivable<any>): boolean {
+    return this[getState]() instanceof ErrorWrapper;
+}
+
+export function errorGetter(this: BaseDerivable<any>): any {
+    const state = this[getState]();
+    return state instanceof ErrorWrapper ? state.error : undefined;
 }

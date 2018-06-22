@@ -1,14 +1,15 @@
 import { expect } from 'chai';
 import { Seq } from 'immutable';
+import { restorableState, unresolved } from '../symbols';
 import { txn } from '../transaction/transaction.spec';
+import { ErrorWrapper } from '../utils';
 import { Atom } from './atom';
 import { $, testDerivable } from './base-derivable.spec';
 import { atom } from './factories';
 import { testSwap } from './mixins/swap.spec';
-import { unresolved } from './symbols';
 
 describe('derivable/atom', () => {
-    testDerivable(v => v === unresolved ? atom.unresolved() : atom(v), false);
+    testDerivable(v => v === unresolved ? atom.unresolved() : v instanceof ErrorWrapper ? atom.error(v.error) : atom(v), false);
     testSwap(atom);
 
     describe('#set', () => {
@@ -52,7 +53,7 @@ describe('derivable/atom', () => {
 
     describe('#unset', () => {
         let a$: Atom<string>;
-        beforeEach('create the derivable', () => { a$ = new Atom('a'); });
+        beforeEach('create the atom', () => { a$ = new Atom('a'); });
 
         it('should be able to `unset`', () => {
             expect(a$.get()).to.equal('a');
@@ -60,33 +61,50 @@ describe('derivable/atom', () => {
             expect(() => a$.get()).to.throw();
         });
 
-        it('should be able to re`set` an `unset` atom', () => {
+        it('should be possible to re`set` an `unset` atom', () => {
             a$.unset();
             a$.set('b');
             expect(a$.get()).to.equal('b');
         });
     });
 
+    describe('#setError', () => {
+        let a$: Atom<string>;
+        beforeEach('create the atom', () => { a$ = new Atom('a'); });
+
+        it('should be able to change the state to errored', () => {
+            expect(a$.get()).to.equal('a');
+            a$.setError(new Error('my error'));
+            expect(() => a$.get()).to.throw('my error');
+        });
+
+        it('should be possible to revert an errored atom to normal', () => {
+            a$.setError(new Error('my error'));
+            a$.set('a normal value');
+            expect(a$.get()).to.equal('a normal value');
+        });
+    });
+
     context('in transactions', () => {
         it('should be restored on abort', () => {
             const a$ = new Atom('a');
-            expect(a$._value).to.equal('a');
+            expect(a$[restorableState]).to.equal('a');
             expect(a$.version).to.equal(0);
             txn(abortOuter => {
                 a$.set('b');
-                expect(a$._value).to.equal('b');
+                expect(a$[restorableState]).to.equal('b');
                 expect(a$.version).to.equal(1);
                 txn(abortInner => {
                     a$.set('c');
-                    expect(a$._value).to.equal('c');
+                    expect(a$[restorableState]).to.equal('c');
                     expect(a$.version).to.equal(2);
                     abortInner();
                 });
-                expect(a$._value).to.equal('b');
+                expect(a$[restorableState]).to.equal('b');
                 expect(a$.version).to.equal(1);
                 abortOuter();
             });
-            expect(a$._value).to.equal('a');
+            expect(a$[restorableState]).to.equal('a');
             expect(a$.version).to.equal(0);
         });
 
@@ -101,19 +119,19 @@ describe('derivable/atom', () => {
                     b$.set('set in both');
                     c$.set('set in inner');
                 });
-                expect(a$._value).to.equal('set in outer');
+                expect(a$[restorableState]).to.equal('set in outer');
                 expect(a$.version).to.equal(1);
-                expect(b$._value).to.equal('set in both');
+                expect(b$[restorableState]).to.equal('set in both');
                 expect(b$.version).to.equal(2);
-                expect(c$._value).to.equal('set in inner');
+                expect(c$[restorableState]).to.equal('set in inner');
                 expect(c$.version).to.equal(1);
                 abort();
             });
-            expect(a$._value).to.equal('a');
+            expect(a$[restorableState]).to.equal('a');
             expect(a$.version).to.equal(0);
-            expect(b$._value).to.equal('a');
+            expect(b$[restorableState]).to.equal('a');
             expect(b$.version).to.equal(0);
-            expect(c$._value).to.equal('a');
+            expect(c$[restorableState]).to.equal('a');
             expect(c$.version).to.equal(0);
         });
 
@@ -130,9 +148,9 @@ describe('derivable/atom', () => {
                     c$.set('set in inner');
                 });
             });
-            expect(a$._value).to.equal('set in outer');
-            expect(b$._value).to.equal('set in both');
-            expect(c$._value).to.equal('set in inner');
+            expect(a$[restorableState]).to.equal('set in outer');
+            expect(b$[restorableState]).to.equal('set in both');
+            expect(c$[restorableState]).to.equal('set in inner');
         });
     });
 });

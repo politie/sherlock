@@ -1,16 +1,17 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { Derivable, SettableDerivable, Unsettable } from '../../interfaces';
+import { DerivableAtom, SettableDerivable } from '../../interfaces';
+import { getState, observers, unresolved } from '../../symbols';
 import { addObserver } from '../../tracking';
-import { $ } from '../base-derivable.spec';
+import { ErrorWrapper } from '../../utils';
+import { $, Factory } from '../base-derivable.spec';
 import { constant } from '../factories';
-import { getValueOrUnresolved, unresolved } from '../symbols';
 import { isSettableDerivable } from '../typeguards';
 
 /**
  * Tests the `get()` method and `value` accessors.
  */
-export function testAccessors(factory: <V>(value: V | typeof unresolved) => Derivable<V>, immutable: boolean) {
+export function testAccessors(factory: Factory, immutable: boolean) {
     describe('#get', () => {
         it('should return the current state', () => {
             const value$ = factory(123);
@@ -24,19 +25,19 @@ export function testAccessors(factory: <V>(value: V | typeof unresolved) => Deri
 
         it(`should ${immutable ? 'not ' : ''}be recorded inside a derivation'`, () => {
             const value$ = $(factory(123));
-            expect(value$.observers).to.be.empty;
+            expect(value$[observers]).to.be.empty;
             const derived$ = $(value$.derive(value => value + 876));
-            expect(value$.observers).to.be.empty;
+            expect(value$[observers]).to.be.empty;
 
             // Simulate being observed to force derived$ to go into connected state.
             addObserver(derived$, {} as any);
             derived$.get();
 
             if (immutable) {
-                expect(value$.observers).to.be.empty;
+                expect(value$[observers]).to.be.empty;
             } else {
-                expect(value$.observers).to.have.length(1);
-                expect(value$.observers[0]).to.equal(derived$);
+                expect(value$[observers]).to.have.length(1);
+                expect(value$[observers][0]).to.equal(derived$);
             }
         });
 
@@ -48,9 +49,24 @@ export function testAccessors(factory: <V>(value: V | typeof unresolved) => Deri
                 a$.set(1);
                 expect(a$.get()).to.equal(1);
 
-                if (isUnsettable(a$)) {
+                if (isAtom(a$)) {
                     a$.unset();
                     expect(() => a$.get()).to.throw('Could not get value, derivable is not (yet) resolved');
+                }
+            }
+        });
+
+        it('should throw an error when the derivable is in error state', () => {
+            const a$ = factory<number>(new ErrorWrapper(new Error('my error message')));
+            expect(() => a$.get()).to.throw('my error message');
+
+            if (isSettableDerivable(a$)) {
+                a$.set(1);
+                expect(a$.get()).to.equal(1);
+
+                if (isAtom(a$)) {
+                    a$.setError(new Error('whatever'));
+                    expect(() => a$.get()).to.throw('whatever');
                 }
             }
         });
@@ -69,19 +85,19 @@ export function testAccessors(factory: <V>(value: V | typeof unresolved) => Deri
 
         it(`should ${immutable ? 'not ' : ''}be recorded inside a derivation'`, () => {
             const value$ = $(factory(123));
-            expect(value$.observers).to.be.empty;
+            expect(value$[observers]).to.be.empty;
             const derived$ = $(value$.derive(value => value + 876));
-            expect(value$.observers).to.be.empty;
+            expect(value$[observers]).to.be.empty;
 
             // Simulate being observed to force derived$ to go into connected state.
             addObserver(derived$, {} as any);
             derived$.getOr('whatever');
 
             if (immutable) {
-                expect(value$.observers).to.be.empty;
+                expect(value$[observers]).to.be.empty;
             } else {
-                expect(value$.observers).to.have.length(1);
-                expect(value$.observers[0]).to.equal(derived$);
+                expect(value$[observers]).to.have.length(1);
+                expect(value$[observers][0]).to.equal(derived$);
             }
         });
 
@@ -93,7 +109,7 @@ export function testAccessors(factory: <V>(value: V | typeof unresolved) => Deri
                 a$.set(1);
                 expect(a$.getOr('fallback')).to.equal(1);
 
-                if (isUnsettable(a$)) {
+                if (isAtom(a$)) {
                     a$.unset();
                     expect(a$.getOr('fallback')).to.equal('fallback');
                 }
@@ -111,7 +127,7 @@ export function testAccessors(factory: <V>(value: V | typeof unresolved) => Deri
                 expect(a$.getOr(fallback)).to.equal(1);
                 expect(fallback).to.have.been.calledOnce;
 
-                if (isUnsettable(a$)) {
+                if (isAtom(a$)) {
                     a$.unset();
                     expect(a$.getOr(fallback)).to.equal('fallback');
                     expect(fallback).to.have.been.calledTwice;
@@ -128,9 +144,24 @@ export function testAccessors(factory: <V>(value: V | typeof unresolved) => Deri
                 a$.set(1);
                 expect(a$.getOr(fallback)).to.equal(1);
 
-                if (isUnsettable(a$)) {
+                if (isAtom(a$)) {
                     a$.unset();
                     expect(a$.getOr(fallback)).to.equal('fallback');
+                }
+            }
+        });
+
+        it('should throw an error when the derivable is in error state', () => {
+            const a$ = factory<number>(new ErrorWrapper(new Error('my error message')));
+            expect(() => a$.getOr('fallback')).to.throw('my error message');
+
+            if (isSettableDerivable(a$)) {
+                a$.set(1);
+                expect(a$.getOr('fallback')).to.equal(1);
+
+                if (isAtom(a$)) {
+                    a$.setError(new Error('whatever'));
+                    expect(() => a$.getOr('fallback')).to.throw('whatever');
                 }
             }
         });
@@ -139,7 +170,7 @@ export function testAccessors(factory: <V>(value: V | typeof unresolved) => Deri
     describe('#value', () => {
         it('should call #getValueOrUnresolved() when getting the #value property', () => {
             const a$ = factory('a');
-            const s = spy($(a$), getValueOrUnresolved);
+            const s = spy($(a$), getState);
 
             // Use the getter
             expect(a$.value).to.equal('a');
@@ -149,19 +180,19 @@ export function testAccessors(factory: <V>(value: V | typeof unresolved) => Deri
 
         it(`should ${immutable ? 'not ' : ''}be recorded inside a derivation'`, () => {
             const value$ = $(factory(123));
-            expect(value$.observers).to.be.empty;
+            expect(value$[observers]).to.be.empty;
             const derived$ = $(value$.derive(value => value + 876));
-            expect(value$.observers).to.be.empty;
+            expect(value$[observers]).to.be.empty;
 
             // Simulate being observed to force derived$ to go into connected state.
             addObserver(derived$, {} as any);
             derived$.value;
 
             if (immutable) {
-                expect(value$.observers).to.be.empty;
+                expect(value$[observers]).to.be.empty;
             } else {
-                expect(value$.observers).to.have.length(1);
-                expect(value$.observers[0]).to.equal(derived$);
+                expect(value$[observers]).to.have.length(1);
+                expect(value$[observers][0]).to.equal(derived$);
             }
         });
 
@@ -173,7 +204,7 @@ export function testAccessors(factory: <V>(value: V | typeof unresolved) => Deri
                 a$.set(1);
                 expect(a$.value).to.equal(1);
 
-                if (isUnsettable(a$)) {
+                if (isAtom(a$)) {
                     a$.unset();
                     expect(a$.value).to.be.undefined;
                 }
@@ -190,6 +221,21 @@ export function testAccessors(factory: <V>(value: V | typeof unresolved) => Deri
                 expect(s).to.have.been.calledOnce.and.calledWithExactly('b');
             });
         }
+
+        it('should not throw an error when the derivable is in error state', () => {
+            const a$ = factory<number>(new ErrorWrapper(new Error('my error message')));
+            expect(a$.value).to.be.undefined;
+
+            if (isSettableDerivable(a$)) {
+                a$.set(1);
+                expect(a$.value).to.equal(1);
+
+                if (isAtom(a$)) {
+                    a$.setError(new Error('whatever'));
+                    expect(a$.value).to.be.undefined;
+                }
+            }
+        });
     });
 
     describe('#resolved', () => {
@@ -199,13 +245,55 @@ export function testAccessors(factory: <V>(value: V | typeof unresolved) => Deri
             if (isSettableDerivable(a$)) {
                 a$.set('abc');
                 expect(a$.resolved).to.be.true;
+                if (isAtom(a$)) {
+                    a$.unset();
+                    expect(a$.resolved).to.be.false;
+                }
             }
             const b$ = factory('with value');
             expect(b$.resolved).to.be.true;
         });
     });
+
+    describe('#errored', () => {
+        it('should return the errored status', () => {
+            const a$ = factory<string>(new ErrorWrapper(0));
+            expect(a$.resolved).to.be.true;
+            expect(a$.errored).to.be.true;
+            if (isSettableDerivable(a$)) {
+                a$.set('abc');
+                expect(a$.resolved).to.be.true;
+                expect(a$.errored).to.be.false;
+                if (isAtom(a$)) {
+                    a$.setError(0);
+                    expect(a$.resolved).to.be.true;
+                    expect(a$.errored).to.be.true;
+                }
+            }
+            const b$ = factory('with value');
+            expect(b$.resolved).to.be.true;
+            expect(b$.errored).to.be.false;
+        });
+    });
+
+    describe('#resolved', () => {
+        it('should return the error when applicable', () => {
+            const a$ = factory<string>(new ErrorWrapper(0));
+            expect(a$.error).to.equal(0);
+            if (isSettableDerivable(a$)) {
+                a$.set('abc');
+                expect(a$.error).to.be.undefined;
+                if (isAtom(a$)) {
+                    a$.setError(1);
+                    expect(a$.error).to.equal(1);
+                }
+            }
+            const b$ = factory('with value');
+            expect(b$.error).to.be.undefined;
+        });
+    });
 }
 
-export function isUnsettable(obj: any): obj is Unsettable {
-    return obj && typeof (obj as Unsettable).unset === 'function';
+export function isAtom(obj: any): obj is DerivableAtom {
+    return obj && typeof (obj as DerivableAtom).unset === 'function' && typeof (obj as DerivableAtom).setError === 'function';
 }

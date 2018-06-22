@@ -1,3 +1,6 @@
+import { unresolved } from './symbols';
+import { ErrorWrapper } from './utils';
+
 /**
  * Derivable is the base interface of all variants of Sherlock Derivables.
  *
@@ -14,6 +17,10 @@ export interface Derivable<V> {
     readonly value: V | undefined;
 
     readonly resolved: boolean;
+
+    readonly errored: boolean;
+
+    readonly error: any;
 
     /**
      * Indicates whether the `set()` method is implemented and whether it will accept a value.
@@ -134,8 +141,9 @@ export interface SettableDerivable<V> extends Derivable<V> {
     swap(f: (oldValue: V, ...args: any[]) => V, ...args: any[]): void;
 }
 
-export interface Unsettable {
+export interface DerivableAtom {
     unset(): void;
+    setError(err: any): void;
 }
 
 /**
@@ -203,3 +211,5 @@ export type ToPromiseOptions<V> = Pick<ReactorOptions<V>, 'from' | 'until' | 'wh
 export declare type Unwrappable<T> = T | Derivable<T>;
 
 export type Fallback<T> = Unwrappable<T> | (() => T);
+
+export type State<V> = V | typeof unresolved | ErrorWrapper;
