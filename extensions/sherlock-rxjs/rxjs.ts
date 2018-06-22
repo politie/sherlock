@@ -1,4 +1,4 @@
-import { _internal, DataSource, Derivable, ReactorOptions, State } from '@politie/sherlock';
+import { _internal, atom, Derivable, ReactorOptions } from '@politie/sherlock';
 import { Observable, Subscriber, Subscription } from 'rxjs';
 
 // Adds the toObservable method to Derivable.
@@ -30,36 +30,22 @@ _internal.BaseDerivable.prototype.toObservable = function toObservable<V>(
     });
 };
 
-class FromObservable<V> extends DataSource<V> {
-    private _state: State<V> = _internal.symbols.unresolved;
-    private subscription?: Subscription;
-
-    constructor(private readonly observable: Observable<V>) { super(); }
-
-    onConnect() {
-        this.subscription = this.observable.subscribe(
-            value => {
-                this._state = value;
-                this.checkForChanges();
-            },
-            err => {
-                this._state = new _internal.ErrorWrapper(err);
-                this.checkForChanges();
-            }
-        );
-    }
-
-    onDisconnect() {
-        this.subscription!.unsubscribe();
-        this.subscription = undefined;
-        this._state = _internal.symbols.unresolved;
-    }
-
-    calculateCurrentValue() {
-        return this._state;
-    }
-}
-
 export function fromObservable<V>(observable: Observable<V>): Derivable<V> {
-    return new FromObservable(observable);
+    const atom$ = atom.unresolved<V>();
+
+    let subscription: Subscription | undefined;
+    atom$.connected$.react(connected => {
+        if (connected) {
+            subscription = observable.subscribe(
+                value => atom$.set(value),
+                err => atom$.setError(err),
+            );
+        } else {
+            subscription!.unsubscribe();
+            subscription = undefined;
+            atom$.unset();
+        }
+    }, { skipFirst: true });
+
+    return atom$;
 }

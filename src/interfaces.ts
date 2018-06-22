@@ -23,6 +23,13 @@ export interface Derivable<V> {
     readonly error: any;
 
     /**
+     * Indicates whether the derivation is actively used to power a reactor, either directly or indirectly with other derivations in
+     * between, or connected in this tick because of autoCacheMode.
+     */
+    readonly connected: boolean;
+    readonly connected$: Derivable<boolean>;
+
+    /**
      * Indicates whether the `set()` method is implemented and whether it will accept a value.
      */
     readonly settable: boolean;
@@ -32,10 +39,10 @@ export interface Derivable<V> {
      *
      * @param f the deriver function
      */
-    derive<R>(f: (v: V) => R): Derivable<R>;
-    derive<R, P1>(f: (v: V, p1: P1) => R, p1: Unwrappable<P1>): Derivable<R>;
-    derive<R, P1, P2>(f: (v: V, p1: P1, p2: P2) => R, p1: Unwrappable<P1>, p2: Unwrappable<P2>): Derivable<R>;
-    derive<R, P>(f: (v: V, ...ps: P[]) => R, ...ps: Array<Unwrappable<P>>): Derivable<R>;
+    derive<R>(f: (v: V) => State<R>): Derivable<R>;
+    derive<R, P1>(f: (v: V, p1: P1) => State<R>, p1: Unwrappable<P1>): Derivable<R>;
+    derive<R, P1, P2>(f: (v: V, p1: P1, p2: P2) => State<R>, p1: Unwrappable<P1>, p2: Unwrappable<P2>): Derivable<R>;
+    derive<R, P>(f: (v: V, ...ps: P[]) => State<R>, ...ps: Array<Unwrappable<P>>): Derivable<R>;
 
     /**
      * Create a derivation that plucks the property with the given key of the current value of the Derivable.

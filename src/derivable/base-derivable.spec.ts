@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { fromJS } from 'immutable';
 import { spy } from 'sinon';
 import { Derivable, SettableDerivable, State } from '../interfaces';
-import { observers, unresolved } from '../symbols';
+import { disconnect, observers, unresolved } from '../symbols';
 import { BaseDerivable } from './base-derivable';
 import { Derivation } from './derivation';
 import { atom, constant, derive } from './factories';
@@ -298,7 +298,7 @@ export function testDerivable(factory: Factory, immutable: boolean) {
 }
 
 function resetAtomTo<V>(a$: SettableDerivable<V>, value: V) {
-    $(a$)[observers].forEach(obs => obs.disconnect());
+    $(a$)[observers].forEach(obs => obs[disconnect]());
     a$.set(value);
 }
 

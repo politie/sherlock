@@ -1,4 +1,4 @@
-import { dependencies, dependencyVersions, mark, observers } from '../symbols';
+import { autoCacheMode, connect, dependencies, dependencyVersions, disconnect, mark, observers } from '../symbols';
 
 let currentRecording: Recording | undefined;
 
@@ -121,11 +121,15 @@ export interface Observable {
 }
 
 export interface TrackedObservable extends Observable {
+    connected: boolean;
+    [connect](): void;
+    [disconnect](): void;
+    [autoCacheMode]: boolean;
     readonly [observers]: Observer[];
 }
 
 export interface Observer {
-    disconnect(): void;
+    [disconnect](): void;
     [mark](reactorSink: TrackedReactor[]): void;
 }
 
@@ -149,8 +153,8 @@ export interface TrackedReactor {
 export function addObserver(observable: TrackedObservable, observer: Observer) {
     const obs = observable[observers];
     obs.push(observer);
-    if (obs.length === 1 && isConnectable(observable)) {
-        observable.connect();
+    if (obs.length === 1 && !observable.connected) {
+        observable[connect]();
     }
 }
 
@@ -170,17 +174,19 @@ export function removeObserver(observable: TrackedObservable, observer: Observer
     }
     obs.splice(i, 1);
     // If the dependency is itself another observer and is not observed anymore, we should disconnect it.
-    if (obs.length === 0 && isDisconnectable(observable)) {
-        observable.disconnect();
+    if (obs.length === 0 && observable.connected) {
+        // Disconnect this observable when not in autoCache mode.
+        // When in autoCache mode, it will wait a tick and then disconnect when no observers are listening.
+        if (observable[autoCacheMode]) {
+            maybeDisconnectInNextTick(observable);
+        } else {
+            observable[disconnect]();
+        }
     }
 }
 
-function isConnectable(obj: any): obj is Connectable {
-    return obj && typeof obj.connect === 'function';
-}
-
-function isDisconnectable(obj: any): obj is Disconnectable {
-    return obj && typeof obj.disconnect === 'function';
+export function maybeDisconnectInNextTick(observable: TrackedObservable) {
+    setTimeout(() => observable[observers].length || observable[disconnect](), 0);
 }
 
 interface Recording {
@@ -190,12 +196,4 @@ interface Recording {
     confirmed: number;
     /** The recording to return to after this recording ends, if applicable. */
     previousRecording: Recording | undefined;
-}
-
-interface Connectable {
-    connect(): void;
-}
-
-interface Disconnectable {
-    disconnect(): void;
 }

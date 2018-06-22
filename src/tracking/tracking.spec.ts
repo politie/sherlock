@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { dependencies, dependencyVersions, mark, observers } from '../symbols';
+import { autoCacheMode, connect, dependencies, dependencyVersions, disconnect, mark, observers } from '../symbols';
 import {
     isRecordingObservations, Observer, recordObservation, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedObserver
 } from './tracking';
@@ -18,7 +18,7 @@ describe('tracking/tracking', () => {
                 id: 0,
                 [dependencies]: [],
                 [dependencyVersions]: {},
-                disconnect: spy(),
+                [disconnect]: spy(),
                 [mark]: spy(),
             };
         });
@@ -27,7 +27,10 @@ describe('tracking/tracking', () => {
                 id,
                 version: 1,
                 [observers]: [],
-                disconnect: spy(),
+                [autoCacheMode]: false,
+                connected: true,
+                [connect]: spy(),
+                [disconnect]: spy(),
                 [mark]: spy(),
             }));
         });
@@ -76,9 +79,9 @@ describe('tracking/tracking', () => {
                 });
 
                 it('should have called disconnect on disconnectable dependencies that are no longer needed', () => {
-                    expect(observables[0].disconnect).to.not.have.been.called;
-                    expect(observables[1].disconnect).to.not.have.been.called;
-                    expect(observables[2].disconnect).to.have.been.calledOnce;
+                    expect(observables[0][disconnect]).to.not.have.been.called;
+                    expect(observables[1][disconnect]).to.not.have.been.called;
+                    expect(observables[2][disconnect]).to.have.been.calledOnce;
                 });
             });
         });
@@ -88,7 +91,7 @@ describe('tracking/tracking', () => {
                 id: 4,
                 [dependencies]: [],
                 [dependencyVersions]: {},
-                disconnect: spy(),
+                [disconnect]: spy(),
                 [mark]: spy(),
             };
 
@@ -122,7 +125,7 @@ describe('tracking/tracking', () => {
                 id: 4,
                 [dependencies]: [],
                 [dependencyVersions]: {},
-                disconnect: spy(),
+                [disconnect]: spy(),
                 [mark]: spy(),
             };
             startRecordingObservations(observer);

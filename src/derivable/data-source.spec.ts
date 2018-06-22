@@ -1,17 +1,17 @@
 import { expect } from 'chai';
 import { SinonFakeTimers, SinonStub, spy, stub, useFakeTimers } from 'sinon';
-import { Derivable, State } from '../interfaces';
+import { State } from '../interfaces';
 import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from '../reactor/reactor.spec';
-import { unresolved } from '../symbols';
+import { connect, disconnect, unresolved } from '../symbols';
 import { basicTransactionsTests } from '../transaction/transaction.spec';
 import { config, ErrorWrapper } from '../utils';
 import { testDerivable } from './base-derivable.spec';
-import { DataSource } from './data-source';
-import { derive } from './factories';
+import { PullDataSource } from './data-source';
 
 describe('derivable/data-source', () => {
 
-    class SimpleDataSource<V> extends DataSource<V> {
+    // Using PullDataSource to simulate an Atom, a bit contrived of course.
+    class SimpleDataSource<V> extends PullDataSource<V> {
         constructor(private _value: State<V>) { super(); }
         calculateCurrentValue() {
             return this._value;
@@ -43,7 +43,7 @@ describe('derivable/data-source', () => {
     });
 
     context('(handling errors)', () => {
-        class FlakyDataSource extends DataSource<string> {
+        class FlakyDataSource extends PullDataSource<string> {
             shouldThrow = false;
             calculateCurrentValue() {
                 if (this.shouldThrow) {
@@ -181,7 +181,7 @@ describe('derivable/data-source', () => {
     });
 
     context('in debug mode', () => {
-        class FaultyDataSource extends DataSource<never> {
+        class FaultyDataSource extends PullDataSource<never> {
             calculateCurrentValue(): never {
                 throw new Error('the error');
             }
@@ -210,27 +210,23 @@ describe('derivable/data-source', () => {
     });
 
     context('(usecase: simple timer)', () => {
-        class Timer extends DataSource<number> {
+        class Timer extends PullDataSource<number> {
             readonly startTime = Date.now();
-
             private intervalId?: NodeJS.Timer;
+
+            [connect]() {
+                super[connect]();
+                this.intervalId = setInterval(() => this.checkForChanges(), 1000);
+            }
+
+            [disconnect]() {
+                super[disconnect]();
+                clearInterval(this.intervalId!);
+            }
 
             calculateCurrentValue() {
                 return Math.trunc((Date.now() - this.startTime) / 1000);
             }
-
-            onConnect() {
-                expect(this.connected).to.be.true;
-                this.intervalId = setInterval(() => this.checkForChanges(), 1000);
-            }
-            onDisconnect() {
-                expect(this.connected).to.be.false;
-                clearInterval(this.intervalId!);
-            }
-
-            // expose
-            connected!: boolean;
-            disconnectNow() { super.disconnectNow(); }
         }
 
         let timer$: Timer;
@@ -238,8 +234,8 @@ describe('derivable/data-source', () => {
 
         beforeEach('create spies', () => {
             spy(timer$, 'calculateCurrentValue');
-            spy(timer$, 'onConnect');
-            spy(timer$, 'onDisconnect');
+            spy(timer$, connect);
+            spy(timer$, disconnect);
         });
 
         it('should throw when trying to set an unsettable datasource', () => {
@@ -257,18 +253,18 @@ describe('derivable/data-source', () => {
         context('when used in a reactor', () => {
             let done: () => void;
             beforeEach('connect', () => {
-                expect(timer$.onConnect).to.not.have.been.called;
+                expect(timer$[connect]).to.not.have.been.called;
                 done = react(timer$);
             });
             afterEach('disconnect', () => {
                 done();
-                expect(timer$.onDisconnect).to.have.been.calledOnce;
+                expect(timer$[disconnect]).to.have.been.calledOnce;
             });
 
             it('should be connected', () => {
                 expect(timer$.connected).to.be.true;
-                expect(timer$.onConnect).to.have.been.calledOnce;
-                expect(timer$.onDisconnect).to.not.have.been.called;
+                expect(timer$[connect]).to.have.been.calledOnce;
+                expect(timer$[disconnect]).to.not.have.been.called;
             });
 
             it('should react once every second', () => {
@@ -301,9 +297,8 @@ describe('derivable/data-source', () => {
             });
 
             it('should allow forceful disconnect', () => {
-                timer$.disconnectNow();
+                timer$[disconnect]();
                 expect(timer$.connected).to.be.false;
-                expect(timer$.onDisconnect).to.have.been.calledOnce;
                 clock.tick(2000);
                 shouldHaveReactedOnce(0);
             });
@@ -314,7 +309,7 @@ describe('derivable/data-source', () => {
     context('(usecase: clock)', () => {
         function currentTime() { return new Date().toLocaleTimeString('nl-NL'); }
 
-        class Clock extends DataSource<string> {
+        class Clock extends PullDataSource<string> {
             calculateCurrentValue() {
                 if (this.connected) {
                     // This way the updates are aligned with the actual seconds that pass.
@@ -337,103 +332,4 @@ describe('derivable/data-source', () => {
         });
     });
 
-    context('(usecase: derivable promise)', () => {
-        class DerivablePromise<V> extends DataSource<V> {
-            private _value: State<V> = unresolved;
-
-            constructor(work: ((resolve: (v: V) => void, reject: (e: any) => void) => void)) {
-                super();
-                work(
-                    v => {
-                        this._value = v;
-                        this.checkForChanges();
-                    },
-                    e => {
-                        this._value = new ErrorWrapper(e);
-                        this.checkForChanges();
-                    },
-                );
-            }
-
-            calculateCurrentValue() {
-                if (this._value instanceof ErrorWrapper) {
-                    throw this._value.error;
-                }
-                return this._value;
-            }
-        }
-
-        let a$: DerivablePromise<number>;
-        let b$: DerivablePromise<number>;
-        let c$: Derivable<number>;
-        beforeEach('create the derivable promises', () => {
-            a$ = new DerivablePromise(resolve => {
-                setTimeout(() => resolve(15), 500);
-            });
-            b$ = new DerivablePromise(resolve => {
-                setTimeout(() => resolve(27), 1000);
-            });
-            c$ = derive(() => a$.get() + b$.get());
-        });
-
-        it('should expose the result asynchronously', () => {
-            expect(a$.value).to.be.undefined;
-            expect(() => a$.get()).to.throw();
-
-            clock.tick(500);
-            expect(a$.value).to.equal(15);
-            expect(a$.get()).to.equal(15);
-        });
-
-        it('should propagate resolved status', () => {
-            expect(c$.resolved).to.be.false;
-            clock.tick(500);
-            expect(c$.resolved).to.be.false;
-            clock.tick(500);
-            expect(c$.resolved).to.be.true;
-
-            expect(c$.get()).to.equal(42);
-        });
-
-        it('should propagate error status', async () => {
-            const e$ = new DerivablePromise<number>((_, reject) => setTimeout(() => reject(new Error('my error')), 0));
-            const f$ = e$.derive(v => v + 1);
-
-            const promise = f$.toPromise();
-
-            clock.next();
-
-            try {
-                await promise;
-                throw new Error('should have thrown an error');
-            } catch (e) {
-                expect(e.message).to.equal('my error');
-            }
-
-            expect(f$.value).to.be.undefined;
-            expect(() => f$.get()).to.throw('my error');
-        });
-
-        context('when used in a reactor', () => {
-            it('should only react when all values are available', () => {
-                react(c$);
-
-                shouldNotHaveReacted();
-                clock.tick(500);
-                shouldNotHaveReacted();
-                clock.tick(500);
-                shouldHaveReactedOnce(42);
-            });
-
-            it('should switch from unresolved', () => {
-                react(derive(() => c$.getOr('unresolved')));
-
-                shouldHaveReactedOnce('unresolved');
-                clock.tick(500);
-                shouldNotHaveReacted();
-                clock.tick(500);
-                shouldHaveReactedOnce(42);
-            });
-        });
-    });
 });

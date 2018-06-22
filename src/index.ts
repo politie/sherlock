@@ -1,11 +1,11 @@
 export {
     atom,
     constant,
-    DataSource,
     derive,
     isDerivable,
     isSettableDerivable,
     lens,
+    PullDataSource,
     unwrap,
 } from './derivable';
 

@@ -1,8 +1,6 @@
 import { Derivable, State } from '../interfaces';
-import { dependencies, dependencyVersions, emptyCache, getState, mark, observers, unresolved } from '../symbols';
-import {
-    isRecordingObservations, recordObservation, removeObserver, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedReactor
-} from '../tracking';
+import { dependencies, dependencyVersions, disconnect, emptyCache, getState, mark, observers, unresolved } from '../symbols';
+import { recordObservation, removeObserver, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedReactor } from '../tracking';
 import { config, equals, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 import { unwrap } from './unwrap';
@@ -27,12 +25,6 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     readonly [dependencyVersions]: { [id: number]: number } = {};
 
     /**
-     * Indicates whether the derivation is actively used to power a reactor, either directly or indirectly with other derivations in
-     * between, or connected in this tick because of autoCacheMode. Should always be kept up to date in order to prevent memory leaks.
-     */
-    private connected = false;
-
-    /**
      * Indicates whether the current cachedValue of this derivation is known to be up to date, or might need an update. Is set to false
      * by our dependencies when needed. We should be able to trust `true`. It may only be set to true when connected, because true means
      * that we depend on upstream dependencies to keep us informed of changes.
@@ -43,11 +35,6 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
      * The last value that was calculated for this derivation. Is only used when connected.
      */
     private cachedState: State<V> | typeof emptyCache = emptyCache;
-
-    /**
-     * Indicates whether the derivation is in autoCache mode.
-     */
-    private autoCacheMode = false;
 
     /**
      * Used for debugging. A stack that shows the location where this derivation was created.
@@ -87,20 +74,6 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
      * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
     [getState]() {
-        // Should we connect now?
-        if (!this.connected) {
-            if (this.autoCacheMode) {
-                // We will connect because of autoCacheMode, after a tick we may need to disconnect (if no reactor was started
-                // in this tick).
-                this.connect();
-                maybeDisconnectInNextTick(this);
-            } else if (isRecordingObservations()) {
-                // We know we need to connect if isRecordingObservations() returns true (in which case our observer is connecting
-                // and therefore recording its dependencies).
-                this.connect();
-            }
-        }
-
         // Not connected, so just calculate our value one time.
         if (!this.connected) {
             return this.callDeriver();
@@ -186,37 +159,15 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     }
 
     /**
-     * Connect this derivation. It will make sure that the internal cache is kept up-to-date and all reactors are notified of changes
-     * until disconnected.
-     */
-    connect() {
-        this.connected = true;
-    }
-
-    /**
-     * Disconnect this derivation when not in autoCache mode. It will disconnect all remaining observers (downstream), stop all
-     * reactors that depend on this derivation and disconnect all dependencies (upstream) that have no other observers.
-     *
-     * When in autoCache mode, it will wait a tick and then disconnect when no observers are listening.
-     */
-    disconnect() {
-        if (this.autoCacheMode) {
-            maybeDisconnectInNextTick(this);
-        } else {
-            this.disconnectNow();
-        }
-    }
-
-    /**
      * Force disconnect.
      */
-    disconnectNow() {
+    [disconnect]() {
+        super[disconnect]();
         this.isUpToDate = false;
-        this.connected = false;
         this.cachedState = emptyCache;
         // Disconnect all observers. When an observer disconnects it removes itself from this array.
         for (let i = this[observers].length - 1; i >= 0; i--) {
-            this[observers][i].disconnect();
+            this[observers][i][disconnect]();
         }
         for (const dep of this[dependencies]) {
             removeObserver(dep, this);
@@ -224,14 +175,6 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
         this[dependencies].length = 0;
     }
 
-    autoCache() {
-        this.autoCacheMode = true;
-        return this;
-    }
-}
-
-export function maybeDisconnectInNextTick(derivation: TrackedObservable & { disconnectNow(): void }) {
-    setTimeout(() => derivation[observers].length || derivation.disconnectNow(), 0);
 }
 
 export function deriveMethod<V extends P, R, P>(

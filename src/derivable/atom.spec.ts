@@ -1,11 +1,14 @@
 import { expect } from 'chai';
 import { Seq } from 'immutable';
+import { SinonFakeTimers, useFakeTimers } from 'sinon';
+import { Derivable } from '../interfaces';
+import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from '../reactor/reactor.spec';
 import { restorableState, unresolved } from '../symbols';
 import { txn } from '../transaction/transaction.spec';
 import { ErrorWrapper } from '../utils';
 import { Atom } from './atom';
 import { $, testDerivable } from './base-derivable.spec';
-import { atom } from './factories';
+import { atom, derive } from './factories';
 import { testSwap } from './mixins/swap.spec';
 
 describe('derivable/atom', () => {
@@ -151,6 +154,92 @@ describe('derivable/atom', () => {
             expect(a$[restorableState]).to.equal('set in outer');
             expect(b$[restorableState]).to.equal('set in both');
             expect(c$[restorableState]).to.equal('set in inner');
+        });
+    });
+
+    context('(usecase: derivable promise)', () => {
+
+        let clock: SinonFakeTimers;
+        beforeEach('use fake timers', () => { clock = useFakeTimers(); });
+        afterEach('restore timers', () => { clock.restore(); });
+
+        function createDerivablePromise<V>(work: ((resolve: (v: V) => void, reject: (e: any) => void) => void)): Derivable<V> {
+            const dp$ = atom.unresolved<V>();
+            work(v => dp$.set(v), e => dp$.setError(e));
+            return dp$;
+        }
+
+        let a$: Derivable<number>;
+        let b$: Derivable<number>;
+        let c$: Derivable<number>;
+        beforeEach('create the derivable promises', () => {
+            a$ = createDerivablePromise(resolve => {
+                setTimeout(() => resolve(15), 500);
+            });
+            b$ = createDerivablePromise(resolve => {
+                setTimeout(() => resolve(27), 1000);
+            });
+            c$ = derive(() => a$.get() + b$.get());
+        });
+
+        it('should expose the result asynchronously', () => {
+            expect(a$.value).to.be.undefined;
+            expect(() => a$.get()).to.throw();
+
+            clock.tick(500);
+            expect(a$.value).to.equal(15);
+            expect(a$.get()).to.equal(15);
+        });
+
+        it('should propagate resolved status', () => {
+            expect(c$.resolved).to.be.false;
+            clock.tick(500);
+            expect(c$.resolved).to.be.false;
+            clock.tick(500);
+            expect(c$.resolved).to.be.true;
+
+            expect(c$.get()).to.equal(42);
+        });
+
+        it('should propagate error status', async () => {
+            const e$ = createDerivablePromise<number>((_, reject) => setTimeout(() => reject(new Error('my error')), 0));
+            const f$ = e$.derive(v => v + 1);
+
+            const promise = f$.toPromise();
+
+            clock.next();
+
+            try {
+                await promise;
+                throw new Error('should have thrown an error');
+            } catch (e) {
+                expect(e.message).to.equal('my error');
+            }
+
+            expect(f$.value).to.be.undefined;
+            expect(() => f$.get()).to.throw('my error');
+        });
+
+        context('when used in a reactor', () => {
+            it('should only react when all values are available', () => {
+                react(c$);
+
+                shouldNotHaveReacted();
+                clock.tick(500);
+                shouldNotHaveReacted();
+                clock.tick(500);
+                shouldHaveReactedOnce(42);
+            });
+
+            it('should switch from unresolved', () => {
+                react(derive(() => c$.getOr('unresolved')));
+
+                shouldHaveReactedOnce('unresolved');
+                clock.tick(500);
+                shouldNotHaveReacted();
+                clock.tick(500);
+                shouldHaveReactedOnce(42);
+            });
         });
     });
 });

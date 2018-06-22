@@ -1,12 +1,12 @@
 import { Derivable, SettableDerivable } from '../interfaces';
 import { Atom } from './atom';
 import { BaseDerivable } from './base-derivable';
-import { DataSource } from './data-source';
+import { PullDataSource } from './data-source';
 import { deriveMethod } from './derivation';
 import { Lens, lensMethod } from './lens';
 import {
-    andMethod, erroredGetter, errorGetter, fallbackToMethod, getMethod, getOrMethod, isMethod, notMethod, orMethod, pluckMethod,
-    resolvedGetter, settablePluckMethod, swapMethod, valueGetter, valueSetter,
+    andMethod, connected$Getter, erroredGetter, errorGetter, fallbackToMethod, getMethod, getOrMethod, isMethod, notMethod,
+    orMethod, pluckMethod, resolvedGetter, settablePluckMethod, swapMethod, valueGetter, valueSetter,
 } from './mixins';
 
 declare module './base-derivable' {
@@ -20,6 +20,8 @@ declare module './base-derivable' {
 
         readonly errored: Derivable<V>['errored'];
         readonly error: Derivable<V>['error'];
+
+        readonly connected$: Derivable<V>['connected$'];
 
         readonly derive: Derivable<V>['derive'];
         readonly pluck: Derivable<V>['pluck'];
@@ -43,6 +45,8 @@ Object.defineProperties(BaseDerivable.prototype, {
     errored: { get: erroredGetter },
     error: { get: errorGetter },
 
+    connected$: { get: connected$Getter },
+
     derive: { value: deriveMethod },
     pluck: { value: pluckMethod },
     fallbackTo: { value: fallbackToMethod },
@@ -63,7 +67,7 @@ declare module './atom' {
 }
 
 declare module './data-source' {
-    export interface DataSource<V> {
+    export interface PullDataSource<V> {
         value: SettableDerivable<V>['value'];
         readonly swap: SettableDerivable<V>['swap'];
         readonly pluck: SettableDerivable<V>['pluck'];
@@ -80,7 +84,7 @@ declare module './lens' {
     }
 }
 
-[Atom, DataSource, Lens].forEach(c => Object.defineProperties(c.prototype, {
+[Atom, PullDataSource, Lens].forEach(c => Object.defineProperties(c.prototype, {
     value: { get: valueGetter, set: valueSetter },
     swap: { value: swapMethod },
     pluck: { value: settablePluckMethod },

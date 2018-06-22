@@ -168,7 +168,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
     });
 
     describe('#value', () => {
-        it('should call #getValueOrUnresolved() when getting the #value property', () => {
+        it('should call #getState() when getting the #value property', () => {
             const a$ = factory('a');
             const s = spy($(a$), getState);
 

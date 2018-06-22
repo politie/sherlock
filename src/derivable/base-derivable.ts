@@ -1,5 +1,5 @@
-import { Derivable, State } from '../interfaces';
-import { getState, observers } from '../symbols';
+import { Derivable, SettableDerivable, State } from '../interfaces';
+import { autoCacheMode, connect, disconnect, getState, observers } from '../symbols';
 import { TrackedObservable, TrackedObserver } from '../tracking';
 import { uniqueId } from '../utils';
 
@@ -21,13 +21,18 @@ export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V
      */
     readonly [observers]: TrackedObserver[] = [];
 
+    [autoCacheMode] = false;
+
     /**
      * Sets this Derivable to autoCache mode. This will cache the state of this Derivable the first time {@link #get} is called every tick
      * and release this cache some time after this tick. The state is still guaranteed to be up-to-date with respect to changes in any of
      * its dependencies, by using the same mechanism that is used by a reactor. It has a setup cost comparable to starting a reactor every
      * first time #get is called per tick. Starting a reactor on a Derivable with an active and up-to-date cache is cheap though.
      */
-    autoCache() { return this; }
+    autoCache() {
+        this[autoCacheMode] = true;
+        return this;
+    }
 
     /**
      * The current version of the state. This number gets incremented every time the state changes. Setting the state to
@@ -36,4 +41,14 @@ export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V
     abstract readonly version: number;
 
     abstract [getState](): State<V>;
+
+    connected = false;
+    _connected$?: SettableDerivable<boolean> = undefined;
+    [connect]() { setConnectionStatus(this, true); }
+    [disconnect]() { setConnectionStatus(this, false); }
+}
+
+function setConnectionStatus(bs: BaseDerivable<any>, status: boolean) {
+    bs.connected = status;
+    bs._connected$ && bs._connected$.set(status);
 }

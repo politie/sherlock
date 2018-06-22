@@ -1,13 +1,13 @@
 import { expect } from 'chai';
-import { atom, constant, DataSource, derive } from '../derivable';
+import { atom, constant, derive, PullDataSource } from '../derivable';
 import { identityLens } from '../derivable/lens.spec';
 import { isDerivable, isSettableDerivable } from './typeguards';
 
 describe('derivable/typeguards', () => {
-    class ReadonlyDataSource extends DataSource<void> {
+    class ReadonlyDataSource extends PullDataSource<void> {
         calculateCurrentValue() { /**/ }
     }
-    class SettableDataSource extends DataSource<void> {
+    class SettableDataSource extends PullDataSource<void> {
         calculateCurrentValue() { /**/ }
         acceptNewValue() { /**/ }
     }
