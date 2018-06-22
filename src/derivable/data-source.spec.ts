@@ -317,6 +317,7 @@ describe('derivable/data-source', () => {
         class Clock extends DataSource<string> {
             calculateCurrentValue() {
                 if (this.connected) {
+                    // This way the updates are aligned with the actual seconds that pass.
                     setTimeout(() => {
                         this.checkForChanges();
                     }, 1000 - (Date.now() % 1000));

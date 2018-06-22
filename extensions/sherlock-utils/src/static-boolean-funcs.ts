@@ -1,21 +1,21 @@
 import { Derivable, derive, unwrap } from '@politie/sherlock';
 
 /**
- * Performs JavaScript `&&` operation on the provided arguments after unwraping.
+ * Performs JavaScript `&&` operation on the provided arguments after unwrapping.
  *
  * @method
  */
 export const and = andOrImpl(v => !v);
 
 /**
- * Performs JavaScript `||` operation on the provided arguments after unwraping.
+ * Performs JavaScript `||` operation on the provided arguments after unwrapping.
  *
  * @method
  */
 export const or = andOrImpl(v => !!v);
 
 /**
- * Returns the first operand that is not `null` or `undefined` after unwraping.
+ * Returns the first operand that is not `null` or `undefined` after unwrapping.
  *
  * @method
  */
