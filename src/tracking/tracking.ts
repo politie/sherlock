@@ -186,7 +186,7 @@ export function removeObserver(observable: TrackedObservable, observer: Observer
 }
 
 export function maybeDisconnectInNextTick(observable: TrackedObservable) {
-    setTimeout(() => observable[observers].length || observable[disconnect](), 0);
+    setTimeout(() => observable.connected && observable[observers].length === 0 && observable[disconnect](), 0);
 }
 
 interface Recording {

@@ -276,7 +276,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
         });
     });
 
-    describe('#resolved', () => {
+    describe('#error', () => {
         it('should return the error when applicable', () => {
             const a$ = factory<string>(new ErrorWrapper(0));
             expect(a$.error).to.equal(0);

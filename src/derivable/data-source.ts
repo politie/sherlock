@@ -72,8 +72,9 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
 
         const newValue = this.callCalculationFn();
         if (!equals(newValue, this._cachedState)) {
+            const oldState = this._cachedState;
             this._cachedState = newValue;
-            processChangedAtom(this, undefined, this.version++);
+            processChangedAtom(this, oldState, this.version++);
         }
     }
 

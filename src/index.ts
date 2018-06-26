@@ -6,6 +6,7 @@ export {
     isSettableDerivable,
     lens,
     PullDataSource,
+    safeUnwrap,
     unwrap,
 } from './derivable';
 

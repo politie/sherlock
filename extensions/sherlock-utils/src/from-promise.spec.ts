@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { fromPromise } from './from-promise';
 
-describe('fromPromise', () => {
+describe('sherlock-utils/fromPromise', () => {
     it('should expose the result of the promise on the returned derivable', async () => {
         const promise = Promise.resolve(123);
         const p$ = fromPromise(promise);
