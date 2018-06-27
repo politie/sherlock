@@ -1,3 +1,4 @@
+export * from './src/copy-state';
 export * from './src/from-promise';
 export * from './src/lift';
 export * from './src/pairwise';

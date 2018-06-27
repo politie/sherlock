@@ -1,4 +1,4 @@
-import { Derivable, SettableDerivable } from '../interfaces';
+import { Derivable, Fallback, SettableDerivable } from '../interfaces';
 import { Atom } from './atom';
 import { BaseDerivable } from './base-derivable';
 import { PullDataSource } from './data-source';
@@ -12,7 +12,7 @@ import {
 declare module './base-derivable' {
     export interface BaseDerivable<V> {
         get(): V;
-        getOr<T>(t: T): V;
+        getOr<T>(t: Fallback<T>): V | T;
 
         readonly value: Derivable<V>['value'];
         readonly resolved: Derivable<V>['resolved'];

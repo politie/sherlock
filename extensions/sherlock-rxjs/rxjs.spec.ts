@@ -92,7 +92,7 @@ describe('rxjs/rxjs', () => {
     });
 
     describe('fromObservable', () => {
-        it('should be unresolved when not connected and no fallback is given', () => {
+        it('should be unresolved when not connected or when no value has been emitted yet', () => {
             const subj = new Subject<string>();
             const d$ = fromObservable(subj);
 
@@ -111,7 +111,7 @@ describe('rxjs/rxjs', () => {
             expect(d$.resolved).to.be.false;
         });
 
-        it('should subscribe on observable when used to power a reactor', () => {
+        it('should subscribe to observable when used to power a reactor', () => {
             const subj = new Subject<string>();
             const d$ = fromObservable(subj);
 
@@ -135,6 +135,26 @@ describe('rxjs/rxjs', () => {
             expect(subj.observers).to.be.empty;
             expect(reactions).to.equal(1);
             expect(d$.resolved).to.be.false;
+        });
+
+        it('should subscribe to the observable only once with multiple reactors', () => {
+            const subj = new Subject<string>();
+            const d$ = fromObservable(subj);
+
+            let reactions = 0;
+            const done1 = d$.react(() => ++reactions);
+            const done2 = d$.react(() => ++reactions);
+
+            expect(subj.observers).to.have.length(1);
+
+            subj.next('a value');
+
+            expect(reactions).to.equal(2);
+
+            done1();
+            expect(subj.observers).to.have.length(1);
+            done2();
+            expect(subj.observers).to.be.empty;
         });
 
         it('should disconnect when not directly used in a derivation', () => {
