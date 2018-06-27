@@ -1,8 +1,8 @@
+import { atom } from '@politie/sherlock';
 import { expect } from 'chai';
-import { atom } from '../derivable';
 import { struct } from './struct';
 
-describe('extras/struct', () => {
+describe('sherlock-utils/struct', () => {
     it('should throw on unexpected input', () => {
         expect(() => struct(undefined as any)).to.throw();
         expect(() => struct(123 as any)).to.throw();
@@ -30,7 +30,7 @@ describe('extras/struct', () => {
         expect(struct(a)).to.equal(a);
     });
 
-    it('should turn an array of derivables into an unpacked derivable', () => {
+    it('should turn an array of derivables into an unwrapped derivable', () => {
         const number1$ = atom(1);
         const number2$ = atom(2);
         const number3$ = number1$.derive(n => n + number2$.get());
@@ -44,7 +44,7 @@ describe('extras/struct', () => {
         expect(numbers$.get()).to.deep.equal([1, 3, 4]);
     });
 
-    it('should turn a map of derivables into an unpacked derivable', () => {
+    it('should turn a map of derivables into an unwrapped derivable', () => {
         const name$ = atom('Edwin');
         const tel$ = atom('0612345678');
         const person = { name: name$, tel: tel$ };
@@ -57,7 +57,7 @@ describe('extras/struct', () => {
         expect(person$.get()).to.deep.equal({ name: 'Edwin', tel: 'n/a' });
     });
 
-    it('should turn any nested structure of maps and arrays into an unpacked derivable', () => {
+    it('should turn any nested structure of maps and arrays into an unwrapped derivable', () => {
         const name$ = atom('Edwin');
         const tel$ = atom('0612345678');
         const friendName$ = atom('Peter');

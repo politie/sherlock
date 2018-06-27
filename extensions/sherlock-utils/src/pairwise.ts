@@ -25,6 +25,3 @@ export function pairwise<C, V, R>(f: (this: C, newValue: V, oldValue: V | undefi
         return result;
     };
 }
-
-/** @deprecated use `pairwise` instead, will be removed in 2.0 final */
-export const wrapPreviousState = pairwise;

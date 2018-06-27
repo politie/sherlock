@@ -200,11 +200,11 @@ export class ProxyDescriptor<V = any, T = V> {
     }
 
     $and(other: MaybePacked<any>) {
-        return this.$proxyDescriptor.$derivable.and(unpackProxy(other));
+        return this.$proxyDescriptor.$derivable.and(unwrapProxy(other));
     }
 
     $or(other: MaybePacked<any>) {
-        return this.$proxyDescriptor.$derivable.or(unpackProxy(other));
+        return this.$proxyDescriptor.$derivable.or(unwrapProxy(other));
     }
 
     $not() {
@@ -212,7 +212,7 @@ export class ProxyDescriptor<V = any, T = V> {
     }
 
     $is(other: MaybePacked<any>) {
-        return this.$proxyDescriptor.$derivable.is(unpackProxy(other));
+        return this.$proxyDescriptor.$derivable.is(unwrapProxy(other));
     }
 
     $derive() {
@@ -267,7 +267,7 @@ export interface DerivableProxyLens<T, V> {
 
 export type MaybePacked<T> = T | Derivable<T> | DerivableProxy<T>;
 
-export function unpackProxy<W>(obj: MaybePacked<W>): W | Derivable<W> {
+export function unwrapProxy<W>(obj: MaybePacked<W>): W | Derivable<W> {
     if (isDerivableProxy(obj)) {
         return (obj as any).$derivable;
     }

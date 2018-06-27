@@ -1,15 +1,16 @@
 import { expect } from 'chai';
 import { SinonStub, spy, stub } from 'sinon';
-import { atom, BaseDerivable, Derivable, derive, SettableDerivable } from '../derivable';
+import { atom, Atom, BaseDerivable, constant, derive } from '../derivable';
 import { $ } from '../derivable/base-derivable.spec';
+import { Derivable, ReactorOptions, SettableDerivable } from '../interfaces';
 import { atomically } from '../transaction';
 import { config } from '../utils';
-import { Reactor, ReactorOptions } from './reactor';
+import { Reactor } from './reactor';
 
 describe('reactor/reactor', () => {
-    let a$: SettableDerivable<string>;
+    let a$: Atom<string>;
 
-    beforeEach('create the base atom', () => { a$ = atom('a'); });
+    beforeEach('create the base atom', () => { a$ = new Atom('a'); });
 
     it('should simply start unconditionally without any options specified', () => {
         react(a$);
@@ -460,6 +461,178 @@ describe('reactor/reactor', () => {
         shouldHaveReactedOnce('c');
     });
 
+    context('with unresolved values', () => {
+        it('should not react until resolved', () => {
+            a$.unset();
+
+            react(a$);
+
+            shouldNotHaveReacted();
+
+            a$.set('a');
+
+            shouldHaveReactedOnce('a');
+        });
+
+        it('should not react when the derivable resolves again to the same value as before', () => {
+            react(a$);
+            shouldHaveReactedOnce('a');
+
+            a$.unset();
+
+            shouldNotHaveReacted();
+
+            a$.set('a');
+
+            shouldNotHaveReacted();
+        });
+
+        it('should start when the `from` condition becomes true and the value is resolved', () => {
+            const from = atom(false);
+            react(a$, { from });
+
+            shouldNotHaveReacted();
+
+            a$.unset();
+            from.set(true);
+
+            shouldNotHaveReacted();
+
+            a$.set('a');
+
+            shouldHaveReactedOnce('a');
+
+            a$.set('b');
+
+            shouldHaveReactedOnce('b');
+        });
+
+        it('should respect the `when` condition but still only react on real values', () => {
+            const when = atom(false);
+            react(a$, { when });
+
+            shouldNotHaveReacted();
+
+            a$.unset();
+            when.set(true);
+
+            shouldNotHaveReacted();
+
+            a$.set('a');
+
+            shouldHaveReactedOnce('a');
+
+            a$.unset();
+
+            shouldNotHaveReacted();
+
+            when.set(false);
+            a$.set('c');
+
+            shouldNotHaveReacted();
+
+            when.set(true);
+
+            shouldHaveReactedOnce('c');
+        });
+
+        it('should support changing the atom and the input to `when` atomically', () => {
+            react(a$, { when: d => d.is('b') });
+
+            a$.unset();
+
+            shouldNotHaveReacted();
+
+            a$.set('b');
+
+            // Reacts once because no previous value has been seen by the reactor.
+            shouldHaveReactedOnce('b');
+
+            a$.unset();
+
+            // Doesn't react, because when is now false.
+            shouldNotHaveReacted();
+
+            a$.set('b');
+
+            // Doesn't react, because the new value equals the previous value that was seen by the reactor.
+            shouldNotHaveReacted();
+        });
+
+        it('should support unresolved values for the `from`, `when` and `until` option', () => {
+            react(a$, { from: constant.unresolved() });
+            a$.set('b');
+            shouldNotHaveReacted();
+
+            react(a$, { when: constant.unresolved() });
+            a$.set('c');
+            shouldNotHaveReacted();
+
+            react(a$, { until: constant.unresolved() });
+            a$.set('d');
+            shouldNotHaveReacted();
+        });
+
+        it('should wait until all options are resolved before starting the reaction', () => {
+            const from = atom.unresolved<boolean>();
+            const when = atom.unresolved<boolean>();
+            const until = atom.unresolved<boolean>();
+
+            react(a$, { from, when, until });
+
+            shouldNotHaveReacted();
+
+            from.set(true);
+
+            shouldNotHaveReacted();
+
+            when.set(true);
+
+            shouldNotHaveReacted();
+
+            until.set(false);
+
+            shouldHaveReactedOnce('a');
+        });
+
+        it('should support the `skipFirst` option, skipping the first real value', () => {
+            a$.unset();
+
+            react(a$, { skipFirst: true });
+
+            shouldNotHaveReacted();
+
+            a$.set('a');
+
+            shouldNotHaveReacted();
+
+            a$.set('b');
+
+            shouldHaveReactedOnce('b');
+
+            a$.set('c');
+
+            shouldHaveReactedOnce('c');
+        });
+
+        it('should support the `once` option, stopping after the first real value', () => {
+            a$.unset();
+
+            react(a$, { once: true });
+
+            shouldNotHaveReacted();
+
+            a$.set('a');
+
+            shouldHaveReactedOnce('a');
+
+            a$.unset();
+            a$.set('b');
+
+            shouldNotHaveReacted();
+        });
+    });
+
     class TestReactor<V> extends Reactor<V> { constructor(p: BaseDerivable<V>, r: (value: V) => void) { super(p, e => { throw e; }, r); } }
 
     it('should not generate a stacktrace on instantiation', () => {
@@ -624,12 +797,12 @@ describe('reactor/reactor error handling', () => {
 
     context('with an error handler', () => {
         context('when an error occurs in any derivation', () => {
-            let errorHandler: sinon.SinonSpy;
+            let onError: sinon.SinonSpy;
             beforeEach('start the reactor', () => {
-                errorHandler = spy();
-                react(d$, { errorHandler });
+                onError = spy();
+                react(d$, { onError });
                 shouldHaveReactedOnce('no error');
-                shouldNotHaveBeenCalled(errorHandler);
+                shouldNotHaveBeenCalled(onError);
             });
 
             it('should not throw on Atom#set', () => {
@@ -638,14 +811,14 @@ describe('reactor/reactor error handling', () => {
 
             it('should call the errorhandler with the error', () => {
                 a$.set('error in derivation');
-                expect(errorHandler).to.have.been.calledOnce;
-                const err = errorHandler.firstCall.args[0];
+                expect(onError).to.have.been.calledOnce;
+                const err = onError.firstCall.args[0];
                 expect(err).to.be.an('error');
                 expect(err.message).to.equal('error in derivation');
 
-                errorHandler.resetHistory();
+                onError.resetHistory();
                 a$.set('no error at all!');
-                expect(errorHandler).to.not.have.been.called;
+                expect(onError).to.not.have.been.called;
             });
 
             it('should stop the reactor', () => {
@@ -661,16 +834,16 @@ describe('reactor/reactor error handling', () => {
         });
 
         context('when an error occurs in any reactor', () => {
-            let errorHandler: sinon.SinonSpy;
+            let onError: sinon.SinonSpy;
             let latestValue: string;
             beforeEach('start an unstable reactor', () => {
-                errorHandler = spy();
+                onError = spy();
                 d$.react(v => {
                     latestValue = v;
                     if (v === 'error in reactor') {
                         throw new Error(v);
                     }
-                }, { errorHandler });
+                }, { onError });
             });
 
             it('should not throw on Atom#set', () => {
@@ -679,14 +852,14 @@ describe('reactor/reactor error handling', () => {
 
             it('should call the errorhandler with the error', () => {
                 a$.set('error in reactor');
-                expect(errorHandler).to.have.been.calledOnce;
-                const err = errorHandler.firstCall.args[0];
+                expect(onError).to.have.been.calledOnce;
+                const err = onError.firstCall.args[0];
                 expect(err).to.be.an('error');
                 expect(err.message).to.equal('error in reactor');
 
-                errorHandler.resetHistory();
+                onError.resetHistory();
                 a$.set('no error at all!');
-                expect(errorHandler).to.not.have.been.called;
+                expect(onError).to.not.have.been.called;
             });
 
             it('should stop the reactor', () => {
@@ -788,7 +961,7 @@ describe('reactor/reactor efficiency', () => {
 });
 
 let currentReactorTest: { reactions: number, value: any } | undefined;
-function react<V>(d: Derivable<V>, opts?: Partial<ReactorOptions<V>>) {
+export function react<V>(d: Derivable<V>, opts?: Partial<ReactorOptions<V>>) {
     currentReactorTest = { reactions: 0, value: undefined as any as V };
     return d.react(v => {
         currentReactorTest!.reactions++;
@@ -798,12 +971,12 @@ function react<V>(d: Derivable<V>, opts?: Partial<ReactorOptions<V>>) {
 
 afterEach(() => currentReactorTest = undefined);
 
-function shouldNotHaveReacted() {
+export function shouldNotHaveReacted() {
     expect(currentReactorTest!.reactions).to.equal(0, 'should not have reacted');
     currentReactorTest!.reactions = 0;
 }
 
-function shouldHaveReactedOnce(value: any) {
+export function shouldHaveReactedOnce(value: any) {
     expect(currentReactorTest!.reactions).to.equal(1, `should have reacted once`);
     expect(currentReactorTest!.value).to.equal(value);
     currentReactorTest!.reactions = 0;

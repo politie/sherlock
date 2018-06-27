@@ -1,13 +1,13 @@
+import { Derivable } from '../../interfaces';
 import { equals } from '../../utils';
-import { Derivable } from '../interfaces';
-import { unpack } from '../unpack';
+import { unwrap } from '../unwrap';
 
 export function andMethod<V, W>(this: Derivable<V>, other: Derivable<W> | W): Derivable<W | V> {
-    return this.derive(v => v && unpack(other));
+    return this.derive(v => v && unwrap(other));
 }
 
 export function orMethod<V, W>(this: Derivable<V>, other: Derivable<W> | W): Derivable<W | V> {
-    return this.derive(v => v || unpack(other));
+    return this.derive(v => v || unwrap(other));
 }
 
 export function notMethod(this: Derivable<any>): Derivable<boolean> {

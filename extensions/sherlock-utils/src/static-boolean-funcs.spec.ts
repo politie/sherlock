@@ -1,8 +1,8 @@
+import { atom, constant, SettableDerivable } from '@politie/sherlock';
 import { expect } from 'chai';
-import { atom, constant, SettableDerivable } from '../derivable';
 import { and, firstNotNull, or } from './static-boolean-funcs';
 
-describe('extras/static-boolean-funcs', () => {
+describe('sherlock-utils/static-boolean-funcs', () => {
     const testSet = sets([undefined, '', 'abc', 0, 3, false, true], 3);
     let atoms: Array<SettableDerivable<any>>;
     beforeEach('create the atoms', () => { atoms = [atom(0), atom(0), atom(0)]; });
@@ -21,7 +21,7 @@ describe('extras/static-boolean-funcs', () => {
             });
         });
 
-        it('should unpack all arguments', () => {
+        it('should unwrap all arguments', () => {
             expect(and(1, constant(0), 3).get()).to.equal(0);
             expect(and(1, constant(2), 3).get()).to.equal(3);
         });
@@ -37,7 +37,7 @@ describe('extras/static-boolean-funcs', () => {
             });
         });
 
-        it('should unpack all arguments', () => {
+        it('should unwrap all arguments', () => {
             expect(or(0, constant(0), 3).get()).to.equal(3);
             expect(or(0, constant(2), 3).get()).to.equal(2);
         });

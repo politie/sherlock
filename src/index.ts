@@ -1,26 +1,53 @@
 export {
-    atom, constant, DataSource, Derivable, derivation, derive, isDerivable, isSettableDerivable,
-    lens, StandaloneLensDescriptor, SettableDerivable, TargetedLensDescriptor,
+    atom,
+    constant,
+    derive,
+    isDerivable,
+    isSettableDerivable,
+    lens,
+    PullDataSource,
+    safeUnwrap,
+    unwrap,
 } from './derivable';
 
 export {
-    and, firstNotNull, lift, or, scan, struct, template, pairwise, wrapPreviousState,
-} from './extras';
+    Derivable,
+    DerivableAtom,
+    Fallback,
+    ReactorOptions,
+    ReactorOptionValue,
+    SettableDerivable,
+    StandaloneLensDescriptor,
+    State,
+    TargetedLensDescriptor,
+    ToPromiseOptions,
+    Unwrappable,
+} from './interfaces';
 
 export {
-    ReactorOptions, ReactorOptionValue, ToPromiseOptions,
-} from './reactor';
-
-export {
-    atomic, atomically, inTransaction, transact, transaction,
+    atomic,
+    atomically,
+    inTransaction,
+    transact,
+    transaction,
 } from './transaction';
 
 export {
     config,
 } from './utils';
 
-import { clone, equals } from './utils';
-export const utils = { clone, equals };
+import * as _internal from './internal';
 
-import * as _internals from './internals';
-export { _internals };
+import { resolveFallback } from './derivable';
+import { clone, equals, isPlainObject } from './utils';
+const utils = {
+    clone,
+    equals,
+    isPlainObject,
+    resolveFallback,
+};
+
+export {
+    utils,
+    _internal,
+};

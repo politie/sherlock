@@ -1,6 +1,6 @@
 {
     "name": "@politie/sherlock",
-    "version": "1.0.1",
+    "version": "2.0.0-alpha.0",
     "private": true,
     "description": "A reactive programming library for JavaScript applications, built with TypeScript.",
     "main": "sherlock.cjs.js",
@@ -87,6 +87,6 @@
         "ts-node": "^7.0.0",
         "tsconfig-paths": "^3.3.2",
         "tslint": "^5.10.0",
-        "typescript": "^2.8.3"
+        "typescript": "^2.9.2"
     }
 }

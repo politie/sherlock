@@ -1,21 +1,23 @@
 import { expect } from 'chai';
 import { SinonFakeTimers, SinonSpy, SinonStub, spy, stub, useFakeTimers } from 'sinon';
-import { config } from '../utils';
+import { Derivable, SettableDerivable } from '../interfaces';
+import { config, ErrorWrapper } from '../utils';
+import { Atom } from './atom';
 import { testDerivable } from './base-derivable.spec';
-import { atom, constant, derive } from './factories';
-import { Derivable, SettableDerivable } from './interfaces';
+import { Constant } from './constant';
+import { atom, derive } from './factories';
 
 describe('derivable/derive', () => {
     context('(standalone)', () => {
-        testDerivable(<V>(v: V) => derive(() => v), true);
+        testDerivable(v => derive(() => { if (v instanceof ErrorWrapper) { throw v.error; } return v; }), true);
     });
 
     context('(based on atom)', () => {
-        testDerivable(<V>(v: V) => atom(v).derive(d => d), false);
+        testDerivable(v => new Atom(v).derive(d => d), false);
     });
 
     context('(based on constant)', () => {
-        testDerivable(<V>(v: V) => constant(v).derive(d => d), true);
+        testDerivable(v => new Constant(v).derive(d => d), true);
     });
 
     it('should not generate a stacktrace on instantiation', () => {

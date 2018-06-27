@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { Seq, Set as ISet } from 'immutable';
-import { atom, unpack } from '../derivable';
+import { atom, unwrap } from '../derivable';
 import { equals } from './equals';
 
 describe('util/equals', () => {
@@ -55,7 +55,7 @@ describe('util/equals', () => {
         const personA = { name$: atom('Sherlock') };
         const personB = { name$: atom('Sherlock') };
         const person$ = atom(personA);
-        const nameOfPerson$ = person$.derive(p => p.name$).derive(unpack).autoCache();
+        const nameOfPerson$ = person$.derive(p => p.name$).derive(unwrap).autoCache();
 
         expect(nameOfPerson$.get()).to.equal('Sherlock');
         person$.set(personB);

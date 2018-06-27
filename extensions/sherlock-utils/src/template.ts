@@ -1,4 +1,4 @@
-import { Derivable, derive, unpack } from '../derivable';
+import { Derivable, derive, unwrap } from '@politie/sherlock';
 
 /**
  * A template literal tag to create a string derivation using a template literal.
@@ -21,7 +21,7 @@ export function template(parts: TemplateStringsArray, ...args: any[]): Derivable
         for (let i = 0; i < parts.length; i++) {
             s += parts[i];
             if (i < args.length) {
-                s += unpack(args[i]);
+                s += unwrap(args[i]);
             }
         }
         return s;

@@ -1,16 +1,22 @@
 import { expect } from 'chai';
 import { fromJS } from 'immutable';
 import { spy } from 'sinon';
+import { Derivable, SettableDerivable, State } from '../interfaces';
+import { disconnect, observers, unresolved } from '../symbols';
 import { BaseDerivable } from './base-derivable';
 import { Derivation } from './derivation';
 import { atom, constant, derive } from './factories';
-import { Derivable, isSettableDerivable, SettableDerivable } from './interfaces';
-import { testAccessors } from './mixins/accessors.spec';
+import { isAtom, testAccessors } from './mixins/accessors.spec';
 import { testBooleanFuncs } from './mixins/boolean-methods.spec';
+import { testFallbackTo } from './mixins/fallback-to.spec';
 import { testPluck } from './mixins/pluck.spec';
+import { isSettableDerivable } from './typeguards';
 
-export function testDerivable(factory: <V>(value: V) => Derivable<V>, immutable: boolean) {
+export type Factory = <V>(state: State<V>) => Derivable<V>;
+
+export function testDerivable(factory: Factory, immutable: boolean) {
     testAccessors(factory, immutable);
+    testFallbackTo(factory);
     testBooleanFuncs(factory);
     testPluck(factory);
 
@@ -50,16 +56,39 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>, immutable:
             expect(sizeString$.get()).to.equal('1 gigabytes');
         });
 
-        it('should pass additional arguments unpacked to the deriver function', () => {
+        it('should pass additional arguments unwrapped to the deriver function', () => {
             function add(...ns: number[]) { return ns.reduce((a, b) => a + b, 0); }
 
             const potentialArgs = [1, 2, 3, 4, 5, 6];
             for (let argCount = 0; argCount < 6; argCount++) {
                 const args = potentialArgs.slice(0, argCount);
-                const dArgs = args.map(constant);
+                const dArgs = args.map(v => constant(v));
                 const derivable = factory(0);
                 expect(derivable.derive(add, ...args).get(), `with ${argCount} args`).to.equal(add(...args));
                 expect(derivable.derive(add, ...dArgs).get(), `with ${argCount} args`).to.equal(add(...args));
+            }
+        });
+
+        it('should propagate unresolved status of any input derivable', () => {
+            const value$ = factory<string>(unresolved);
+            const otherValue$ = atom('2');
+            const yetAnotherValue$ = atom('3');
+            const d$ = value$.derive((v, otherValue) => v + otherValue + yetAnotherValue$.get(), otherValue$);
+
+            expect(d$.resolved).to.be.false;
+
+            if (isSettableDerivable(value$)) {
+                expect(d$.value).to.be.undefined;
+                value$.set('1');
+                expect(d$.value).to.equal('123');
+                otherValue$.unset();
+                expect(d$.value).to.be.undefined;
+                otherValue$.set('4');
+                expect(d$.value).to.equal('143');
+                yetAnotherValue$.unset();
+                expect(d$.value).to.be.undefined;
+                yetAnotherValue$.set('5');
+                expect(d$.value).to.equal('145');
             }
         });
     });
@@ -199,6 +228,22 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>, immutable:
                 value$.set('as promised');
                 expect(await promise).to.equal('as promised');
             });
+
+            if (isAtom(value$)) {
+                it('should resolve on the first resolved value', async () => {
+                    value$.unset();
+                    value$.set('some other value');
+                    expect(await value$.toPromise()).to.equal('some other value');
+                });
+
+                it('should resolve on the first resolved value according to the lifecycle options', async () => {
+                    value$.unset();
+                    const promise = value$.toPromise({ skipFirst: true });
+                    value$.set('first real value');
+                    value$.set('second real value');
+                    expect(await promise).to.equal('second real value');
+                });
+            }
         }
     });
 
@@ -253,7 +298,7 @@ export function testDerivable(factory: <V>(value: V) => Derivable<V>, immutable:
 }
 
 function resetAtomTo<V>(a$: SettableDerivable<V>, value: V) {
-    $(a$).observers.forEach(obs => obs.disconnect());
+    $(a$)[observers].forEach(obs => obs[disconnect]());
     a$.set(value);
 }
 
