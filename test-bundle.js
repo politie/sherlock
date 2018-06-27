@@ -26,7 +26,7 @@ const gzipSize = require('gzip-size');
     'sherlock': assertBundleSize('sherlock', 14),
     'sherlock-proxy': assertBundleSize('sherlock-proxy', 5),
     'sherlock-rxjs': assertBundleSize('sherlock-rxjs', 1),
-    'sherlock-utils': assertBundleSize('sherlock-utils', 2),
+    'sherlock-utils': assertBundleSize('sherlock-utils', 3),
 });
 
 console.log('Bundle ok.');
