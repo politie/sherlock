@@ -1,5 +1,5 @@
-import { _internals, ReactorOptions } from '@politie/sherlock';
-import { Observable, Subscriber } from 'rxjs';
+import { _internal, atom, Derivable, ReactorOptions } from '@politie/sherlock';
+import { Observable, Subscriber, Subscription } from 'rxjs';
 
 // Adds the toObservable method to Derivable.
 declare module '@politie/sherlock/derivable/extension' {
@@ -14,12 +14,12 @@ declare module '@politie/sherlock/derivable/extension' {
     }
 }
 
-_internals.BaseDerivable.prototype.toObservable = function toObservable<V>(
-    this: _internals.BaseDerivable<V>,
+_internal.BaseDerivable.prototype.toObservable = function toObservable<V>(
+    this: _internal.BaseDerivable<V>,
     options?: Partial<ReactorOptions<V>>,
 ) {
     return new Observable<V>((subscriber: Subscriber<V>) => {
-        return _internals.Reactor.create(this,
+        return _internal.Reactor.create(this,
             // onValue: notify subscriber
             value => subscriber.next(value),
             // Merge the options with the default options.
@@ -29,3 +29,23 @@ _internals.BaseDerivable.prototype.toObservable = function toObservable<V>(
         );
     });
 };
+
+export function fromObservable<V>(observable: Observable<V>): Derivable<V> {
+    const atom$ = atom.unresolved<V>();
+
+    let subscription: Subscription | undefined;
+    atom$.connected$.react(connected => {
+        if (connected) {
+            subscription = observable.subscribe(
+                value => atom$.set(value),
+                err => atom$.setError(err),
+            );
+        } else {
+            subscription!.unsubscribe();
+            subscription = undefined;
+            atom$.unset();
+        }
+    }, { skipFirst: true });
+
+    return atom$;
+}

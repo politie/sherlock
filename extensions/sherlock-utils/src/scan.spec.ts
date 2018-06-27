@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { scan } from './scan';
 
-describe('extras/scan', () => {
+describe('sherlock-utils/scan', () => {
     it('should return a monadic function, passing in the current and previous value to the provided dyadic function', () => {
         const f = scan((a, v: number) => a + v, 0);
 

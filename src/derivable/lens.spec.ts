@@ -1,12 +1,15 @@
 import { expect } from 'chai';
+import { TargetedLensDescriptor } from '../interfaces';
+import { unresolved } from '../symbols';
+import { ErrorWrapper } from '../utils';
+import { Atom } from './atom';
 import { $, testDerivable } from './base-derivable.spec';
 import { atom, lens } from './factories';
-import { TargetedLensDescriptor } from './interfaces';
 import { testSwap } from './mixins/swap.spec';
 
 describe('derivable/lens', () => {
     context('(mono)', () => {
-        testDerivable(<V>(v: V) => atom({ value: v }).lens<V>({
+        testDerivable(v => (new Atom(v === unresolved || v instanceof ErrorWrapper ? v : { value: v })).lens({
             get: obj => obj.value,
             set: value => ({ value }),
         }), false);
@@ -14,19 +17,19 @@ describe('derivable/lens', () => {
 
     context('(mono with params)', () => {
         const propName = 'property';
-        testDerivable(<V>(v: V) => atom({ [propName]: v }).lens<V, string>({
+        testDerivable(v => new Atom(v === unresolved || v instanceof ErrorWrapper ? v : { [propName]: v }).lens({
             get: (obj, prop) => obj[prop],
             set: (newValue, obj, prop) => ({ ...obj, [prop]: newValue }),
         }, propName), false);
     });
 
     context('(standalone)', () => {
-        testDerivable(<V>(v: V) => {
-            const a$ = atom(v);
-            const b$ = atom(v);
+        testDerivable(v => {
+            const a$ = new Atom(v);
+            const b$ = new Atom(v);
             return lens({
                 get: () => {
-                    const val: V = a$.get();
+                    const val = a$.get();
                     if (b$.get() !== val) { throw new Error(); }
                     return val;
                 },
@@ -39,16 +42,16 @@ describe('derivable/lens', () => {
     });
 
     context('(standalone with params)', () => {
-        testDerivable(<V>(v: V) => {
-            const obj1$ = atom({ prop1: v });
-            const obj2$ = atom({ prop2: v });
+        testDerivable(v => {
+            const obj1$ = new Atom(v === unresolved || v instanceof ErrorWrapper ? v : { prop1: v });
+            const obj2$ = new Atom(v === unresolved || v instanceof ErrorWrapper ? v : { prop2: v });
             return lens({
                 get(prop1, prop2) {
-                    const val: V = obj1$.get()[prop1];
+                    const val = obj1$.get()[prop1];
                     if (obj2$.get()[prop2] !== val) { throw new Error(); }
                     return val;
                 },
-                set(newValue: V, prop1, prop2) {
+                set(newValue, prop1, prop2) {
                     obj1$.swap(obj => ({ ...obj, [prop1]: newValue }));
                     obj2$.swap(obj => ({ ...obj, [prop2]: newValue }));
                 },

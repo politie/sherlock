@@ -8,6 +8,7 @@ const dirs = {
     'dist/sherlock/': '',
     'dist/sherlock-proxy/': 'extensions/sherlock-proxy/',
     'dist/sherlock-rxjs/': 'extensions/sherlock-rxjs/',
+    'dist/sherlock-utils/': 'extensions/sherlock-utils/',
 };
 
 Object.keys(dirs).forEach(to => {

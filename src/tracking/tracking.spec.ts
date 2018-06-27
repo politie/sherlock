@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
+import { autoCacheMode, connect, dependencies, dependencyVersions, disconnect, mark, observers } from '../symbols';
 import {
     isRecordingObservations, Observer, recordObservation, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedObserver
 } from './tracking';
@@ -15,19 +16,22 @@ describe('tracking/tracking', () => {
         beforeEach('create an observer', () => {
             observer = {
                 id: 0,
-                dependencies: [],
-                dependencyVersions: {},
-                disconnect: spy(),
-                mark: spy(),
+                [dependencies]: [],
+                [dependencyVersions]: {},
+                [disconnect]: spy(),
+                [mark]: spy(),
             };
         });
         beforeEach('create an observable', () => {
             observables = [1, 2, 3].map(id => ({
                 id,
                 version: 1,
-                observers: [],
-                disconnect: spy(),
-                mark: spy(),
+                [observers]: [],
+                [autoCacheMode]: false,
+                connected: true,
+                [connect]: spy(),
+                [disconnect]: spy(),
+                [mark]: spy(),
             }));
         });
 
@@ -49,9 +53,9 @@ describe('tracking/tracking', () => {
             });
 
             it('should have recorded all dependencies', () => {
-                expect(observer.dependencies).to.deep.equal(observables);
-                expect(observer.dependencyVersions).to.deep.equal({ 1: 1, 2: 1, 3: 1 });
-                observables.forEach(obs => expect(obs.observers).to.deep.equal([observer]));
+                expect(observer[dependencies]).to.deep.equal(observables);
+                expect(observer[dependencyVersions]).to.deep.equal({ 1: 1, 2: 1, 3: 1 });
+                observables.forEach(obs => expect(obs[observers]).to.deep.equal([observer]));
             });
 
             context('and a second recording', () => {
@@ -65,19 +69,19 @@ describe('tracking/tracking', () => {
                 });
 
                 it('should have updated the dependencies in the order in which they were observed', () => {
-                    expect(observer.dependencies).to.deep.equal([
+                    expect(observer[dependencies]).to.deep.equal([
                         observables[1], observables[0],
                     ]);
-                    expect(observables[2].observers).to.be.empty;
+                    expect(observables[2][observers]).to.be.empty;
                     observables.slice(0, 2).forEach(obs =>
-                        expect(obs.observers).to.deep.equal([observer]),
+                        expect(obs[observers]).to.deep.equal([observer]),
                     );
                 });
 
                 it('should have called disconnect on disconnectable dependencies that are no longer needed', () => {
-                    expect(observables[0].disconnect).to.not.have.been.called;
-                    expect(observables[1].disconnect).to.not.have.been.called;
-                    expect(observables[2].disconnect).to.have.been.calledOnce;
+                    expect(observables[0][disconnect]).to.not.have.been.called;
+                    expect(observables[1][disconnect]).to.not.have.been.called;
+                    expect(observables[2][disconnect]).to.have.been.calledOnce;
                 });
             });
         });
@@ -85,10 +89,10 @@ describe('tracking/tracking', () => {
         it('should support nested recordings', () => {
             const secondObserver: TrackedObserver = {
                 id: 4,
-                dependencies: [],
-                dependencyVersions: {},
-                disconnect: spy(),
-                mark: spy(),
+                [dependencies]: [],
+                [dependencyVersions]: {},
+                [disconnect]: spy(),
+                [mark]: spy(),
             };
 
             startRecordingObservations(observer);
@@ -98,31 +102,31 @@ describe('tracking/tracking', () => {
             recordObservation(observables[2]);
             stopRecordingObservations();
 
-            expect(observer.dependencies).to.be.empty;
-            expect(secondObserver.dependencies).to.deep.equal(observables.slice(1));
-            expect(observables[0].observers).to.be.empty;
-            expect(observables[1].observers).to.deep.equal([secondObserver]);
-            expect(observables[2].observers).to.deep.equal([secondObserver]);
+            expect(observer[dependencies]).to.be.empty;
+            expect(secondObserver[dependencies]).to.deep.equal(observables.slice(1));
+            expect(observables[0][observers]).to.be.empty;
+            expect(observables[1][observers]).to.deep.equal([secondObserver]);
+            expect(observables[2][observers]).to.deep.equal([secondObserver]);
 
             recordObservation(observables[0]);
             recordObservation(observables[1]);
 
             stopRecordingObservations();
 
-            expect(observer.dependencies).to.deep.equal(observables.slice(0, 2));
-            expect(secondObserver.dependencies).to.deep.equal(observables.slice(1));
-            expect(observables[0].observers).to.deep.equal([observer]);
-            expect(observables[1].observers).to.deep.equal([secondObserver, observer]);
-            expect(observables[2].observers).to.deep.equal([secondObserver]);
+            expect(observer[dependencies]).to.deep.equal(observables.slice(0, 2));
+            expect(secondObserver[dependencies]).to.deep.equal(observables.slice(1));
+            expect(observables[0][observers]).to.deep.equal([observer]);
+            expect(observables[1][observers]).to.deep.equal([secondObserver, observer]);
+            expect(observables[2][observers]).to.deep.equal([secondObserver]);
         });
 
         it('should fail when trying to record a cyclic dependency of derivables', () => {
             const secondObserver: TrackedObserver = {
                 id: 4,
-                dependencies: [],
-                dependencyVersions: {},
-                disconnect: spy(),
-                mark: spy(),
+                [dependencies]: [],
+                [dependencyVersions]: {},
+                [disconnect]: spy(),
+                [mark]: spy(),
             };
             startRecordingObservations(observer);
             startRecordingObservations(secondObserver);

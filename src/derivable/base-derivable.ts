@@ -1,6 +1,7 @@
+import { Derivable, SettableDerivable, State } from '../interfaces';
+import { autoCacheMode, connect, disconnect, getState, observers } from '../symbols';
 import { TrackedObservable, TrackedObserver } from '../tracking';
-import { uniqueId } from '../utils/unique-id';
-import { Derivable } from './interfaces';
+import { uniqueId } from '../utils';
 
 /**
  * The base class for all Derivables. Derivables must extend from this, to be 'tracked' and to classify as a Derivable.
@@ -18,31 +19,36 @@ export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V
     /**
      * The observers of this Derivable, do not use this in application code.
      */
-    readonly observers: TrackedObserver[] = [];
+    readonly [observers]: TrackedObserver[] = [];
+
+    [autoCacheMode] = false;
 
     /**
-     * Sets this Derivable to autoCache mode. This will cache the value of this Derivable the first time {@link #get} is called every tick
-     * and release this cache some time after this tick. The value is still guaranteed to be up-to-date with respect to changes in any of
+     * Sets this Derivable to autoCache mode. This will cache the state of this Derivable the first time {@link #get} is called every tick
+     * and release this cache some time after this tick. The state is still guaranteed to be up-to-date with respect to changes in any of
      * its dependencies, by using the same mechanism that is used by a reactor. It has a setup cost comparable to starting a reactor every
      * first time #get is called per tick. Starting a reactor on a Derivable with an active and up-to-date cache is cheap though.
      */
-    autoCache() { return this; }
+    autoCache() {
+        this[autoCacheMode] = true;
+        return this;
+    }
 
     /**
      * The current version of the state. This number gets incremented every time the state changes. Setting the state to
      * an immutable object that is structurally equal to the previous immutable object is not considered a state change.
      */
-    abstract version: number;
+    abstract readonly version: number;
 
-    abstract get(): V;
-    abstract value: Derivable<V>['value'];
-    abstract settable: Derivable<V>['settable'];
+    abstract [getState](): State<V>;
 
-    abstract derive: Derivable<V>['derive'];
-    abstract pluck: Derivable<V>['pluck'];
+    connected = false;
+    _connected$?: SettableDerivable<boolean> = undefined;
+    [connect]() { setConnectionStatus(this, true); }
+    [disconnect]() { setConnectionStatus(this, false); }
+}
 
-    abstract and: Derivable<V>['and'];
-    abstract or: Derivable<V>['or'];
-    abstract not: Derivable<V>['not'];
-    abstract is: Derivable<V>['is'];
+function setConnectionStatus(bs: BaseDerivable<any>, status: boolean) {
+    bs.connected = status;
+    bs._connected$ && bs._connected$.set(status);
 }

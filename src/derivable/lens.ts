@@ -1,8 +1,7 @@
+import { Derivable, SettableDerivable, StandaloneLensDescriptor, TargetedLensDescriptor } from '../interfaces';
 import { atomic } from '../transaction';
 import { Derivation } from './derivation';
-import { Derivable, SettableDerivable, StandaloneLensDescriptor, TargetedLensDescriptor } from './interfaces';
-import { settablePluckMethod, swapMethod, valueGetter, valueSetter } from './mixins';
-import { unpack } from './unpack';
+import { safeUnwrap } from './unwrap';
 
 /**
  * A Lens is a Derivation that is also settable. It satisfies the Atom interface and can be created using an
@@ -37,26 +36,15 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
     set(newValue: V) {
         const { setter, args } = this;
         if (args) {
-            setter(newValue, ...args.map(unpack));
+            setter(newValue, ...args.map(safeUnwrap));
         } else {
             setter(newValue);
         }
     }
 
-    value!: V;
     readonly settable!: true;
-
-    readonly lens!: SettableDerivable<V>['lens'];
-    readonly pluck!: SettableDerivable<V>['pluck'];
-    readonly swap!: SettableDerivable<V>['swap'];
 }
-Object.defineProperties(Lens.prototype, {
-    value: { get: valueGetter, set: valueSetter },
-    settable: { value: true },
-    lens: { value: lensMethod },
-    pluck: { value: settablePluckMethod },
-    swap: { value: swapMethod },
-});
+Object.defineProperty(Lens.prototype, 'settable', { value: true });
 
 export function lensMethod<V, W, P>(
     this: SettableDerivable<V>,

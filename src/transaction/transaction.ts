@@ -1,3 +1,4 @@
+import { mark, observers, restorableState } from '../symbols';
 import { TrackedObservable, TrackedReactor } from '../tracking';
 
 let currentTransaction: Transaction | undefined;
@@ -17,9 +18,12 @@ export function inTransaction() {
  * @param oldValue the previous value of the atom
  * @param oldVersion the previous version number of the atom
  */
-export function processChangedAtom<V>(atom: TransactionAtom<V>, oldValue: V, oldVersion: number) {
+export function processChangedAtom<V>(atom: TrackedObservable | TransactionAtom<V>, oldValue: V, oldVersion: number) {
     if (currentTransaction) {
-        processChangedAtomInTransaction(currentTransaction, atom, oldValue, oldVersion);
+        markObservers(atom, currentTransaction.touchedReactors);
+        if (isTransactionAtom(atom)) {
+            storeOldValueInTransaction(currentTransaction, atom, oldValue!, oldVersion!);
+        }
     } else {
         const reactors: TrackedReactor[] = [];
         markObservers(atom, reactors);
@@ -50,12 +54,16 @@ interface Transaction {
 }
 
 export interface TransactionAtom<V> extends TrackedObservable {
-    _value: V;
+    [restorableState]: V;
 }
 
-function markObservers(changedAtom: TransactionAtom<any>, reactorSink: TrackedReactor[]) {
-    for (const observer of changedAtom.observers) {
-        observer.mark(reactorSink);
+function isTransactionAtom<V>(obj: TrackedObservable): obj is TransactionAtom<V> {
+    return restorableState in obj;
+}
+
+function markObservers(changedAtom: TrackedObservable, reactorSink: TrackedReactor[]) {
+    for (const observer of changedAtom[observers]) {
+        observer[mark](reactorSink);
     }
 }
 
@@ -173,7 +181,7 @@ function commitTransaction() {
 
     if (currentTransaction) {
         // Hand over all info to the parent transaction
-        ctx.touchedAtoms.forEach(atom => processChangedAtomInTransaction(
+        ctx.touchedAtoms.forEach(atom => storeOldValueInTransaction(
             currentTransaction!,
             atom,
             ctx.oldValues[atom.id],
@@ -199,16 +207,15 @@ function rollbackTransaction() {
     }
     currentTransaction = ctx.parentTransaction;
 
-    // Restore the state of all touched atoms.
+    // Restore the state of all touched atoms that can be restored using the internalState token.
     ctx.touchedAtoms.forEach(atom => {
-        atom._value = ctx.oldValues[atom.id];
+        atom[restorableState] = ctx.oldValues[atom.id];
         atom.version = ctx.oldVersions[atom.id];
         markObservers(atom, []);
     });
 }
 
-function processChangedAtomInTransaction(txn: Transaction, atom: TransactionAtom<any>, oldValue: any, oldVersion: number) {
-    markObservers(atom, txn.touchedReactors);
+function storeOldValueInTransaction<V>(txn: Transaction, atom: TransactionAtom<V>, oldValue: V, oldVersion: number) {
     const { id } = atom;
     if (!(id in txn.oldValues)) {
         txn.touchedAtoms.push(atom);

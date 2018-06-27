@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { atom, SettableDerivable } from '../derivable';
-import { template } from '../extras';
+import { atom, derive } from '../derivable';
+import { SettableDerivable } from '../interfaces';
 import { atomic, atomically, transact, transaction } from './transaction';
 
 describe('transaction/transaction', () => {
@@ -123,7 +123,7 @@ export function basicTransactionsTests(atomFactory: <V>(v: V) => SettableDerivab
 
     it('should support adding a reactor to an atom after it was reassigned inside a transaction', () => {
         const a$ = atomFactory('a');
-        const derived$ = template`${a$}!`;
+        const derived$ = derive(() => `${a$.value}!`);
         let reactions = 0;
         let value: string | undefined;
         txn(() => {
@@ -143,7 +143,7 @@ export function basicTransactionsTests(atomFactory: <V>(v: V) => SettableDerivab
     it('should fully support derivations inside transactions that abort', () => {
         const a$ = atomFactory('a');
         const b$ = atomFactory('b');
-        const derived$ = template`${a$} ${b$}`;
+        const derived$ = derive(() => `${a$.value} ${b$.value}`);
         let reactions = 0;
         derived$.react(() => reactions++, { skipFirst: true });
         expect(derived$.get()).to.equal('a b');
@@ -164,7 +164,7 @@ export function basicTransactionsTests(atomFactory: <V>(v: V) => SettableDerivab
 
     it('should fully support derivations inside transactions that commit', () => {
         const a$ = atomFactory('a');
-        const derived$ = template`${a$}!`;
+        const derived$ = derive(() => `${a$.value}!`);
         let reactions = 0;
         let value: string | undefined;
         derived$.react(v => { reactions++; value = v; }, { skipFirst: true });
@@ -184,7 +184,7 @@ export function basicTransactionsTests(atomFactory: <V>(v: V) => SettableDerivab
     it('should support transactions inside reactions', () => {
         const a$ = atomFactory('a');
         const b$ = atomFactory('b');
-        const derived$ = template`${a$} ${b$}`;
+        const derived$ = derive(() => `${a$.value} ${b$.value}`);
         derived$.react(d => txn(abort => {
             expect(d).to.equal('a b');
             a$.set('b');

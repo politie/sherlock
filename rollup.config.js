@@ -2,7 +2,7 @@ import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 
-const libs = ['sherlock', 'sherlock-proxy', 'sherlock-rxjs'];
+const libs = ['sherlock', 'sherlock-proxy', 'sherlock-rxjs', 'sherlock-utils'];
 
 const oldVersion = process.version.startsWith('v6');
 

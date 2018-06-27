@@ -1,0 +1,42 @@
+{
+    "name": "@politie/sherlock-utils",
+    "version": "0.0.0-PLACEHOLDER",
+    "description": "Utility functions that are designed to work with Sherlock. His toolbelt.",
+    "main": "sherlock-utils.cjs.js",
+    "module": "sherlock-utils.esm.js",
+    "browser": "sherlock-utils.umd.js",
+    "typings": "index.d.ts",
+    "files": [
+        "sherlock-utils.{cjs,esm,umd}.*",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/politie/sherlock.git"
+    },
+    "keywords": [
+        "derivable",
+        "reactive",
+        "politie",
+        "typescript",
+        "derivation",
+        "state",
+        "utils"
+    ],
+    "contributors": [
+        "Paco van der Linden <pavadeli@gmail.com>",
+        "Wilfred van der Deijl <wilfred@vanderdeijl.com>",
+        "Merijn van der Linden <njirem@gmail.com>"
+    ],
+    "license": "Apache-2.0",
+    "bugs": {
+        "url": "https://github.com/politie/sherlock/issues"
+    },
+    "homepage": "https://github.com/politie/sherlock/tree/master/extensions/sherlock-utils#readme",
+    "dependencies": {
+        "tslib": "^1.9.0"
+    },
+    "peerDependencies": {
+        "@politie/sherlock": "0.0.0-PLACEHOLDER"
+    }
+}

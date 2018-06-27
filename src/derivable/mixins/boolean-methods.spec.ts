@@ -1,13 +1,14 @@
 import { expect } from 'chai';
 import { List, Seq } from 'immutable';
 import { spy } from 'sinon';
+import { getState } from '../../symbols';
+import { $, Factory } from '../base-derivable.spec';
 import { atom } from '../factories';
-import { Derivable } from '../interfaces';
 
 /**
  * Tests the `is()`, `or()`, `and()` and `not()` methods.
  */
-export function testBooleanFuncs(factory: <V>(value: V) => Derivable<V>) {
+export function testBooleanFuncs(factory: Factory) {
     context('(boolean functions)', () => {
         const true$ = factory(true);
         const false$ = factory(false);
@@ -53,7 +54,7 @@ export function testBooleanFuncs(factory: <V>(value: V) => Derivable<V>) {
             });
 
             it('should not observe the right operand when the left operand is truthy', () => {
-                const s = spy(bool$, 'get');
+                const s = spy($(bool$), getState);
                 trueOrBool$.get();
                 expect(s).not.to.have.been.called;
                 falseOrBool$.get();
@@ -75,7 +76,7 @@ export function testBooleanFuncs(factory: <V>(value: V) => Derivable<V>) {
             });
 
             it('should not observe the right operand when the left operand is falsey', () => {
-                const s = spy(bool$, 'get');
+                const s = spy($(bool$), getState);
                 falseAndBool$.get();
                 expect(s).not.to.have.been.called;
                 trueAndBool$.get();

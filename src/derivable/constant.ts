@@ -1,51 +1,33 @@
+import { Derivable, State } from '../interfaces';
+import { getState } from '../symbols';
 import { BaseDerivable } from './base-derivable';
-import { deriveMethod } from './derivation';
-import { Derivable } from './interfaces';
-import { andMethod, isMethod, notMethod, orMethod, pluckMethod } from './mixins';
 
 /**
  * Constant represents a basic immutable building block of derivations.
  */
 export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
     /**
-     * Creates a new Constant with the give value.
+     * Creates a new Constant with the given state.
      *
-     * @param value the readonly value of this Constant
+     * @param _state the readonly state of this Constant
      */
     constructor(
         /**
-         * The readonly value of this Constant.
+         * The readonly state of this Constant.
          */
-        readonly value: V,
+        private readonly _state: State<V>,
     ) {
         super();
     }
 
-    /**
-     * Returns the value of this Constant.
-     */
-    get(): V { return this.value; }
+    [getState]() {
+        return this._state;
+    }
 
     readonly version!: 0;
     readonly settable!: false;
-
-    readonly derive!: Derivable<V>['derive'];
-    readonly pluck!: Derivable<V>['pluck'];
-
-    readonly and!: Derivable<V>['and'];
-    readonly or!: Derivable<V>['or'];
-    readonly not!: Derivable<V>['not'];
-    readonly is!: Derivable<V>['is'];
 }
 Object.defineProperties(Constant.prototype, {
     version: { value: 0 },
     settable: { value: false },
-
-    derive: { value: deriveMethod },
-    pluck: { value: pluckMethod },
-
-    and: { value: andMethod },
-    or: { value: orMethod },
-    not: { value: notMethod },
-    is: { value: isMethod },
 });

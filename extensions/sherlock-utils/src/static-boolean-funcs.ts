@@ -1,21 +1,21 @@
-import { Derivable, derive, unpack } from '../derivable';
+import { Derivable, derive, unwrap } from '@politie/sherlock';
 
 /**
- * Performs JavaScript `&&` operation on the provided arguments after unpacking.
+ * Performs JavaScript `&&` operation on the provided arguments after unwrapping.
  *
  * @method
  */
 export const and = andOrImpl(v => !v);
 
 /**
- * Performs JavaScript `||` operation on the provided arguments after unpacking.
+ * Performs JavaScript `||` operation on the provided arguments after unwrapping.
  *
  * @method
  */
 export const or = andOrImpl(v => !!v);
 
 /**
- * Returns the first operand that is not `null` or `undefined` after unpacking.
+ * Returns the first operand that is not `null` or `undefined` after unwrapping.
  *
  * @method
  */
@@ -25,7 +25,7 @@ function andOrImpl(breakOn: (v: any) => boolean) {
     return <V>(...args: Array<Derivable<V> | V>) => derive(() => {
         let value: V | undefined;
         for (const arg of args) {
-            value = unpack(arg);
+            value = unwrap(arg);
             if (breakOn(value)) {
                 break;
             }

@@ -1,4 +1,3 @@
-
 /**
  * This interface can be used to augment all Derivables.
  *
@@ -9,7 +8,7 @@
  */
 export interface DerivableExtension<V> { }
 
-declare module './interfaces' {
+declare module '../interfaces' {
     export interface Derivable<V> extends DerivableExtension<V> { }
 }
 declare module './base-derivable' {

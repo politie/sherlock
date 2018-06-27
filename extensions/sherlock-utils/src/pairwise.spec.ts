@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { pairwise } from './pairwise';
 
-describe('extras/wrapPreviousState', () => {
+describe('sherlock-utils/wrapPreviousState', () => {
     it('should return a monadic function, passing in the current and previous value to the provided dyadic function', () => {
         const f = pairwise((a, b) => a + b, 0);
 

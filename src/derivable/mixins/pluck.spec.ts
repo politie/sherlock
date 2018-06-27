@@ -1,15 +1,16 @@
 import { expect } from 'chai';
 import { fromJS, Seq } from 'immutable';
 import { Atom } from '../atom';
+import { Factory } from '../base-derivable.spec';
 import { Derivation } from '../derivation';
 import { atom } from '../factories';
-import { Derivable, isSettableDerivable } from '../interfaces';
 import { Lens } from '../lens';
+import { isSettableDerivable } from '../typeguards';
 
 /**
  * Tests the `pluck()` method.
  */
-export function testPluck(factory: <V>(value: V) => Derivable<V>) {
+export function testPluck(factory: Factory) {
     describe('#pluck', () => {
         it('should pluck using a string or derivable string', () => {
             const obj$ = factory({ a: 'valueOfA', b: 'valueOfB' });
