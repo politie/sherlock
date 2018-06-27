@@ -1,8 +1,8 @@
 import { _internal, Derivable, DerivableAtom, derive, ReactorOptions, SettableDerivable } from '@politie/sherlock';
 
 export type StateObject<V> =
-    { value: V, error?: undefined, errored: false, resolved: true } |
-    { value?: undefined, error: any, errored: true, resolved: true } |
+    { value: V, errored: false, resolved: true } |
+    { error: any, errored: true, resolved: true } |
     { errored: false, resolved: false };
 
 export function getState<V>(from: Derivable<V>): StateObject<V> {
