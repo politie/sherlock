@@ -166,4 +166,41 @@ describe('sherlock-utils/syncState', () => {
 
         done();
     });
+
+    it('should support lifecycle options', () => {
+        const a$ = atom(0);
+        const unresolved$ = constant.unresolved<number>();
+        const error = new Error('this is not good!');
+        const d$ = a$.derive(v => {
+            switch (v) {
+                case 0: return 42;
+                case 1: throw error;
+                default: return unresolved$.get() + 42;
+            }
+        });
+        const until = atom(false);
+        const target$ = atom.unresolved<number>();
+
+        syncState(d$, target$, { until });
+
+        expect(target$.value).to.equal(42);
+
+        a$.set(1);
+
+        expect(target$.error).to.equal(error);
+
+        a$.set(2);
+
+        expect(target$.resolved).to.be.false;
+
+        a$.set(0);
+
+        expect(target$.value).to.equal(42);
+
+        until.set(true);
+        a$.set(1);
+
+        // not changed
+        expect(target$.value).to.equal(42);
+    });
 });

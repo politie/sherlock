@@ -43,7 +43,7 @@ export function setState<V>(to: SettableDerivable<V> & DerivableAtom, state: Sta
     }
 }
 
-export function syncState<V>(from: Derivable<V>, to: SettableDerivable<V> & DerivableAtom, opts?: ReactorOptions<StateObject<V>>) {
+export function syncState<V>(from: Derivable<V>, to: SettableDerivable<V> & DerivableAtom, opts?: Partial<ReactorOptions<StateObject<V>>>) {
     return materialize(from).react(state => setState(to, state), opts);
 }
 
