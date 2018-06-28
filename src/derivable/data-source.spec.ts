@@ -28,14 +28,17 @@ describe('derivable/data-source', () => {
     context('(derived)', () => {
         testDerivable(v => new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v }).derive(obj => obj.value), false);
     });
+    context('(mapped)', () => {
+        testDerivable(v => new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v }).map(obj => obj.value), true);
+    });
     context('(lensed)', () => {
         testDerivable(<V>(v: State<V>) =>
             new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v })
-                .lens<V>({
-                    get: obj => obj.value,
-                    set: value => ({ value }),
-                }),
-            false);
+                .map<V>(
+                    obj => obj.value,
+                    value => ({ value }),
+            ),
+            true);
     });
 
     context('(in transactions)', () => {

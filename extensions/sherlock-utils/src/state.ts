@@ -1,4 +1,4 @@
-import { _internal, Derivable, DerivableAtom, derive, ReactorOptions, SettableDerivable } from '@politie/sherlock';
+import { _internal, Derivable, DerivableAtom, ReactorOptions, State } from '@politie/sherlock';
 
 export type StateObject<V> =
     { value: V, errored: false, resolved: true } |
@@ -6,7 +6,10 @@ export type StateObject<V> =
     { errored: false, resolved: false };
 
 export function getState<V>(from: Derivable<V>): StateObject<V> {
-    const state = from[_internal.symbols.getState]();
+    return toStateObject(from[_internal.symbols.getState]());
+}
+
+function toStateObject<V>(state: State<V>): StateObject<V> {
     if (state === _internal.symbols.unresolved) {
         return { errored: false, resolved: false };
     }
@@ -18,11 +21,11 @@ export function getState<V>(from: Derivable<V>): StateObject<V> {
 }
 
 export function materialize<V>(derivable: Derivable<V>): Derivable<StateObject<V>> {
-    return derive(() => getState(derivable));
+    return derivable.mapState(toStateObject);
 }
 
 export function dematerialize<V>(derivable: Derivable<StateObject<V>>): Derivable<V> {
-    return derivable.derive(state => {
+    return derivable.map(state => {
         if (state.errored) {
             return new _internal.ErrorWrapper(state.error);
         }
@@ -33,7 +36,7 @@ export function dematerialize<V>(derivable: Derivable<StateObject<V>>): Derivabl
     });
 }
 
-export function setState<V>(to: SettableDerivable<V> & DerivableAtom, state: StateObject<V>) {
+export function setState<V>(to: DerivableAtom<V>, state: StateObject<V>) {
     if (!state.resolved) {
         to.unset();
     } else if (state.errored) {
@@ -43,10 +46,10 @@ export function setState<V>(to: SettableDerivable<V> & DerivableAtom, state: Sta
     }
 }
 
-export function syncState<V>(from: Derivable<V>, to: SettableDerivable<V> & DerivableAtom, opts?: Partial<ReactorOptions<StateObject<V>>>) {
+export function syncState<V>(from: Derivable<V>, to: DerivableAtom<V>, opts?: Partial<ReactorOptions<StateObject<V>>>) {
     return materialize(from).react(state => setState(to, state), opts);
 }
 
-export function copyState<V>(from: Derivable<V>, to: SettableDerivable<V> & DerivableAtom) {
+export function copyState<V>(from: Derivable<V>, to: DerivableAtom<V>) {
     setState(to, getState(from));
 }

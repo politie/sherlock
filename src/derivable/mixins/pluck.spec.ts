@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import { fromJS, Seq } from 'immutable';
 import { Atom } from '../atom';
 import { Factory } from '../base-derivable.spec';
-import { Derivation } from '../derivation';
 import { atom } from '../factories';
 import { Lens } from '../lens';
+import { BiMapping } from '../map';
 import { isSettableDerivable } from '../typeguards';
 
 /**
@@ -44,7 +44,7 @@ export function testPluck(factory: Factory) {
             expect(value1$.get()).to.equal('value2');
         });
 
-        context('(lensed)', () => {
+        context('(lensed with constant key)', () => {
             class MyClass { constructor(public key: string) { } }
             const value$ = factory(new MyClass('value'));
 
@@ -53,9 +53,8 @@ export function testPluck(factory: Factory) {
 
                 const plucked$ = value$.pluck('key');
 
-                it('should produce an Atom if the base was also an Atom', () => {
-                    expect(plucked$).to.be.an.instanceof(Derivation);
-                    expect(plucked$).to.be.an.instanceof(Lens);
+                it('should produce a SettableDerivable if the base was also a SettableDerivable', () => {
+                    expect(plucked$).to.be.an.instanceof(BiMapping);
                     expect(isSettableDerivable(plucked$)).to.be.true;
                 });
 
@@ -84,6 +83,42 @@ export function testPluck(factory: Factory) {
                 it('should not allow readonly immutable values to be changed', () => {
                     const immValue$ = factory(Seq.of(1, 2, 3)) as Atom<any>;
                     expect(() => immValue$.pluck(0).set(123)).to.throw();
+                });
+            }
+        });
+
+        context('(lensed with derivable key)', () => {
+            class MyClass { constructor(public key: string) { } }
+            const value$ = factory(new MyClass('value'));
+
+            if (isSettableDerivable(value$)) {
+
+                const key$ = atom('key');
+                const plucked$ = value$.pluck(key$);
+
+                beforeEach('reset the atoms', () => {
+                    value$.set(new MyClass('value'));
+                    key$.set('key');
+                });
+
+                it('should produce a SettableDerivable if the base was also a SettableDerivable', () => {
+                    expect(plucked$).to.be.an.instanceof(Lens);
+                    expect(isSettableDerivable(plucked$)).to.be.true;
+                });
+
+                it('should produce a lens that can change any property based on the current value of the key', () => {
+                    const oldInstance = value$.get();
+                    expect(plucked$.get()).to.equal('value');
+                    plucked$.set('another value');
+                    expect(plucked$.get()).to.equal('another value');
+                    expect(value$.get()).to.deep.equal({ key: 'another value' });
+                    expect(value$.get()).to.not.equal(oldInstance);
+
+                    key$.set('another');
+                    expect(plucked$.get()).to.be.undefined;
+                    plucked$.set('level');
+                    expect(plucked$.get()).to.equal('level');
+                    expect(value$.get()).to.deep.equal({ key: 'another value', another: 'level' });
                 });
             }
         });

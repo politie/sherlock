@@ -6,23 +6,24 @@ import { disconnect, observers, unresolved } from '../symbols';
 import { BaseDerivable } from './base-derivable';
 import { Derivation } from './derivation';
 import { atom, constant, derive } from './factories';
-import { isAtom, testAccessors } from './mixins/accessors.spec';
+import { Mapping } from './map';
+import { testAccessors } from './mixins/accessors.spec';
 import { testBooleanFuncs } from './mixins/boolean-methods.spec';
 import { testFallbackTo } from './mixins/fallback-to.spec';
 import { testPluck } from './mixins/pluck.spec';
-import { isSettableDerivable } from './typeguards';
+import { isDerivableAtom, isSettableDerivable } from './typeguards';
 
 export type Factory = <V>(state: State<V>) => Derivable<V>;
 
-export function testDerivable(factory: Factory, immutable: boolean) {
-    testAccessors(factory, immutable);
+export function testDerivable(factory: Factory, noObservers: boolean) {
+    testAccessors(factory, noObservers);
     testFallbackTo(factory);
     testBooleanFuncs(factory);
     testPluck(factory);
 
+    const oneGigabyte = 1024 * 1024 * 1024;
+    const bytes$ = factory(oneGigabyte);
     describe('#derive', () => {
-        const oneGigabyte = 1024 * 1024 * 1024;
-        const bytes$ = factory(oneGigabyte);
 
         // Created with derive method
         const kiloBytes$ = bytes$.derive(orderUp);
@@ -89,6 +90,33 @@ export function testDerivable(factory: Factory, immutable: boolean) {
                 expect(d$.value).to.be.undefined;
                 yetAnotherValue$.set('5');
                 expect(d$.value).to.equal('145');
+            }
+        });
+    });
+
+    describe('#map', () => {
+        // Created with map method
+        const kiloBytes$ = bytes$.map(n => n / 1024);
+
+        it('should create a derivation', () => {
+            expect(kiloBytes$).to.be.an.instanceOf(Mapping);
+            expect(kiloBytes$.get()).to.equal(1024 * 1024);
+        });
+
+        it('should propagate unresolved status of input derivable', () => {
+            const value$ = factory<string>(unresolved);
+            const d$ = value$.map(v => v + '!');
+
+            expect(d$.resolved).to.be.false;
+
+            if (isSettableDerivable(value$)) {
+                expect(d$.value).to.be.undefined;
+                value$.set('1');
+                expect(d$.value).to.equal('1!');
+                if (isDerivableAtom(value$)) {
+                    value$.unset();
+                    expect(d$.value).to.be.undefined;
+                }
             }
         });
     });
@@ -229,7 +257,7 @@ export function testDerivable(factory: Factory, immutable: boolean) {
                 expect(await promise).to.equal('as promised');
             });
 
-            if (isAtom(value$)) {
+            if (isDerivableAtom(value$)) {
                 it('should resolve on the first resolved value', async () => {
                     value$.unset();
                     value$.set('some other value');
@@ -298,8 +326,16 @@ export function testDerivable(factory: Factory, immutable: boolean) {
 }
 
 function resetAtomTo<V>(a$: SettableDerivable<V>, value: V) {
-    $(a$)[observers].forEach(obs => obs[disconnect]());
+    disconnectTree(a$);
     a$.set(value);
+}
+
+function disconnectTree(bd: any) {
+    while (bd[observers] && bd[observers].length) {
+        const obs = bd[observers][0];
+        disconnectTree(obs);
+        obs[disconnect] && obs[disconnect]();
+    }
 }
 
 export function $<V>(d: SettableDerivable<V>): SettableDerivable<V> & BaseDerivable<V>;

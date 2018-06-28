@@ -20,6 +20,8 @@ describe('derivable/derive', () => {
         testDerivable(v => new Constant(v).derive(d => d), true);
     });
 
+    testAutocache((a$, deriver) => a$.derive(deriver));
+
     it('should not generate a stacktrace on instantiation', () => {
         // tslint:disable-next-line:no-string-literal
         expect(derive(() => 0)['stack']).to.be.undefined;
@@ -86,6 +88,10 @@ describe('derivable/derive', () => {
         expect(deriver).to.have.been.calledOnce;
     });
 
+});
+
+export function testAutocache(factory: (a$: Derivable<string>, deriver: (v: string) => string) => Derivable<string>) {
+
     describe('#autoCache', () => {
         let clock: SinonFakeTimers;
         beforeEach('use fake timers', () => { clock = useFakeTimers(); });
@@ -98,7 +104,7 @@ describe('derivable/derive', () => {
         beforeEach('create the deriver', () => { deriver = spy((v = 'empty') => v + '!'); });
 
         let d$: Derivable<string>;
-        beforeEach('create the derivation', () => { d$ = a$.derive(deriver).autoCache(); });
+        beforeEach('create the derivation', () => { d$ = factory(a$, deriver).autoCache(); });
 
         it('should automatically cache the value of the Derivable the first time in a tick', () => {
             expect(d$.get()).to.equal('value!');
@@ -182,4 +188,4 @@ describe('derivable/derive', () => {
             expect(deriver).to.have.been.calledTwice;
         });
     });
-});
+}

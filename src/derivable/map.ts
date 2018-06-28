@@ -1,47 +1,17 @@
-import { Derivable, State } from '../interfaces';
-import { dependencies, dependencyVersions, disconnect, emptyCache, getState, mark, observers, unresolved } from '../symbols';
-import { recordObservation, removeObserver, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedReactor } from '../tracking';
+import { Derivable, SettableDerivable, State } from '../interfaces';
+import { connect, disconnect, emptyCache, getState, mark, observers, unresolved } from '../symbols';
+import { addObserver, recordObservation, removeObserver, TrackedReactor } from '../tracking';
 import { config, equals, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
-import { unwrap } from './unwrap';
+import { isSettableDerivable } from './typeguards';
 
-export let derivationStackDepth = 0;
-
-/**
- * Derivation is the implementation of derived state. Automatically tracks other Derivables that are used in the deriver function
- * and updates when needed.
- */
-export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
-
-    /**
-     * Create a new Derivation using the deriver function.
-     *
-     * @param deriver the deriver function
-     */
+export class Mapping<B, V> extends BaseDerivable<V> implements Derivable<V> {
     constructor(
-        /**
-         * The deriver function that is used to calculate the value of this derivation.
-         */
-        private readonly deriver: (...args: any[]) => State<V>,
-        /**
-         * Arguments that will be passed unwrapped to the deriver function.
-         */
-        protected readonly args?: any[],
-    ) {
-        super();
-    }
+        protected readonly base: BaseDerivable<B>,
+        private readonly pureFn: (state: State<B>) => State<V>,
+    ) { super(); }
 
-    /**
-     * The recorded dependencies of this derivation. Is only used when the derivation is connected (i.e. it is actively used to
-     * power a reactor, either directly or indirectly with other derivations in between).
-     */
-    readonly [dependencies]: TrackedObservable[] = [];
-
-    /**
-     * The versions of all dependencies that were used to calculate the currently known value. Is used to determine whether
-     * the deriver function needs to be called.
-     */
-    readonly [dependencyVersions]: { [id: number]: number } = {};
+    private baseVersion = 0;
 
     /**
      * Indicates whether the current cachedValue of this derivation is known to be up to date, or might need an update. Is set to false
@@ -81,12 +51,6 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
         }
 
         this.updateIfNeeded();
-        // We are connected, so we should record this instance as a dependency of our observers, but only if we have dependencies.
-        // If we don't have any dependencies we are effectively immutable (because derivations must be pure functions), therefore we
-        // don't record this observation to our observer.
-        if (this[dependencies].length) {
-            recordObservation(this);
-        }
         return this.cachedState as State<V>;
     }
 
@@ -95,19 +59,18 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
      */
     private updateIfNeeded() {
         if (!this.connected || !this.shouldUpdate()) {
+            // If deriver is not called, we still need to make sure our base is recorded as being "observed", otherwise it would be
+            // removed as observation which is not what we want.
+            recordObservation(this.base);
             return;
         }
 
-        startRecordingObservations(this);
-        try {
-            const newValue = this.callDeriver();
-            this.isUpToDate = true;
-            if (!equals(newValue, this.cachedState)) {
-                this.cachedState = newValue;
-                this._version++;
-            }
-        } finally {
-            stopRecordingObservations();
+        const newValue = this.callDeriver();
+        this.isUpToDate = true;
+        this.baseVersion = this.base.version;
+        if (!equals(newValue, this.cachedState)) {
+            this.cachedState = newValue;
+            this._version++;
         }
     }
 
@@ -115,19 +78,13 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
      * Call the deriver function without `this` context and log debug stack traces when applicable.
      */
     private callDeriver() {
-        ++derivationStackDepth;
         try {
-            const { deriver, args } = this;
-            return args ? deriver(...args.map(unwrap)) : deriver();
+            const { pureFn } = this;
+            return pureFn(this.base[getState]());
         } catch (e) {
-            if (e === unresolved) {
-                return unresolved;
-            }
             // tslint:disable-next-line:no-console - console.error is only called when debugMode is set to true
             this.stack && console.error(e.message, this.stack);
             return new ErrorWrapper(e);
-        } finally {
-            --derivationStackDepth;
         }
     }
 
@@ -138,7 +95,7 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
     private shouldUpdate() {
         // Update the isUpToDate boolean only when it is false and we know all our dependencies (c.q. the cache is not empty).
         if (!this.isUpToDate && this.cachedState !== emptyCache) {
-            this.isUpToDate = this[dependencies].every(obs => this[dependencyVersions][obs.id] === obs.version);
+            this.isUpToDate = this.baseVersion === this.base.version;
         }
         return !this.isUpToDate;
     }
@@ -159,6 +116,11 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
         }
     }
 
+    [connect]() {
+        super[connect]();
+        addObserver(this.base, this);
+    }
+
     /**
      * Force disconnect.
      */
@@ -170,18 +132,34 @@ export class Derivation<V> extends BaseDerivable<V> implements Derivable<V> {
         if (this[observers].length) {
             throw new Error('Inconsistent state!');
         }
-        for (const dep of this[dependencies]) {
-            removeObserver(dep, this);
-        }
-        this[dependencies].length = 0;
+        removeObserver(this.base, this);
     }
-
 }
 
-export function deriveMethod<V extends P, R, P>(
-    this: Derivable<V>,
-    f: (v: V, ...ps: P[]) => R,
-    ...ps: Array<P | Derivable<P>>
-): Derivable<R> {
-    return new Derivation(f, [this, ...ps]);
+export class BiMapping<B, V> extends Mapping<B, V> implements SettableDerivable<V> {
+    protected readonly base!: BaseDerivable<B> & SettableDerivable<B>;
+
+    constructor(
+        base: BaseDerivable<B> & SettableDerivable<B>,
+        pureGet: (baseValue: State<B>) => State<V>,
+        private readonly pureSet: (newValue: V, oldValue: B | undefined) => B,
+    ) {
+        super(base, pureGet);
+    }
+
+    set(newValue: V) {
+        const { pureSet } = this;
+        this.base.set(pureSet(newValue, this.base.value));
+    }
+}
+
+export function mapMethod<B, V>(this: BaseDerivable<B>, get: (b: B) => State<V>, set?: (v: V, b?: B) => B): Derivable<V> {
+    const stateMapper = (state: State<B>) => state === unresolved || state instanceof ErrorWrapper ? state : get(state);
+    return set && isSettableDerivable(this)
+        ? new BiMapping(this, stateMapper, set)
+        : new Mapping(this, stateMapper);
+}
+
+export function mapStateMethod<B, V>(this: BaseDerivable<B>, f: (state: State<B>) => State<V>): Derivable<V> {
+    return new Mapping(this, f);
 }

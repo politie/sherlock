@@ -3,7 +3,8 @@ import { Atom } from './atom';
 import { BaseDerivable } from './base-derivable';
 import { PullDataSource } from './data-source';
 import { deriveMethod } from './derivation';
-import { Lens, lensMethod } from './lens';
+import { Lens } from './lens';
+import { BiMapping, mapMethod, mapStateMethod } from './map';
 import {
     andMethod, connected$Getter, erroredGetter, errorGetter, fallbackToMethod, getMethod, getOrMethod, isMethod, notMethod,
     orMethod, pluckMethod, resolvedGetter, settablePluckMethod, swapMethod, valueGetter, valueSetter,
@@ -24,6 +25,8 @@ declare module './base-derivable' {
         readonly connected$: Derivable<V>['connected$'];
 
         readonly derive: Derivable<V>['derive'];
+        readonly map: Derivable<V>['map'];
+        readonly mapState: Derivable<V>['mapState'];
         readonly pluck: Derivable<V>['pluck'];
         readonly fallbackTo: Derivable<V>['fallbackTo'];
 
@@ -48,6 +51,8 @@ Object.defineProperties(BaseDerivable.prototype, {
     connected$: { get: connected$Getter },
 
     derive: { value: deriveMethod },
+    map: { value: mapMethod },
+    mapState: { value: mapStateMethod },
     pluck: { value: pluckMethod },
     fallbackTo: { value: fallbackToMethod },
 
@@ -62,7 +67,8 @@ declare module './atom' {
         value: SettableDerivable<V>['value'];
         readonly swap: SettableDerivable<V>['swap'];
         readonly pluck: SettableDerivable<V>['pluck'];
-        readonly lens: SettableDerivable<V>['lens'];
+        readonly map: SettableDerivable<V>['map'];
+        readonly settable: true;
     }
 }
 
@@ -71,7 +77,7 @@ declare module './data-source' {
         value: SettableDerivable<V>['value'];
         readonly swap: SettableDerivable<V>['swap'];
         readonly pluck: SettableDerivable<V>['pluck'];
-        readonly lens: SettableDerivable<V>['lens'];
+        readonly map: SettableDerivable<V>['map'];
     }
 }
 
@@ -80,13 +86,24 @@ declare module './lens' {
         value: SettableDerivable<V>['value'];
         readonly swap: SettableDerivable<V>['swap'];
         readonly pluck: SettableDerivable<V>['pluck'];
-        readonly lens: SettableDerivable<V>['lens'];
+        readonly map: SettableDerivable<V>['map'];
+        readonly settable: true;
     }
 }
 
-[Atom, PullDataSource, Lens].forEach(c => Object.defineProperties(c.prototype, {
+declare module './map' {
+    export interface BiMapping<B, V> {
+        value: SettableDerivable<V>['value'];
+        readonly swap: SettableDerivable<V>['swap'];
+        readonly pluck: SettableDerivable<V>['pluck'];
+        readonly map: SettableDerivable<V>['map'];
+        readonly settable: true;
+    }
+}
+
+[Atom, PullDataSource, BiMapping, Lens].forEach(c => Object.defineProperties(c.prototype, {
     value: { get: valueGetter, set: valueSetter },
     swap: { value: swapMethod },
     pluck: { value: settablePluckMethod },
-    lens: { value: lensMethod },
 }));
+[Atom, BiMapping, Lens].forEach(c => Object.defineProperty(c.prototype, 'settable', { value: true }));

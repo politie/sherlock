@@ -4,8 +4,7 @@ import { observers, unresolved } from '../../symbols';
 import { Atom } from '../atom';
 import { Factory } from '../base-derivable.spec';
 import { atom } from '../factories';
-import { isSettableDerivable } from '../typeguards';
-import { isAtom } from './accessors.spec';
+import { isDerivableAtom, isSettableDerivable } from '../typeguards';
 
 export function testFallbackTo(factory: Factory) {
     describe('#fallbackTo', () => {
@@ -22,7 +21,7 @@ export function testFallbackTo(factory: Factory) {
                 expect(b$.get()).to.equal('a value');
                 expect(fallback).to.have.been.calledOnce;
 
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.unset();
                     expect(b$.get()).to.equal(42);
                     expect(fallback).to.have.been.calledTwice;
@@ -44,7 +43,7 @@ export function testFallbackTo(factory: Factory) {
                 expect(b$.get()).to.equal('a value');
                 expect(fallback$.get).to.have.been.calledOnce;
 
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.unset();
                     expect(b$.get()).to.equal(42);
                     expect(fallback$.get).to.have.been.calledTwice;
@@ -66,7 +65,7 @@ export function testFallbackTo(factory: Factory) {
                 b$.get();
                 expect(fallback$[observers]).to.be.empty;
 
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.unset();
                     b$.get();
                     expect(fallback$[observers]).to.have.length(1);
@@ -84,7 +83,7 @@ export function testFallbackTo(factory: Factory) {
                 a$.set('a value');
                 expect(b$.get()).to.equal('a value');
 
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.unset();
                     expect(b$.get()).to.equal(42);
                 }

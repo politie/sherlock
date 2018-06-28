@@ -13,7 +13,7 @@ describe('sherlock-utils/fromPromise', () => {
     it('should refresh all derivations that depend on the returned derivable', async () => {
         const promise = Promise.resolve(15);
         const p$ = fromPromise(promise);
-        const d$ = p$.derive(v => v + 27);
+        const d$ = p$.map(v => v + 27);
         expect(d$.resolved).to.be.false;
 
         await promise;

@@ -53,13 +53,12 @@ describe('sherlock-utils/getState', () => {
 describe('sherlock-utils/materialize', () => {
     it('should materialize all possible states', () => {
         const a$ = atom(0);
-        const unresolved$ = constant.unresolved<number>();
         const error = new Error('this is not good!');
-        const d$ = a$.derive(v => {
+        const d$ = a$.map(v => {
             switch (v) {
                 case 0: return 42;
                 case 1: throw error;
-                default: return unresolved$.get() + 42;
+                default: return _internal.symbols.unresolved;
             }
         });
         let reactions = 0;

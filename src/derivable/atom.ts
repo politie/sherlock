@@ -1,4 +1,4 @@
-import { DerivableAtom, SettableDerivable, State } from '../interfaces';
+import { DerivableAtom, State } from '../interfaces';
 import { getState, restorableState, unresolved } from '../symbols';
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
@@ -10,7 +10,7 @@ import { BaseDerivable } from './base-derivable';
  * with other kinds of derivables that only store immutable (constant) or derived state. Should be constructed
  * with the initial state.
  */
-export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V>, DerivableAtom {
+export class Atom<V> extends BaseDerivable<V> implements DerivableAtom<V> {
     /**
      * Contains the current state of this atom. Note that this field is public for transaction support, should
      * not be used in application code. Use {@link Derivable#get} and {@link SettableDerivable#set} instead.
@@ -61,7 +61,4 @@ export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V>, D
     setError(err: any) {
         this.set(new ErrorWrapper(err));
     }
-
-    readonly settable!: true;
 }
-Object.defineProperty(Atom.prototype, 'settable', { value: true });

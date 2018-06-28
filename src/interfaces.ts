@@ -44,6 +44,9 @@ export interface Derivable<V> {
     derive<R, P1, P2>(f: (v: V, p1: P1, p2: P2) => State<R>, p1: Unwrappable<P1>, p2: Unwrappable<P2>): Derivable<R>;
     derive<R, P>(f: (v: V, ...ps: P[]) => State<R>, ...ps: Array<Unwrappable<P>>): Derivable<R>;
 
+    map<R>(f: (v: V) => State<R>): Derivable<R>;
+    mapState<R>(f: (v: State<V>) => State<R>): Derivable<R>;
+
     /**
      * Create a derivation that plucks the property with the given key of the current value of the Derivable.
      *
@@ -122,10 +125,8 @@ export interface SettableDerivable<V> extends Derivable<V> {
      *
      * @param descriptor the deriver (get) and transform (set) functions
      */
-    lens<W>(descriptor: TargetedLensDescriptor<V, W, never>): SettableDerivable<W>;
-    lens<W, P1>(descriptor: TargetedLensDescriptor<V, W, P1>, p1: Unwrappable<P1>): SettableDerivable<W>;
-    lens<W, P1, P2>(descriptor: TargetedLensDescriptor<V, W, P1 | P2>, p1: Unwrappable<P1>, p2: Unwrappable<P2>): SettableDerivable<W>;
-    lens<W, P>(descriptor: TargetedLensDescriptor<V, W, P>, ...ps: Array<Unwrappable<P>>): SettableDerivable<W>;
+    map<R>(get: (baseValue: V) => State<R>): Derivable<R>;
+    map<R>(get: (baseValue: V) => State<R>, set: (newValue: R, oldBaseValue?: V) => V): SettableDerivable<R>;
 
     /**
      * Create a lens that plucks the property with the given key of the current value of the SettableDerivable.
@@ -148,26 +149,17 @@ export interface SettableDerivable<V> extends Derivable<V> {
     swap(f: (oldValue: V, ...args: any[]) => V, ...args: any[]): void;
 }
 
-export interface DerivableAtom {
+export interface DerivableAtom<V> extends SettableDerivable<V> {
+    set(newState: State<V>): void;
     unset(): void;
     setError(err: any): void;
-}
-
-/**
- * A description of a derived lens that automatically uses the {@link SettableDerivable#get} and {@link SettableDerivable#set} functions
- * with the provided deriver (get) and transform (set) functions. Can be used with the {@link SettableDerivable#lens} function to create
- * a new Lens.
- */
-export interface TargetedLensDescriptor<T, V, P> {
-    get(targetValue: T, ...ps: P[]): V;
-    set(newValue: V, targetValue: T, ...ps: P[]): T;
 }
 
 /**
  * A description of a standalone lens with arbitrary dependencies. Can be used with the {@link lens} function
  * to create a new Lens.
  */
-export interface StandaloneLensDescriptor<V, P> {
+export interface LensDescriptor<V, P> {
     get(...ps: P[]): V;
     set(newValue: V, ...ps: P[]): void;
 }

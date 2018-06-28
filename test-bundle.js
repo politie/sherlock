@@ -23,10 +23,10 @@ const fs = require('fs');
 const gzipSize = require('gzip-size');
 
 (console.table || console.log)({
-    'sherlock': assertBundleSize('sherlock', 14),
-    'sherlock-proxy': assertBundleSize('sherlock-proxy', 5),
+    'sherlock': assertBundleSize('sherlock', 5),
+    'sherlock-proxy': assertBundleSize('sherlock-proxy', 2),
     'sherlock-rxjs': assertBundleSize('sherlock-rxjs', 1),
-    'sherlock-utils': assertBundleSize('sherlock-utils', 3),
+    'sherlock-utils': assertBundleSize('sherlock-utils', 1),
 });
 
 console.log('Bundle ok.');
@@ -35,7 +35,8 @@ function assertBundleSize(name, expectedSize) {
     const filename = `./dist/${name}/${name}.esm.js`;
     const file = fs.readFileSync(filename, 'utf8');
     const minified = terser.minify(file, { module: true }).code;
-    const size = minified.length;
+    fs.writeFileSync(`./dist/${name}/${name}.esm.min.js`, minified, 'utf8');
+    const size = gzipSize.sync(minified);
 
     assert(size < expectedSize * 1024, `Unexpected minified bundle size for ${name}, expected ${expectedSize}KB but it was ${Math.ceil(size / 1024)}KB`)
     assert(size >= (expectedSize - 1) * 1024, `Unexpected minified bundle size for ${name}, expected ${expectedSize}KB but it was ${Math.ceil(size / 1024)}KB`)
@@ -43,7 +44,7 @@ function assertBundleSize(name, expectedSize) {
     return {
         filename: filename,
         filesize: file.length,
-        minified: size,
-        gzipped: gzipSize.sync(minified),
+        minified: minified.length,
+        gzipped: size,
     };
 }

@@ -894,7 +894,7 @@ describe('reactor/reactor efficiency', () => {
         const lengthDeriver = spy((name: string) => name.length + karma$.get());
         const length$ = name$.derive(lengthDeriver);
         const isHeroDeriver = spy((length: number) => length > 8);
-        const isHero$ = length$.derive(isHeroDeriver);
+        const isHero$ = length$.map(isHeroDeriver);
         const shout$ = name$.derive(name => isHero$.get() ? name.toUpperCase() : name.toLowerCase());
 
         react(shout$);
@@ -931,8 +931,8 @@ describe('reactor/reactor efficiency', () => {
         const path2Derivation = spy((v: string) => v + ' from path 2');
         const atom1 = atom('a');
         const atom2 = atom('b');
-        const path1 = atom1.derive(path1Derivation);
-        const path2 = atom2.derive(path2Derivation);
+        const path1 = atom1.map(path1Derivation);
+        const path2 = atom2.map(path2Derivation);
 
         react(derive(() => switcher$.get() ? path1.get() : path2.get()));
 
