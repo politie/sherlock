@@ -13,6 +13,7 @@ describe('util/multiple-instances-warning', () => {
     it('should add sherlockInstanceCount to global object', () => {
         runGlobalStateWarning();
         expect(getInstanceCount()).to.equal(1);
+        expect(consoleWarnStub).not.to.have.been.called;
     });
 
     it('should call console.warn when more than one instance of sherlock is loaded', () => {
