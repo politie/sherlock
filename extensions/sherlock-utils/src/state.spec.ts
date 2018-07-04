@@ -1,7 +1,7 @@
 import { _internal, atom, constant } from '@politie/sherlock';
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { copyState, dematerialize, getState, materialize, setState, StateObject, syncState } from './state';
+import { copyState, dematerialize, getStateObject, materialize, setStateObject, StateObject, syncState } from './state';
 
 describe('sherlock-utils/copyState', () => {
     it('should transfer value state', () => {
@@ -29,23 +29,23 @@ describe('sherlock-utils/copyState', () => {
 describe('sherlock-utils/getState', () => {
     it('should return the state as a StateObject', () => {
         const a$ = atom(undefined);
-        expect(getState(a$)).to.deep.equal({ value: undefined, errored: false, resolved: true });
+        expect(getStateObject(a$)).to.deep.equal({ value: undefined, errored: false, resolved: true });
         a$.setError(undefined);
-        expect(getState(a$)).to.deep.equal({ error: undefined, errored: true, resolved: true });
+        expect(getStateObject(a$)).to.deep.equal({ error: undefined, errored: true, resolved: true });
         a$.unset();
-        expect(getState(a$)).to.deep.equal({ errored: false, resolved: false });
+        expect(getStateObject(a$)).to.deep.equal({ errored: false, resolved: false });
     });
 
     it('should not call the internal getter more than once', () => {
         const a$ = atom(undefined);
         const getter = spy(a$ as any as _internal.BaseDerivable<any>, _internal.symbols.getState);
-        getState(a$);
+        getStateObject(a$);
         expect(getter).to.have.been.calledOnce;
         a$.setError(undefined);
-        getState(a$);
+        getStateObject(a$);
         expect(getter).to.have.been.calledTwice;
         a$.unset();
-        getState(a$);
+        getStateObject(a$);
         expect(getter).to.have.been.calledThrice;
     });
 });
@@ -116,19 +116,19 @@ describe('sherlock-utils/dematerialize', () => {
 describe('sherlock-utils/setState', () => {
     it('should set value state', () => {
         const to$ = atom.unresolved();
-        setState(to$, { value: 123, errored: false, resolved: true });
+        setStateObject(to$, { value: 123, errored: false, resolved: true });
         expect(to$.get()).to.equal(123);
     });
 
     it('should set unresolved state', () => {
         const to$ = atom(123);
-        setState(to$, { errored: false, resolved: false });
+        setStateObject(to$, { errored: false, resolved: false });
         expect(to$.resolved).to.be.false;
     });
 
     it('should set error state', () => {
         const to$ = atom(123);
-        setState(to$, { error: 'womp womp', errored: true, resolved: true });
+        setStateObject(to$, { error: 'womp womp', errored: true, resolved: true });
         expect(to$.error).to.equal('womp womp');
     });
 });

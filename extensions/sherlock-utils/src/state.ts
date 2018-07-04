@@ -5,8 +5,8 @@ export type StateObject<V> =
     { error: any, errored: true, resolved: true } |
     { errored: false, resolved: false };
 
-export function getState<V>(from: Derivable<V>): StateObject<V> {
-    return toStateObject(from[_internal.symbols.getState]());
+export function getStateObject<V>(from: Derivable<V>): StateObject<V> {
+    return toStateObject(from.getState());
 }
 
 function toStateObject<V>(state: State<V>): StateObject<V> {
@@ -36,7 +36,7 @@ export function dematerialize<V>(derivable: Derivable<StateObject<V>>): Derivabl
     });
 }
 
-export function setState<V>(to: DerivableAtom<V>, state: StateObject<V>) {
+export function setStateObject<V>(to: DerivableAtom<V>, state: StateObject<V>) {
     if (!state.resolved) {
         to.unset();
     } else if (state.errored) {
@@ -47,9 +47,9 @@ export function setState<V>(to: DerivableAtom<V>, state: StateObject<V>) {
 }
 
 export function syncState<V>(from: Derivable<V>, to: DerivableAtom<V>, opts?: Partial<ReactorOptions<StateObject<V>>>) {
-    return materialize(from).react(state => setState(to, state), opts);
+    return materialize(from).react(state => setStateObject(to, state), opts);
 }
 
 export function copyState<V>(from: Derivable<V>, to: DerivableAtom<V>) {
-    setState(to, getState(from));
+    setStateObject(to, getStateObject(from));
 }

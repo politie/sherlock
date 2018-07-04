@@ -21,7 +21,7 @@ describe('derivable/lens', () => {
                     b$.set(x);
                 },
             });
-        }, false);
+        });
     });
 
     context('(standalone with params)', () => {
@@ -39,7 +39,7 @@ describe('derivable/lens', () => {
                     obj2$.swap(obj => ({ ...obj, [prop2]: newValue }));
                 },
             }, 'prop1', 'prop2');
-        }, false);
+        });
     });
 
     testSwap(<V>(val: V) => atom(val).map(v => v, v => v));

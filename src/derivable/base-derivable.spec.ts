@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { fromJS } from 'immutable';
 import { spy } from 'sinon';
 import { Derivable, SettableDerivable, State } from '../interfaces';
-import { disconnect, observers, unresolved } from '../symbols';
+import { dependencies, disconnect, observers, unresolved } from '../symbols';
 import { BaseDerivable } from './base-derivable';
 import { Derivation } from './derivation';
 import { atom, constant, derive } from './factories';
@@ -15,8 +15,8 @@ import { isDerivableAtom, isSettableDerivable } from './typeguards';
 
 export type Factory = <V>(state: State<V>) => Derivable<V>;
 
-export function testDerivable(factory: Factory, noObservers: boolean) {
-    testAccessors(factory, noObservers);
+export function testDerivable(factory: Factory, isConstant = false) {
+    testAccessors(factory, isConstant);
     testFallbackTo(factory);
     testBooleanFuncs(factory);
     testPluck(factory);
@@ -227,6 +227,37 @@ export function testDerivable(factory: Factory, noObservers: boolean) {
                 expect(reactions).to.equal(1);
             });
         }
+    });
+
+    describe('#connected$', () => {
+        it('should keep observers updated on connected state', () => {
+            const d$ = factory('a certain value');
+            let connected = false;
+            d$.connected$.react(v => connected = v);
+
+            expect(connected).to.be.false;
+
+            const stop = derive(() => d$.get()).react(() => 0);
+            expect(connected).to.equal(!isConstant);
+
+            stop();
+
+            expect(connected).to.be.false;
+        });
+
+        it('should not polute any observer administration', () => {
+            // Because connection happens during derivations we have to be very careful, side-effects
+            // during derivations can result in memory-leaks because of the way our dependency tracking works.
+            const base$ = factory('value');
+            const derived$ = base$.derive(v => v);
+            const connected$ = base$.connected$;
+            connected$.react(() => 0);
+            derived$.react(() => 0);
+
+            // If we don't isolate our side-effects from dependency tracking, derived$ would think it depended on the
+            // connected$ atom, which is not true and prevents disconnect from ever being called.
+            expect(derived$[dependencies]).to.have.length(isConstant ? 0 : 1);
+        });
     });
 
     describe('#toPromise', () => {

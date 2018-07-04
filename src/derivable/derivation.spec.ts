@@ -9,15 +9,15 @@ import { atom, derive } from './factories';
 
 describe('derivable/derive', () => {
     context('(standalone)', () => {
-        testDerivable(v => derive(() => { if (v instanceof ErrorWrapper) { throw v.error; } return v; }), true);
+        testDerivable(v => derive(() => { if (v instanceof ErrorWrapper) { throw v.error; } return v; }));
     });
 
     context('(based on atom)', () => {
-        testDerivable(v => new Atom(v).derive(d => d), false);
+        testDerivable(v => new Atom(v).derive(d => d));
     });
 
     context('(based on constant)', () => {
-        testDerivable(v => new Constant(v).derive(d => d), true);
+        testDerivable(v => new Constant(v).derive(d => d));
     });
 
     testAutocache((a$, deriver) => a$.derive(deriver));
@@ -37,13 +37,13 @@ describe('derivable/derive', () => {
 
         it('should generate a stacktrace on instantiation', () => {
             // tslint:disable-next-line:no-string-literal
-            expect(derive(() => 0)['stack']).to.be.a('string');
+            expect(derive(() => 0)['_stack']).to.be.a('string');
         });
 
         it('should log the recorded stacktrace on error', () => {
             const d$ = derive(() => { throw new Error('the Error'); });
             // tslint:disable-next-line:no-string-literal
-            const stack = d$['stack'];
+            const stack = d$['_stack'];
             expect(() => d$.get()).to.throw('the Error');
             expect(console.error).to.have.been.calledOnce
                 .and.to.have.been.calledWithExactly('the Error', stack);

@@ -13,7 +13,7 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
     /**
      * The setter that was provided in the constructor.
      */
-    private setter: (newValue: V, ...args: any[]) => void;
+    private _setter: (newValue: V, ...args: any[]) => void;
 
     /**
      * Create a new Lens using a get and a set function. The get is used as a normal deriver function
@@ -23,7 +23,7 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
      */
     constructor({ get, set }: LensDescriptor<V, any>, args?: any[]) {
         super(get, args);
-        this.setter = set;
+        this._setter = set;
     }
 
     /**
@@ -34,11 +34,11 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
      */
     @atomic()
     set(newValue: V) {
-        const { setter, args } = this;
-        if (args) {
-            setter(newValue, ...args.map(safeUnwrap));
+        const { _setter, _args } = this;
+        if (_args) {
+            _setter(newValue, ..._args.map(safeUnwrap));
         } else {
-            setter(newValue);
+            _setter(newValue);
         }
     }
 }

@@ -6,12 +6,10 @@ import { isDerivable } from './typeguards';
  *
  * @param v a value or derivable
  */
-export function unwrap<T>(v: Unwrappable<T>): T;
-export function unwrap<T>(v: Unwrappable<T> | undefined): T | undefined;
-export function unwrap<T>(v?: Unwrappable<T>): T | undefined {
+export function unwrap<T>(v: Unwrappable<T>): T {
     return isDerivable(v) ? v.get() : v;
 }
 
-export function safeUnwrap<T>(v?: Unwrappable<T>): T | undefined {
+export function safeUnwrap<T>(v: Unwrappable<T>): T | undefined {
     return isDerivable(v) ? v.value : v;
 }

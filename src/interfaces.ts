@@ -12,6 +12,8 @@ export interface Derivable<V> {
 
     getOr<T>(fallback: Fallback<T>): V | T;
 
+    getState(): State<V>;
+
     fallbackTo<T>(fallback: Fallback<T>): Derivable<V | T>;
 
     readonly value: V | undefined;
@@ -160,7 +162,7 @@ export interface DerivableAtom<V> extends SettableDerivable<V> {
  * to create a new Lens.
  */
 export interface LensDescriptor<V, P> {
-    get(...ps: P[]): V;
+    get(...ps: P[]): State<V>;
     set(newValue: V, ...ps: P[]): void;
 }
 

@@ -1,6 +1,6 @@
 import { Derivable, SettableDerivable, State } from '../interfaces';
 import { autoCacheMode, connect, disconnect, getState, observers } from '../symbols';
-import { TrackedObservable, TrackedObserver } from '../tracking';
+import { independentTracking, isRecordingObservations, maybeDisconnectInNextTick, TrackedObservable, TrackedObserver } from '../tracking';
 import { uniqueId } from '../utils';
 
 /**
@@ -34,13 +34,31 @@ export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V
         return this;
     }
 
+    getState() {
+        // Should we connect now?
+        if (!this.connected) {
+            if (this[autoCacheMode]) {
+                // We will connect because of autoCacheMode, after a tick we may need to disconnect (if no reactor was started
+                // in this tick).
+                this[connect]();
+                maybeDisconnectInNextTick(this);
+            } else if (isRecordingObservations()) {
+                // We know we need to connect if isRecordingObservations() returns true (in which case our observer is connecting/connected
+                // and therefore recording its dependencies).
+                this[connect]();
+            }
+        }
+
+        return this[getState]();
+    }
+
+    abstract [getState](): State<V>;
+
     /**
      * The current version of the state. This number gets incremented every time the state changes. Setting the state to
      * an immutable object that is structurally equal to the previous immutable object is not considered a state change.
      */
     abstract readonly version: number;
-
-    abstract [getState](): State<V>;
 
     connected = false;
     _connected$?: SettableDerivable<boolean> = undefined;
@@ -50,5 +68,5 @@ export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V
 
 function setConnectionStatus(bs: BaseDerivable<any>, status: boolean) {
     bs.connected = status;
-    bs._connected$ && bs._connected$.set(status);
+    bs._connected$ && independentTracking(() => bs._connected$!.set(status));
 }

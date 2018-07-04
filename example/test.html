@@ -1,0 +1,27 @@
+<body>
+    <script src="../dist/sherlock/sherlock.umd.min.js"></script>
+    <script src="../dist/sherlock-utils/sherlock-utils.umd.min.js"></script>
+    <script>
+        const utils = window['sherlock-utils'];
+        const httpGet = utils.derivableCache({
+            derivableFactory: url => utils.fromPromise(fetch(url).then(v => v.json())),
+        });
+        const RELEASE = 'https://api.github.com/repos/politie/sherlock/releases/latest';
+
+        const time$ = sherlock.atom(0);
+        setInterval(() => time$.swap(v => v + 1), 1000);
+
+        const template$ = utils.template`
+            <h1>Sherlock UMD bundle test</h1>
+            <p>Latest version of Sherlock: <b>${httpGet(RELEASE).pluck('tag_name')}</b>.</p>
+            <pre>${httpGet(RELEASE).pluck('body')}</pre>
+            <p>You have been watching this page for <b>${time$}</b> seconds! Time to move on!</p>
+        `;
+
+        const loading$ = utils.template`
+            Getting latest release notes from GitHub.${time$.map(v => '.'.repeat(v))}
+        `;
+
+        template$.fallbackTo(loading$).react(v => document.body.innerHTML = v);
+    </script>
+</body>

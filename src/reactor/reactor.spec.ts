@@ -637,7 +637,7 @@ describe('reactor/reactor', () => {
 
     it('should not generate a stacktrace on instantiation', () => {
         // tslint:disable-next-line:no-string-literal
-        expect(new TestReactor($(a$), () => 0)['stack']).to.be.undefined;
+        expect(new TestReactor($(a$), () => 0)['_stack']).to.be.undefined;
     });
 
     context('in debug mode', () => {
@@ -650,17 +650,17 @@ describe('reactor/reactor', () => {
 
         it('should generate a stacktrace on instantiation', () => {
             // tslint:disable-next-line:no-string-literal
-            expect(new TestReactor($(a$), () => 0)['stack']).to.be.a('string');
+            expect(new TestReactor($(a$), () => 0)['_stack']).to.be.a('string');
         });
 
         it('should log the recorded stacktrace on error', () => {
             const reactor = new TestReactor($(a$), () => { throw new Error('the Error'); });
             // tslint:disable-next-line:no-string-literal
-            const stack = reactor['stack'];
-            expect(() => reactor.start()).to.throw('the Error');
+            const stack = reactor['_stack'];
+            expect(() => reactor._start()).to.throw('the Error');
             expect(console.error).to.have.been.calledOnce
                 .and.to.have.been.calledWithExactly('the Error', stack);
-            reactor.stop();
+            reactor._stop();
         });
     });
 });

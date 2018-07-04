@@ -1,5 +1,5 @@
 import { Derivable, State } from '../interfaces';
-import { getState } from '../symbols';
+import { connect, getState } from '../symbols';
 import { BaseDerivable } from './base-derivable';
 
 /**
@@ -16,14 +16,14 @@ export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
          * The readonly state of this Constant.
          */
         private readonly _state: State<V>,
-    ) {
-        super();
-    }
+    ) { super(); }
 
-    [getState]() {
-        return this._state;
-    }
+    // No connection should ever be made.
+    getState() { return this[getState](); }
+    [getState]() { return this._state; }
+    [connect]() { /* nop */ }
 
+    readonly connected!: false;
     readonly version!: 0;
     readonly settable!: false;
 }

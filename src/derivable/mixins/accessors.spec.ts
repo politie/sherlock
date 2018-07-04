@@ -11,7 +11,7 @@ import { isDerivableAtom, isSettableDerivable } from '../typeguards';
 /**
  * Tests the `get()` method and `value` accessors.
  */
-export function testAccessors(factory: Factory, noObservers: boolean) {
+export function testAccessors(factory: Factory, isConstant: boolean) {
     describe('#get', () => {
         it('should return the current state', () => {
             const value$ = factory(123);
@@ -23,7 +23,7 @@ export function testAccessors(factory: Factory, noObservers: boolean) {
             }
         });
 
-        it(`should ${noObservers ? 'not ' : ''}be recorded inside a derivation'`, () => {
+        it(`should ${isConstant ? 'not ' : ''}be recorded inside a derivation'`, () => {
             const value$ = $(factory(123));
             expect(value$[observers]).to.be.empty;
             const derived$ = $(value$.derive(value => value + 876));
@@ -33,7 +33,7 @@ export function testAccessors(factory: Factory, noObservers: boolean) {
             addObserver(derived$, {} as any);
             derived$.get();
 
-            if (noObservers) {
+            if (isConstant) {
                 expect(value$[observers]).to.be.empty;
             } else {
                 expect(value$[observers]).to.have.length(1);
@@ -83,7 +83,7 @@ export function testAccessors(factory: Factory, noObservers: boolean) {
             }
         });
 
-        it(`should ${noObservers ? 'not ' : ''}be recorded inside a derivation'`, () => {
+        it(`should ${isConstant ? 'not ' : ''}be recorded inside a derivation'`, () => {
             const value$ = $(factory(123));
             expect(value$[observers]).to.be.empty;
             const derived$ = $(value$.derive(value => value + 876));
@@ -93,7 +93,7 @@ export function testAccessors(factory: Factory, noObservers: boolean) {
             addObserver(derived$, {} as any);
             derived$.getOr('whatever');
 
-            if (noObservers) {
+            if (isConstant) {
                 expect(value$[observers]).to.be.empty;
             } else {
                 expect(value$[observers]).to.have.length(1);
@@ -178,7 +178,7 @@ export function testAccessors(factory: Factory, noObservers: boolean) {
             expect(s).to.have.been.calledOnce;
         });
 
-        it(`should ${noObservers ? 'not ' : ''}be recorded inside a derivation'`, () => {
+        it(`should ${isConstant ? 'not ' : ''}be recorded inside a derivation'`, () => {
             const value$ = $(factory(123));
             expect(value$[observers]).to.be.empty;
             const derived$ = $(value$.derive(value => value + 876));
@@ -188,7 +188,7 @@ export function testAccessors(factory: Factory, noObservers: boolean) {
             addObserver(derived$, {} as any);
             derived$.value;
 
-            if (noObservers) {
+            if (isConstant) {
                 expect(value$[observers]).to.be.empty;
             } else {
                 expect(value$[observers]).to.have.length(1);

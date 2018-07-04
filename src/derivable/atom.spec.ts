@@ -12,7 +12,7 @@ import { atom, derive } from './factories';
 import { testSwap } from './mixins/swap.spec';
 
 describe('derivable/atom', () => {
-    testDerivable(v => v === unresolved ? atom.unresolved() : v instanceof ErrorWrapper ? atom.error(v.error) : atom(v), false);
+    testDerivable(v => v === unresolved ? atom.unresolved() : v instanceof ErrorWrapper ? atom.error(v.error) : atom(v));
     testSwap(atom);
 
     describe('#set', () => {
