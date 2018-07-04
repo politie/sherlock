@@ -14,15 +14,22 @@ const terser = require('terser');
 
 Object.keys(expectedSizes).forEach(lib => {
     ['esm', 'cjs', 'umd'].forEach(suf => {
-        const source = `dist/${lib}/${lib}.${suf}.js`;
-        const file = fs.readFileSync(source, 'utf8');
-        const minified = terser.minify(file, {
+        const file = fs.readFileSync(`dist/${lib}/${lib}.${suf}.js`, 'utf8');
+        const fileSM = fs.readFileSync(`dist/${lib}/${lib}.${suf}.js.map`, 'utf8');
+        const result = terser.minify(file, {
             module: suf !== 'umd',
+            sourceMap: {
+                content: fileSM,
+                filename: `${lib}.${suf}.min.js`,
+                url: `${lib}.${suf}.min.js.map`,
+            },
             compress: { unsafe: true, passes: 2, warnings: true, pure_funcs: ['Object.freeze'] },
             mangle: { properties: { regex: /^_(?!_)(?!internal)/ } }
-        }).code;
+        });
         const target = `dist/${lib}/${lib}.${suf}.min.js`;
-        fs.writeFileSync(target, minified, 'utf8');
+        const targetSM = `dist/${lib}/${lib}.${suf}.min.js.map`;
+        fs.writeFileSync(target, result.code, 'utf8');
+        fs.writeFileSync(targetSM, result.map, 'utf8');
         console.log('-', target);
     });
 });
