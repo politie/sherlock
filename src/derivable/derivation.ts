@@ -161,13 +161,12 @@ export class Derivation<V> extends BaseDerivation<V> implements Derivable<V> {
     }
 
     /**
-     * Call the deriver function without `this` context and log debug stack traces when applicable.
+     * Call the deriver function and log debug stack traces when applicable.
      */
     protected _callDeriver() {
         ++derivationStackDepth;
         try {
-            const { _deriver, _args } = this;
-            return _args ? _deriver(..._args.map(unwrap)) : _deriver();
+            return this._args ? this._deriver(...this._args.map(unwrap)) : this._deriver();
         } catch (e) {
             if (e === unresolved) {
                 return unresolved;
@@ -194,7 +193,6 @@ export class Derivation<V> extends BaseDerivation<V> implements Derivable<V> {
         }
         this[dependencies].length = 0;
     }
-
 }
 
 export function deriveMethod<V extends P, R, P>(

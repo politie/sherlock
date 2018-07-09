@@ -34,11 +34,10 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
      */
     @atomic()
     set(newValue: V) {
-        const { _setter, _args } = this;
-        if (_args) {
-            _setter(newValue, ..._args.map(safeUnwrap));
+        if (this._args) {
+            this._setter(newValue, ...this._args.map(safeUnwrap));
         } else {
-            _setter(newValue);
+            this._setter(newValue);
         }
     }
 }

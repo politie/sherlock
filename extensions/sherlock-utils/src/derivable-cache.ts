@@ -1,4 +1,4 @@
-import { _internal, Derivable, isSettableDerivable, lens, LensDescriptor, SettableDerivable, Unwrappable } from '@politie/sherlock';
+import { _internal, Derivable, isDerivable, isSettableDerivable, lens, LensDescriptor, SettableDerivable, Unwrappable } from '@politie/sherlock';
 
 export interface MapImplementation<K, V> {
     set(key: K, value: V): void;
@@ -16,12 +16,14 @@ export type DerivableCache<K, V> = (key: Unwrappable<K>) => SettableDerivable<V>
 
 function defaultMapFactory<K, V>(): MapImplementation<K, V> { return new Map; }
 
+const CACHED_PROXY = '__cachedProxy';
+
 export function derivableCache<K, V>(opts: DerivableCacheOptions<K, V>): DerivableCache<K, V> {
     const cache = (opts.mapFactory || defaultMapFactory)();
 
     const { delayedEviction, derivableFactory } = opts;
     const descriptor: LensDescriptor<V, K> = {
-        get: key => {
+        get(key) {
             let derivable = cache.get(key);
             // If the cache has a hit for the current key, we know it is already connected (through another proxy).
             if (derivable) {
@@ -40,12 +42,13 @@ export function derivableCache<K, V>(opts: DerivableCacheOptions<K, V>): Derivab
             // Get the state of our derivable early so it connects when needed.
             const state = derivable.getState();
             if (derivable.connected) {
+                derivable[CACHED_PROXY] = this;
                 cache.set(key, derivable);
                 derivable.connected$.react(() => cache.delete(key), { skipFirst: true, once: true });
             }
             return state;
         },
-        set: (newValue, key) => {
+        set(newValue, key) {
             const derivable = cache.get(key) || derivableFactory(key);
             if (!isSettableDerivable(derivable)) {
                 throw new Error('Cached derivable is not settable');
@@ -54,5 +57,14 @@ export function derivableCache<K, V>(opts: DerivableCacheOptions<K, V>): Derivab
         },
     };
 
-    return key => lens(descriptor, key);
+    return key => {
+        if (!isDerivable(key)) {
+            const cacheItem = cache.get(key);
+            if (cacheItem) {
+                return cacheItem[CACHED_PROXY];
+            }
+        }
+
+        return lens(descriptor, key);
+    };
 }
