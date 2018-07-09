@@ -25,7 +25,7 @@ export function derivableCache<K, V>(opts: DerivableCacheOptions<K, V>): Derivab
             let derivable = cache.get(key);
             // If the cache has a hit for the current key, we know it is already connected (through another proxy).
             if (derivable) {
-                return derivable.get();
+                return derivable.getState();
             }
 
             // A cache miss means no other proxy is currently connected.
