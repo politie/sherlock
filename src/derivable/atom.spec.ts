@@ -12,7 +12,7 @@ import { atom, derive } from './factories';
 import { testSwap } from './mixins/swap.spec';
 
 describe('derivable/atom', () => {
-    testDerivable(v => v === unresolved ? atom.unresolved() : v instanceof ErrorWrapper ? atom.error(v.error) : atom(v), false);
+    testDerivable(v => v === unresolved ? atom.unresolved() : v instanceof ErrorWrapper ? atom.error(v.error) : atom(v));
     testSwap(atom);
 
     describe('#set', () => {
@@ -203,7 +203,7 @@ describe('derivable/atom', () => {
 
         it('should propagate error status', async () => {
             const e$ = createDerivablePromise<number>((_, reject) => setTimeout(() => reject(new Error('my error')), 0));
-            const f$ = e$.derive(v => v + 1);
+            const f$ = e$.map(v => v + 1);
 
             const promise = f$.toPromise();
 

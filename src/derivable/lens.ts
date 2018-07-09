@@ -1,4 +1,4 @@
-import { Derivable, SettableDerivable, StandaloneLensDescriptor, TargetedLensDescriptor } from '../interfaces';
+import { LensDescriptor, SettableDerivable } from '../interfaces';
 import { atomic } from '../transaction';
 import { Derivation } from './derivation';
 import { safeUnwrap } from './unwrap';
@@ -13,7 +13,7 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
     /**
      * The setter that was provided in the constructor.
      */
-    private setter: (newValue: V, ...args: any[]) => void;
+    private _setter: (newValue: V, ...args: any[]) => void;
 
     /**
      * Create a new Lens using a get and a set function. The get is used as a normal deriver function
@@ -21,9 +21,9 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
      *
      * @param param0 the get and set functions
      */
-    constructor({ get, set }: StandaloneLensDescriptor<V, any>, args?: any[]) {
+    constructor({ get, set }: LensDescriptor<V, any>, args?: any[]) {
         super(get, args);
-        this.setter = set;
+        this._setter = set;
     }
 
     /**
@@ -34,27 +34,11 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
      */
     @atomic()
     set(newValue: V) {
-        const { setter, args } = this;
-        if (args) {
-            setter(newValue, ...args.map(safeUnwrap));
+        const { _setter, _args } = this;
+        if (_args) {
+            _setter(newValue, ..._args.map(safeUnwrap));
         } else {
-            setter(newValue);
+            _setter(newValue);
         }
     }
-
-    readonly settable!: true;
-}
-Object.defineProperty(Lens.prototype, 'settable', { value: true });
-
-export function lensMethod<V, W, P>(
-    this: SettableDerivable<V>,
-    { get, set }: TargetedLensDescriptor<V, W, P>,
-    ...ps: Array<P | Derivable<P>>
-): SettableDerivable<W> {
-
-    const base = this;
-    return new Lens({
-        get,
-        set() { base.set(set.apply(undefined, arguments)); },
-    }, [base, ...ps]);
 }

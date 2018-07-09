@@ -23,19 +23,21 @@ describe('derivable/data-source', () => {
     }
 
     context('(simple)', () => {
-        testDerivable(v => new SimpleDataSource(v), false);
+        testDerivable(v => new SimpleDataSource(v));
     });
     context('(derived)', () => {
-        testDerivable(v => new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v }).derive(obj => obj.value), false);
+        testDerivable(v => new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v }).derive(obj => obj.value));
     });
-    context('(lensed)', () => {
+    context('(mapped)', () => {
+        testDerivable(v => new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v }).map(obj => obj.value));
+    });
+    context('(bi-mapped)', () => {
         testDerivable(<V>(v: State<V>) =>
             new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v })
-                .lens<V>({
-                    get: obj => obj.value,
-                    set: value => ({ value }),
-                }),
-            false);
+                .map<V>(
+                    obj => obj.value,
+                    value => ({ value }),
+            ));
     });
 
     context('(in transactions)', () => {

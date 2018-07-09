@@ -637,7 +637,7 @@ describe('reactor/reactor', () => {
 
     it('should not generate a stacktrace on instantiation', () => {
         // tslint:disable-next-line:no-string-literal
-        expect(new TestReactor($(a$), () => 0)['stack']).to.be.undefined;
+        expect(new TestReactor($(a$), () => 0)['_stack']).to.be.undefined;
     });
 
     context('in debug mode', () => {
@@ -650,17 +650,17 @@ describe('reactor/reactor', () => {
 
         it('should generate a stacktrace on instantiation', () => {
             // tslint:disable-next-line:no-string-literal
-            expect(new TestReactor($(a$), () => 0)['stack']).to.be.a('string');
+            expect(new TestReactor($(a$), () => 0)['_stack']).to.be.a('string');
         });
 
         it('should log the recorded stacktrace on error', () => {
             const reactor = new TestReactor($(a$), () => { throw new Error('the Error'); });
             // tslint:disable-next-line:no-string-literal
-            const stack = reactor['stack'];
-            expect(() => reactor.start()).to.throw('the Error');
+            const stack = reactor['_stack'];
+            expect(() => reactor._start()).to.throw('the Error');
             expect(console.error).to.have.been.calledOnce
                 .and.to.have.been.calledWithExactly('the Error', stack);
-            reactor.stop();
+            reactor._stop();
         });
     });
 });
@@ -894,7 +894,7 @@ describe('reactor/reactor efficiency', () => {
         const lengthDeriver = spy((name: string) => name.length + karma$.get());
         const length$ = name$.derive(lengthDeriver);
         const isHeroDeriver = spy((length: number) => length > 8);
-        const isHero$ = length$.derive(isHeroDeriver);
+        const isHero$ = length$.map(isHeroDeriver);
         const shout$ = name$.derive(name => isHero$.get() ? name.toUpperCase() : name.toLowerCase());
 
         react(shout$);
@@ -931,8 +931,8 @@ describe('reactor/reactor efficiency', () => {
         const path2Derivation = spy((v: string) => v + ' from path 2');
         const atom1 = atom('a');
         const atom2 = atom('b');
-        const path1 = atom1.derive(path1Derivation);
-        const path2 = atom2.derive(path2Derivation);
+        const path1 = atom1.map(path1Derivation);
+        const path2 = atom2.map(path2Derivation);
 
         react(derive(() => switcher$.get() ? path1.get() : path2.get()));
 

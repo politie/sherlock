@@ -71,7 +71,7 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
             it('should be possible to override the default $pluck behavior', () => {
                 const pd = new ProxyDescriptor<string>();
                 pd.$pluck = function (this: ProxyDescriptor<string>, prop: string | number) {
-                    return this.$create(this.$target.derive(v => (v + ' ' + prop).trim()), extendExpression(this.$expression, prop));
+                    return this.$create(this.$target.map(v => (v + ' ' + prop).trim()), extendExpression(this.$expression, prop));
                 };
                 const px = pd.$create(constant('')) as any;
                 expect(px.this.is.awkward.in.more.than[10].ways.$value).to.equal('this is awkward in more than 10 ways');
@@ -313,10 +313,10 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
             });
 
             it('should not shadow setter-errors with getter-errors', () => {
-                const a$ = atom(0).lens({
-                    get(): never { throw Error('from get'); },
-                    set(): never { throw Error('from set'); },
-                });
+                const a$ = atom(0).map(
+                    () => { throw Error('from get'); },
+                    () => { throw Error('from set'); },
+                );
                 const pd = new ProxyDescriptor<number>();
                 pd.$target = a$;
                 expect(() => pd.$targetValue = 1).to.throw('from set');

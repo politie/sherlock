@@ -9,16 +9,18 @@ import { atom, derive } from './factories';
 
 describe('derivable/derive', () => {
     context('(standalone)', () => {
-        testDerivable(v => derive(() => { if (v instanceof ErrorWrapper) { throw v.error; } return v; }), true);
+        testDerivable(v => derive(() => { if (v instanceof ErrorWrapper) { throw v.error; } return v; }));
     });
 
     context('(based on atom)', () => {
-        testDerivable(v => new Atom(v).derive(d => d), false);
+        testDerivable(v => new Atom(v).derive(d => d));
     });
 
     context('(based on constant)', () => {
-        testDerivable(v => new Constant(v).derive(d => d), true);
+        testDerivable(v => new Constant(v).derive(d => d));
     });
+
+    testAutocache((a$, deriver) => a$.derive(deriver));
 
     it('should not generate a stacktrace on instantiation', () => {
         // tslint:disable-next-line:no-string-literal
@@ -35,13 +37,13 @@ describe('derivable/derive', () => {
 
         it('should generate a stacktrace on instantiation', () => {
             // tslint:disable-next-line:no-string-literal
-            expect(derive(() => 0)['stack']).to.be.a('string');
+            expect(derive(() => 0)['_stack']).to.be.a('string');
         });
 
         it('should log the recorded stacktrace on error', () => {
             const d$ = derive(() => { throw new Error('the Error'); });
             // tslint:disable-next-line:no-string-literal
-            const stack = d$['stack'];
+            const stack = d$['_stack'];
             expect(() => d$.get()).to.throw('the Error');
             expect(console.error).to.have.been.calledOnce
                 .and.to.have.been.calledWithExactly('the Error', stack);
@@ -86,6 +88,10 @@ describe('derivable/derive', () => {
         expect(deriver).to.have.been.calledOnce;
     });
 
+});
+
+export function testAutocache(factory: (a$: Derivable<string>, deriver: (v: string) => string) => Derivable<string>) {
+
     describe('#autoCache', () => {
         let clock: SinonFakeTimers;
         beforeEach('use fake timers', () => { clock = useFakeTimers(); });
@@ -98,7 +104,7 @@ describe('derivable/derive', () => {
         beforeEach('create the deriver', () => { deriver = spy((v = 'empty') => v + '!'); });
 
         let d$: Derivable<string>;
-        beforeEach('create the derivation', () => { d$ = a$.derive(deriver).autoCache(); });
+        beforeEach('create the derivation', () => { d$ = factory(a$, deriver).autoCache(); });
 
         it('should automatically cache the value of the Derivable the first time in a tick', () => {
             expect(d$.get()).to.equal('value!');
@@ -182,4 +188,4 @@ describe('derivable/derive', () => {
             expect(deriver).to.have.been.calledTwice;
         });
     });
-});
+}

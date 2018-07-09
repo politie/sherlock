@@ -1,5 +1,5 @@
 import { SettableDerivable, State } from '../interfaces';
-import { connect, disconnect, emptyCache, getState, observers } from '../symbols';
+import { connect, disconnect, emptyCache, internalGetState, observers } from '../symbols';
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
 import { config, equals, ErrorWrapper } from '../utils';
@@ -39,10 +39,10 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
     /**
      * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
-    [getState]() {
+    [internalGetState]() {
         // Not connected, so just calculate our value one time.
         if (!this.connected) {
-            return this.callCalculationFn();
+            return this._callCalculationFn();
         }
 
         // We are connected, so we should record our dependencies.
@@ -70,7 +70,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
             return;
         }
 
-        const newValue = this.callCalculationFn();
+        const newValue = this._callCalculationFn();
         if (!equals(newValue, this._cachedState)) {
             const oldState = this._cachedState;
             this._cachedState = newValue;
@@ -81,7 +81,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
     /**
      * Call the deriver function without `this` context and log debug stack traces when applicable.
      */
-    private callCalculationFn() {
+    private _callCalculationFn() {
         try {
             return this.calculateCurrentValue();
         } catch (e) {

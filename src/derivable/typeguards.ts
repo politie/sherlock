@@ -1,4 +1,4 @@
-import { Derivable, SettableDerivable } from '../interfaces';
+import { Derivable, DerivableAtom, SettableDerivable } from '../interfaces';
 import { BaseDerivable } from './base-derivable';
 
 /**
@@ -21,4 +21,14 @@ export function isSettableDerivable<V>(derivable: Derivable<V>): derivable is Se
 export function isSettableDerivable(obj: any): obj is SettableDerivable<any>;
 export function isSettableDerivable(derivable: any) {
     return isDerivable(derivable) && derivable.settable;
+}
+
+/**
+ * Returns true iff the provided `derivable` is a DerivableAtom.
+ *
+ * @param obj the object to test
+ */
+export function isDerivableAtom<V>(derivable: Derivable<V>): derivable is DerivableAtom<V>;
+export function isDerivableAtom(obj: any): obj is DerivableAtom<any> {
+    return typeof (obj as DerivableAtom<any>).unset === 'function' && typeof (obj as DerivableAtom<any>).setError === 'function';
 }
