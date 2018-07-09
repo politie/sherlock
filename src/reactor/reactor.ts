@@ -1,6 +1,6 @@
 import { BaseDerivable, Constant, Derivation, unwrap } from '../derivable';
 import { Derivable, ReactorOptions, ReactorOptionValue, ToPromiseOptions } from '../interfaces';
-import { disconnect, emptyCache, getState, mark, unresolved } from '../symbols';
+import { disconnect, emptyCache, internalGetState, mark, unresolved } from '../symbols';
 import { addObserver, independentTracking, Observer, removeObserver } from '../tracking';
 import { config, equals, ErrorWrapper, uniqueId } from '../utils';
 
@@ -143,7 +143,7 @@ export class Reactor<V> implements Observer {
         }
 
         const { _lastValue } = this;
-        const nextValue = this._parent[getState]();
+        const nextValue = this._parent[internalGetState]();
         if (nextValue instanceof ErrorWrapper) {
             this._errorHandler(nextValue.error);
         } else if (nextValue !== unresolved && !equals(_lastValue, nextValue)) {

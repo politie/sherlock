@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
 import { SettableDerivable } from '../../interfaces';
-import { getState, observers, unresolved } from '../../symbols';
+import { internalGetState, observers, unresolved } from '../../symbols';
 import { addObserver } from '../../tracking';
 import { ErrorWrapper } from '../../utils';
 import { $, Factory } from '../base-derivable.spec';
@@ -170,7 +170,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
     describe('#value', () => {
         it('should call #getState() when getting the #value property', () => {
             const a$ = factory('a');
-            const s = spy($(a$), getState);
+            const s = spy($(a$), internalGetState);
 
             // Use the getter
             expect(a$.value).to.equal('a');

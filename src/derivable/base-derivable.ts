@@ -1,5 +1,5 @@
 import { Derivable, SettableDerivable, State } from '../interfaces';
-import { autoCacheMode, connect, disconnect, getState, observers } from '../symbols';
+import { autoCacheMode, connect, disconnect, internalGetState, observers } from '../symbols';
 import { independentTracking, isRecordingObservations, maybeDisconnectInNextTick, TrackedObservable, TrackedObserver } from '../tracking';
 import { uniqueId } from '../utils';
 
@@ -49,10 +49,10 @@ export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V
             }
         }
 
-        return this[getState]();
+        return this[internalGetState]();
     }
 
-    abstract [getState](): State<V>;
+    abstract [internalGetState](): State<V>;
 
     /**
      * The current version of the state. This number gets incremented every time the state changes. Setting the state to

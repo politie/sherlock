@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { List, Seq } from 'immutable';
 import { spy } from 'sinon';
-import { getState } from '../../symbols';
+import { internalGetState } from '../../symbols';
 import { $, Factory } from '../base-derivable.spec';
 import { atom } from '../factories';
 
@@ -54,7 +54,7 @@ export function testBooleanFuncs(factory: Factory) {
             });
 
             it('should not observe the right operand when the left operand is truthy', () => {
-                const s = spy($(bool$), getState);
+                const s = spy($(bool$), internalGetState);
                 trueOrBool$.get();
                 expect(s).not.to.have.been.called;
                 falseOrBool$.get();
@@ -76,7 +76,7 @@ export function testBooleanFuncs(factory: Factory) {
             });
 
             it('should not observe the right operand when the left operand is falsey', () => {
-                const s = spy($(bool$), getState);
+                const s = spy($(bool$), internalGetState);
                 falseAndBool$.get();
                 expect(s).not.to.have.been.called;
                 trueAndBool$.get();

@@ -1,5 +1,5 @@
 import { Derivable, State } from '../interfaces';
-import { dependencies, dependencyVersions, disconnect, emptyCache, getState, mark, observers, unresolved } from '../symbols';
+import { dependencies, dependencyVersions, disconnect, emptyCache, internalGetState, mark, observers, unresolved } from '../symbols';
 import { recordObservation, removeObserver, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedReactor } from '../tracking';
 import { config, equals, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
@@ -37,7 +37,7 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
     /**
      * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
-    [getState]() {
+    [internalGetState]() {
         // Not connected, so just calculate our value one time.
         if (!this.connected) {
             return this._callDeriver();

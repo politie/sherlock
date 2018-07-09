@@ -155,13 +155,4 @@ describe('derivable/map', () => {
         expect(d$.get(), 'second time').to.equal('a value');
         expect(deriver).to.have.been.calledThrice;
     });
-
-    it('should allow error objects as valid values', () => {
-        const theError = new Error('the error');
-        const deriver = spy(() => theError);
-        const d$ = constant(0).map(deriver).autoCache();
-        expect(d$.get(), 'first time').to.equal(theError);
-        expect(d$.get(), 'second time').to.equal(theError);
-        expect(deriver).to.have.been.calledOnce;
-    });
 });

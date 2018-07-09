@@ -38,7 +38,7 @@ describe('sherlock-utils/getState', () => {
 
     it('should not call the internal getter more than once', () => {
         const a$ = atom(undefined);
-        const getter = spy(a$ as any as _internal.BaseDerivable<any>, _internal.symbols.getState);
+        const getter = spy(a$ as any as _internal.BaseDerivable<any>, _internal.symbols.internalGetState);
         getStateObject(a$);
         expect(getter).to.have.been.calledOnce;
         a$.setError(undefined);

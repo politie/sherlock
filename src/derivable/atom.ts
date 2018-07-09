@@ -1,5 +1,5 @@
 import { DerivableAtom, State } from '../interfaces';
-import { getState, restorableState, unresolved } from '../symbols';
+import { internalGetState, restorableState, unresolved } from '../symbols';
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
 import { equals, ErrorWrapper } from '../utils';
@@ -36,7 +36,7 @@ export class Atom<V> extends BaseDerivable<V> implements DerivableAtom<V> {
     /**
      * Returns the current state of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
-    [getState]() {
+    [internalGetState]() {
         recordObservation(this);
         return this[restorableState];
     }

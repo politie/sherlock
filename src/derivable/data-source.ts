@@ -1,5 +1,5 @@
 import { SettableDerivable, State } from '../interfaces';
-import { connect, disconnect, emptyCache, getState, observers } from '../symbols';
+import { connect, disconnect, emptyCache, internalGetState, observers } from '../symbols';
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
 import { config, equals, ErrorWrapper } from '../utils';
@@ -39,7 +39,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
     /**
      * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
-    [getState]() {
+    [internalGetState]() {
         // Not connected, so just calculate our value one time.
         if (!this.connected) {
             return this._callCalculationFn();

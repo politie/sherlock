@@ -2,7 +2,7 @@ import { atom, constant, Derivable, DerivableAtom, derive, unwrap } from '@polit
 import { expect } from 'chai';
 import * as immutable from 'immutable';
 import { SinonSpy, spy } from 'sinon';
-import { derivableCache, DerivableCache, DerivableCacheOptions, MapImplementation } from './derivable-cache';
+import { derivableCache, DerivableCache, MapImplementation } from './derivable-cache';
 import { template } from './template';
 
 describe('sherlock-utils/createCachedDeriver', () => {
@@ -35,14 +35,13 @@ describe('sherlock-utils/createCachedDeriver', () => {
         expect(output).to.equal('defdef');
     });
 
-    context('(using JavaScript map)', () => {
+    context('(using the default JavaScript map implementation)', () => {
         let derivableFactory: SinonSpy;
         let resultCache: DerivableCache<string, string>;
 
         beforeEach('setup cachedFactory', () => {
-            const options: DerivableCacheOptions<string, string> = { derivableFactory: k => constant('result from ' + k) };
-            derivableFactory = spy(options, 'derivableFactory');
-            resultCache = derivableCache(options);
+            derivableFactory = spy((k: string) => constant('result from ' + k));
+            resultCache = derivableCache({ derivableFactory });
         });
 
         it('should do no special tricks when not connected', () => {
@@ -82,7 +81,6 @@ describe('sherlock-utils/createCachedDeriver', () => {
             let output$: Derivable<string[]>;
             let stopConnection: () => void;
             beforeEach('setup derivables', () => {
-                // tslint:disable:no-console
                 input$ = atom(['key1', 'key2']);
                 output$ = input$.derive(keys => keys.map(resultCache).map(unwrap));
                 stopConnection = output$.react(() => 0);
