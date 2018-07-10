@@ -31,7 +31,7 @@ export function derivableCache<K, V>(opts: DerivableCacheOptions<K, V>): Derivab
             }
 
             // A cache miss means no other proxy is currently connected.
-            derivable = derivableFactory(key);
+            derivable = _internal.independentTracking(() => derivableFactory(key));
             if (derivable instanceof _internal.Constant) {
                 // Enable connection administration (constants cannot be connected)
                 derivable = derivable.map(v => v);
