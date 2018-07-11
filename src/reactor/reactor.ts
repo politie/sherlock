@@ -2,7 +2,7 @@ import { BaseDerivable, Constant, Derivation, unwrap } from '../derivable';
 import { Derivable, ReactorOptions, ReactorOptionValue, ToPromiseOptions } from '../interfaces';
 import { disconnect, emptyCache, internalGetState, mark, unresolved } from '../symbols';
 import { addObserver, independentTracking, Observer, removeObserver } from '../tracking';
-import { config, equals, ErrorWrapper, uniqueId } from '../utils';
+import { augmentStack, equals, ErrorWrapper, prepareCreationStack, uniqueId } from '../utils';
 
 // Adds the react and toPromise methods to Derivables.
 declare module '../derivable/extension' {
@@ -82,7 +82,7 @@ export class Reactor<V> implements Observer {
     /**
      * Used for debugging. A stack that shows the location where this derivation was created.
      */
-    private readonly _stack = config.debugMode ? new Error().stack : undefined;
+    readonly creationStack = prepareCreationStack(this);
 
     /**
      * The value of the parent when this reactor last reacted. Is used to determine whether it should react again or not.
@@ -164,9 +164,7 @@ export class Reactor<V> implements Observer {
             }
             this._reaction(value);
         } catch (e) {
-            // tslint:disable-next-line:no-console - console.error is only called when debugMode is set to true
-            this._stack && console.error(e.message, this._stack);
-            this._errorHandler(e);
+            this._errorHandler(augmentStack(e, this));
         } finally {
             this._reactionDepth--;
         }
@@ -295,5 +293,5 @@ export function toDerivable<V>(option: ReactorOptionValue<V>, derivable: Derivab
 function combineWhenUntil<V>(parent: Derivable<V>, whenOption: ReactorOptionValue<V>, untilOption: ReactorOptionValue<V>) {
     const when$ = toDerivable(whenOption, parent);
     const until$ = toDerivable(untilOption, parent);
-    return new Derivation((when, until) => ({ when, until }), [when$, until$]);
+    return new Derivation<{ when: boolean, until: boolean }>((when, until) => ({ when, until }), [when$, until$]);
 }

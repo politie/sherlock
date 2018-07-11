@@ -1,6 +1,6 @@
 import { Derivable, Fallback, SettableDerivable } from '../../interfaces';
 import { unresolved } from '../../symbols';
-import { ErrorWrapper } from '../../utils';
+import { augmentStack, ErrorWrapper } from '../../utils';
 import { Atom } from '../atom';
 import { BaseDerivable } from '../base-derivable';
 import { derivationStackDepth } from '../derivation';
@@ -16,6 +16,7 @@ export function valueSetter<V>(this: SettableDerivable<V>, newValue: V) { return
 export function getMethod<V>(this: BaseDerivable<V>): V {
     const state = this.getState();
     if (state instanceof ErrorWrapper) {
+        // Errors should be augmented at the place they originated (either catched or set).
         throw state.error;
     }
     if (state !== unresolved) {
@@ -24,7 +25,7 @@ export function getMethod<V>(this: BaseDerivable<V>): V {
     if (derivationStackDepth > 0) {
         throw unresolved;
     }
-    throw new Error('Could not get value, derivable is not (yet) resolved');
+    throw augmentStack(new Error('Could not get value, derivable is unresolved'), this);
 }
 
 export function getOrMethod<V, T>(this: BaseDerivable<V>, fallback: Fallback<T>): V | T {

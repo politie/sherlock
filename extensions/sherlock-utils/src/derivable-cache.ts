@@ -48,7 +48,7 @@ export function derivableCache<K, V>(opts: DerivableCacheOptions<K, V>): Derivab
         set: (newValue, key) => {
             const derivable = cache.get(key) || derivableFactory(key);
             if (!isSettableDerivable(derivable)) {
-                throw new Error('Cached derivable is not settable');
+                throw _internal.augmentStack(new Error('Cached derivable is not settable'), derivable);
             }
             derivable.set(newValue);
         },

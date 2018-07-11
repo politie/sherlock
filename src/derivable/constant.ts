@@ -1,5 +1,6 @@
 import { Derivable, State } from '../interfaces';
 import { connect, internalGetState } from '../symbols';
+import { augmentState } from '../utils';
 import { BaseDerivable } from './base-derivable';
 
 /**
@@ -7,16 +8,19 @@ import { BaseDerivable } from './base-derivable';
  */
 export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
     /**
+     * The readonly state of this Constant.
+     */
+    private readonly _state: State<V>;
+
+    /**
      * Creates a new Constant with the given state.
      *
      * @param _state the readonly state of this Constant
      */
-    constructor(
-        /**
-         * The readonly state of this Constant.
-         */
-        private readonly _state: State<V>,
-    ) { super(); }
+    constructor(state: State<V>) {
+        super();
+        this._state = augmentState(state, this);
+    }
 
     // No connection should ever be made.
     getState() { return this[internalGetState](); }

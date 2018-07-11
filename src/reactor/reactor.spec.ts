@@ -636,8 +636,7 @@ describe('reactor/reactor', () => {
     class TestReactor<V> extends Reactor<V> { constructor(p: BaseDerivable<V>, r: (value: V) => void) { super(p, e => { throw e; }, r); } }
 
     it('should not generate a stacktrace on instantiation', () => {
-        // tslint:disable-next-line:no-string-literal
-        expect(new TestReactor($(a$), () => 0)['_stack']).to.be.undefined;
+        expect(new TestReactor($(a$), () => 0).creationStack).to.be.undefined;
     });
 
     context('in debug mode', () => {
@@ -649,18 +648,20 @@ describe('reactor/reactor', () => {
         afterEach('restore console.error', () => { consoleErrorStub.restore(); });
 
         it('should generate a stacktrace on instantiation', () => {
-            // tslint:disable-next-line:no-string-literal
-            expect(new TestReactor($(a$), () => 0)['_stack']).to.be.a('string');
+            expect(new TestReactor($(a$), () => 0).creationStack).to.be.a('string');
         });
 
-        it('should log the recorded stacktrace on error', () => {
+        it('should augment the error with the recorded stacktrace', () => {
             const reactor = new TestReactor($(a$), () => { throw new Error('the Error'); });
-            // tslint:disable-next-line:no-string-literal
-            const stack = reactor['_stack'];
-            expect(() => reactor._start()).to.throw('the Error');
-            expect(console.error).to.have.been.calledOnce
-                .and.to.have.been.calledWithExactly('the Error', stack);
-            reactor._stop();
+            try {
+                reactor._start();
+            } catch (e) {
+                reactor._stop();
+                expect(e.stack).to.contain('the Error');
+                expect(e.stack).to.contain(reactor.creationStack!);
+                return;
+            }
+            throw new Error('Reactor did not throw');
         });
     });
 });

@@ -1,7 +1,7 @@
 import { Derivable, State } from '../interfaces';
 import { dependencies, dependencyVersions, disconnect, emptyCache, internalGetState, mark, observers, unresolved } from '../symbols';
 import { recordObservation, removeObserver, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedReactor } from '../tracking';
-import { config, equals, ErrorWrapper } from '../utils';
+import { augmentStack, equals, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 import { unwrap } from './unwrap';
 
@@ -17,11 +17,6 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
      * The last value that was calculated for this derivation. Is only used when connected.
      */
     private _cachedState: State<V> | typeof emptyCache = emptyCache;
-
-    /**
-     * Used for debugging. A stack that shows the location where this derivation was created.
-     */
-    protected readonly _stack = config.debugMode ? Error().stack : undefined;
 
     private _version = 0;
 
@@ -105,7 +100,7 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
         this._cachedState = emptyCache;
         // istanbul ignore if: should never happen!
         if (this[observers].length) {
-            throw new Error('Inconsistent state!');
+            throw augmentStack(new Error('Inconsistent state!'), this);
         }
     }
 }
@@ -127,7 +122,7 @@ export class Derivation<V> extends BaseDerivation<V> implements Derivable<V> {
         /**
          * The deriver function that is used to calculate the value of this derivation.
          */
-        private readonly _deriver: (...args: any[]) => State<V>,
+        private readonly _deriver: (this: Derivable<V>, ...args: any[]) => State<V>,
         /**
          * Arguments that will be passed unwrapped to the deriver function.
          */
@@ -166,15 +161,12 @@ export class Derivation<V> extends BaseDerivation<V> implements Derivable<V> {
     protected _callDeriver() {
         ++derivationStackDepth;
         try {
-            const { _deriver, _args } = this;
-            return _args ? _deriver(..._args.map(unwrap)) : _deriver();
+            return this._args ? this._deriver(...this._args.map(unwrap)) : this._deriver();
         } catch (e) {
             if (e === unresolved) {
                 return unresolved;
             }
-            // tslint:disable-next-line:no-console - console.error is only called when debugMode is set to true
-            this._stack && console.error(e.message, this._stack);
-            return new ErrorWrapper(e);
+            return new ErrorWrapper(augmentStack(e, this));
         } finally {
             --derivationStackDepth;
         }

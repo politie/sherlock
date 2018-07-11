@@ -3,6 +3,7 @@ import { fromJS } from 'immutable';
 import { spy } from 'sinon';
 import { Derivable, SettableDerivable, State } from '../interfaces';
 import { dependencies, disconnect, observers, unresolved } from '../symbols';
+import { config, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 import { Derivation } from './derivation';
 import { atom, constant, derive } from './factories';
@@ -15,7 +16,12 @@ import { isDerivableAtom, isSettableDerivable } from './typeguards';
 
 export type Factory = <V>(state: State<V>) => Derivable<V>;
 
-export function testDerivable(factory: Factory, isConstant = false) {
+export type DerivableMode = 'constant' | 'no-error-augmentation';
+
+export function testDerivable(factory: Factory, ...modes: DerivableMode[]) {
+    const isConstant = modes.includes('constant');
+    const noErrorAugmentation = modes.includes('no-error-augmentation');
+
     testAccessors(factory, isConstant);
     testFallbackTo(factory);
     testBooleanFuncs(factory);
@@ -353,6 +359,25 @@ export function testDerivable(factory: Factory, isConstant = false) {
                 expect(a$.get() === instance).to.equal(true, 'encountered another instance with the same data');
             });
         }
+    });
+
+    context('(in debug mode)', () => {
+        before('setDebugMode', () => { config.debugMode = true; });
+        after('resetDebugMode', () => { config.debugMode = false; });
+
+        it('should generate a stacktrace on instantiation', () => {
+            expect(factory(0).creationStack).to.be.a('string');
+        });
+
+        noErrorAugmentation || it('should have augmented the error somewhere', () => {
+            const d$ = factory(new ErrorWrapper(new Error('the Error')));
+            expect(() => d$.get()).to.throw('the Error');
+            try {
+                d$.get();
+            } catch (e) {
+                expect(e.stack).to.contain(' created:\n');
+            }
+        });
     });
 }
 

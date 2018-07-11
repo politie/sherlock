@@ -24,6 +24,8 @@ export interface Derivable<V> {
 
     readonly error: any;
 
+    readonly creationStack?: string;
+
     /**
      * Indicates whether the derivation is actively used to power a reactor, either directly or indirectly with other derivations in
      * between, or connected in this tick because of autoCacheMode.
@@ -162,8 +164,8 @@ export interface DerivableAtom<V> extends SettableDerivable<V> {
  * to create a new Lens.
  */
 export interface LensDescriptor<V, P> {
-    get(...ps: P[]): State<V>;
-    set(newValue: V, ...ps: P[]): void;
+    get(this: Derivable<V>, ...ps: P[]): State<V>;
+    set(this: SettableDerivable<V>, newValue: V, ...ps: P[]): void;
 }
 
 export type ReactorOptionValue<V> = Unwrappable<boolean> | ((d: Derivable<V>) => Unwrappable<boolean>);

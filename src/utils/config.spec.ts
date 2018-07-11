@@ -70,16 +70,16 @@ describe('util/config', () => {
                 get(obj, key) {
                     if (obj instanceof MyWrapper) {
                         // Wrap on get.
-                        return new MyWrapper(defaultPlucker.get(obj.value, key), key);
+                        return new MyWrapper(defaultPlucker.get.call(this, obj.value, key), key);
                     }
-                    return defaultPlucker.get(obj, key);
+                    return defaultPlucker.get.call(this, obj, key);
                 },
                 set(newValue, oldObject, key) {
                     if (oldObject instanceof MyWrapper) {
                         // Wrap on set.
-                        return new MyWrapper(defaultPlucker.set(newValue.value, oldObject.value, key), oldObject.property);
+                        return new MyWrapper(defaultPlucker.set.call(this, newValue.value, oldObject.value, key), oldObject.property);
                     }
-                    return defaultPlucker.set(newValue, oldObject, key);
+                    return defaultPlucker.set.call(this, newValue, oldObject, key);
                 }
             };
 
