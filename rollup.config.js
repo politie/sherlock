@@ -15,10 +15,10 @@ export default [].concat.apply([], libs.map(lib => {
             output: {
                 file: `dist/${lib}/${pkg.browser}`,
                 format: 'umd',
-                name: lib,
+                name: pascal(lib),
                 sourcemap: true,
                 globals: {
-                    '@politie/sherlock': 'sherlock',
+                    '@politie/sherlock': 'Sherlock',
                     'rxjs': 'Rx',
                 },
             },
@@ -50,3 +50,8 @@ export default [].concat.apply([], libs.map(lib => {
         },
     ];
 }));
+
+function pascal(name) {
+    const parts = name.split('-');
+    return parts.map(part => part[0].toUpperCase() + part.substr(1)).join('');
+}
