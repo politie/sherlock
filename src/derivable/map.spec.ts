@@ -7,6 +7,7 @@ import { $, testDerivable } from './base-derivable.spec';
 import { Constant } from './constant';
 import { testAutocache } from './derivation.spec';
 import { atom, constant, lens } from './factories';
+import { BiMapping, Mapping } from './map';
 
 describe('derivable/map', () => {
     context('(based on atom)', () => {
@@ -146,5 +147,21 @@ describe('derivable/map', () => {
         expect(d$.get(), 'first time').to.equal('a value');
         expect(d$.get(), 'second time').to.equal('a value');
         expect(deriver).to.have.been.calledThrice;
+    });
+
+    it('should use the Mapping object as `this`', () => {
+        const base$ = new Atom(1);
+        const mapping$ = new Mapping(base$, function () { expect(this).to.equal(mapping$); return 1; });
+        expect(mapping$.get()).to.equal(1);
+    });
+
+    it('should use the BiMapping object as `this`', () => {
+        const base$ = new Atom(1);
+        const bimapping$ = new BiMapping(base$,
+            function () { expect(this).to.equal(bimapping$); return 1; },
+            function () { expect(this).to.equal(bimapping$); return 1; },
+        );
+        expect(bimapping$.get()).to.equal(1);
+        bimapping$.set(2);
     });
 });

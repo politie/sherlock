@@ -5,6 +5,7 @@ import { config, ErrorWrapper } from '../utils';
 import { Atom } from './atom';
 import { testDerivable } from './base-derivable.spec';
 import { Constant } from './constant';
+import { Derivation } from './derivation';
 import { atom, derive } from './factories';
 
 describe('derivable/derive', () => {
@@ -80,6 +81,10 @@ describe('derivable/derive', () => {
         expect(deriver).to.have.been.calledOnce;
     });
 
+    it('should use the Derivation object as `this`', () => {
+        const derivation$ = new Derivation(function () { expect(this).to.equal(derivation$); return 1; });
+        expect(derivation$.get()).to.equal(1);
+    });
 });
 
 export function testAutocache(factory: (a$: Derivable<string>, deriver: (v: string) => string) => Derivable<string>) {
