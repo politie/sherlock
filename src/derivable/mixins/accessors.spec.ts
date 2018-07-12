@@ -43,7 +43,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
 
         it('should throw an Error when unresolved', () => {
             const a$ = factory<number>(unresolved);
-            expect(() => a$.get()).to.throw('Could not get value, derivable is not (yet) resolved');
+            expect(() => a$.get()).to.throw('Could not get value, derivable is unresolved');
 
             if (isSettableDerivable(a$)) {
                 a$.set(1);
@@ -51,7 +51,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
 
                 if (isDerivableAtom(a$)) {
                     a$.unset();
-                    expect(() => a$.get()).to.throw('Could not get value, derivable is not (yet) resolved');
+                    expect(() => a$.get()).to.throw('Could not get value, derivable is unresolved');
                 }
             }
         });

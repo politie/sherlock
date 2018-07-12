@@ -1,4 +1,5 @@
 import { autoCacheMode, connect, dependencies, dependencyVersions, disconnect, mark, observers } from '../symbols';
+import { augmentStack } from '../utils';
 
 let currentRecording: Recording | undefined;
 
@@ -18,7 +19,7 @@ export function startRecordingObservations(observer: TrackedObserver) {
     let r = currentRecording;
     while (r) {
         if (r._observer === observer) {
-            throw new Error('cyclic dependency between derivables detected');
+            throw augmentStack(new Error('cyclic dependency between derivables detected'), observer);
         }
         r = r._previousRecording;
     }
@@ -145,6 +146,7 @@ export interface Observer {
 
 export interface TrackedObserver extends Observer {
     readonly id: number;
+    readonly creationStack?: string;
     readonly [dependencies]: TrackedObservable[];
     readonly [dependencyVersions]: { [id: number]: number };
 }

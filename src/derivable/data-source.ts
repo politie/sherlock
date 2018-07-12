@@ -2,7 +2,7 @@ import { SettableDerivable, State } from '../interfaces';
 import { connect, disconnect, emptyCache, internalGetState, observers } from '../symbols';
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { config, equals, ErrorWrapper } from '../utils';
+import { augmentStack, equals, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 
 export abstract class PullDataSource<V> extends BaseDerivable<V> implements SettableDerivable<V> {
@@ -24,11 +24,6 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
      * The last value that was calculated for this datasource. Is only used when connected.
      */
     private _cachedState: State<V> | typeof emptyCache = emptyCache;
-
-    /**
-     * Used for debugging. A stack that shows the location where this datasource was created.
-     */
-    private readonly _stack = config.debugMode ? Error().stack : undefined;
 
     /**
      * The current version of the state. This number gets incremented every time the state changes when connected. The version
@@ -57,7 +52,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
      */
     set(newValue: V) {
         if (!this.acceptNewValue) {
-            throw new Error('DataSource is not settable');
+            throw augmentStack(new Error('DataSource is not settable'), this);
         }
         this.acceptNewValue(newValue);
     }
@@ -85,9 +80,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
         try {
             return this.calculateCurrentValue();
         } catch (e) {
-            // tslint:disable-next-line:no-console - console.error is only called when debugMode is set to true
-            this._stack && console.error(e.message, this._stack);
-            return new ErrorWrapper(e);
+            return new ErrorWrapper(augmentStack(e, this));
         }
     }
 

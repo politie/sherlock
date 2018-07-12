@@ -8,19 +8,20 @@ export function pluckMethod<V>(this: Derivable<V>, key: Unwrappable<string | num
     if (isDerivable(key)) {
         return this.derive(get, key);
     }
-    return this.map(v => get(v, key));
+    return this.map(v => get.call(this, v, key));
 }
 
 export function settablePluckMethod<V>(this: SettableDerivable<V>, key: Unwrappable<string | number>): SettableDerivable<any> {
     const { get, set } = config.plucker;
+    const base = this;
     if (isDerivable(key)) {
         return lens({
-            get: () => get(this.get(), key.get()),
-            set: newValue => this.set(set(newValue, this.value, key.get())),
+            get() { return get.call(this, base.get(), key.get()); },
+            set(newValue) { base.set(set.call(this, newValue, base.value, key.get())); },
         });
     }
-    return this.map(
-        baseValue => get(baseValue, key),
-        newValue => set(newValue, this.value, key),
+    return base.map(
+        baseValue => get.call(this, baseValue, key),
+        newValue => set.call(this, newValue, base.value, key),
     );
 }

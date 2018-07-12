@@ -1,7 +1,7 @@
 import { Derivable, SettableDerivable, State } from '../interfaces';
 import { connect, disconnect, unresolved } from '../symbols';
 import { addObserver, independentTracking, removeObserver } from '../tracking';
-import { ErrorWrapper } from '../utils';
+import { augmentStack, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 import { BaseDerivation } from './derivation';
 import { isSettableDerivable } from './typeguards';
@@ -9,7 +9,7 @@ import { isSettableDerivable } from './typeguards';
 export class Mapping<B, V> extends BaseDerivation<V> implements Derivable<V> {
     constructor(
         protected readonly _base: BaseDerivable<B>,
-        private readonly _pureFn: (state: State<B>) => State<V>,
+        private readonly _pureFn: (this: Derivable<V>, state: State<B>) => State<V>,
     ) { super(); }
 
     private _baseVersion = 0;
@@ -27,12 +27,9 @@ export class Mapping<B, V> extends BaseDerivation<V> implements Derivable<V> {
      */
     protected _callDeriver() {
         try {
-            const { _pureFn } = this;
-            return independentTracking(() => _pureFn(this._base.getState()));
+            return independentTracking(() => this._pureFn(this._base.getState()));
         } catch (e) {
-            // tslint:disable-next-line:no-console - console.error is only called when debugMode is set to true
-            this._stack && console.error(e.message, this._stack);
-            return new ErrorWrapper(e);
+            return new ErrorWrapper(augmentStack(e, this));
         }
     }
 
@@ -59,15 +56,14 @@ export class BiMapping<B, V> extends Mapping<B, V> implements SettableDerivable<
 
     constructor(
         base: BaseDerivable<B> & SettableDerivable<B>,
-        pureGet: (baseValue: State<B>) => State<V>,
-        private readonly _pureSet: (newValue: V, oldValue: B | undefined) => B,
+        pureGet: (this: Derivable<V>, baseValue: State<B>) => State<V>,
+        private readonly _pureSet: (this: SettableDerivable<V>, newValue: V, oldValue: B | undefined) => B,
     ) {
         super(base, pureGet);
     }
 
     set(newValue: V) {
-        const { _pureSet } = this;
-        this._base.set(_pureSet(newValue, this._base.value));
+        this._base.set(this._pureSet(newValue, this._base.value));
     }
 }
 

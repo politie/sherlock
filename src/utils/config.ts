@@ -1,3 +1,4 @@
+import { Derivable } from '../interfaces';
 import { clone } from './clone';
 
 export const config = {
@@ -46,7 +47,7 @@ function hasEqualsMethod(obj: any): obj is { equals(other: any): any; } {
     return obj && typeof obj.equals === 'function';
 }
 
-function defaultPluckGetter(obj: any, key: string | number) {
+function defaultPluckGetter(this: Derivable<any>, obj: any, key: string | number) {
     return hasGetter(obj)
         ? obj.get(key)
         : obj[key];
@@ -56,7 +57,7 @@ function hasGetter(obj: any): obj is { get(key: string | number): any } {
     return obj && typeof obj.get === 'function';
 }
 
-function defaultPluckSetter(newValue: any, object: any, key: string | number) {
+function defaultPluckSetter(this: Derivable<any>, newValue: any, object: any, key: string | number) {
     if (hasGetter(object)) {
         if (hasSetter(object)) {
             return object.set(key, newValue);

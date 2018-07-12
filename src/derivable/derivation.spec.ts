@@ -1,10 +1,11 @@
 import { expect } from 'chai';
-import { SinonFakeTimers, SinonSpy, SinonStub, spy, stub, useFakeTimers } from 'sinon';
+import { SinonFakeTimers, SinonSpy, spy, useFakeTimers } from 'sinon';
 import { Derivable, SettableDerivable } from '../interfaces';
 import { config, ErrorWrapper } from '../utils';
 import { Atom } from './atom';
 import { testDerivable } from './base-derivable.spec';
 import { Constant } from './constant';
+import { Derivation } from './derivation';
 import { atom, derive } from './factories';
 
 describe('derivable/derive', () => {
@@ -23,30 +24,22 @@ describe('derivable/derive', () => {
     testAutocache((a$, deriver) => a$.derive(deriver));
 
     it('should not generate a stacktrace on instantiation', () => {
-        // tslint:disable-next-line:no-string-literal
-        expect(derive(() => 0)['stack']).to.be.undefined;
+        expect(derive(() => 0).creationStack).to.be.undefined;
     });
 
     context('in debug mode', () => {
         before('setDebugMode', () => { config.debugMode = true; });
         after('resetDebugMode', () => { config.debugMode = false; });
 
-        let consoleErrorStub: SinonStub;
-        beforeEach('stub console.error', () => { consoleErrorStub = stub(console, 'error'); });
-        afterEach('restore console.error', () => { consoleErrorStub.restore(); });
-
-        it('should generate a stacktrace on instantiation', () => {
-            // tslint:disable-next-line:no-string-literal
-            expect(derive(() => 0)['_stack']).to.be.a('string');
-        });
-
-        it('should log the recorded stacktrace on error', () => {
+        it('should augment an error when it is caught in the deriver function', () => {
             const d$ = derive(() => { throw new Error('the Error'); });
-            // tslint:disable-next-line:no-string-literal
-            const stack = d$['_stack'];
             expect(() => d$.get()).to.throw('the Error');
-            expect(console.error).to.have.been.calledOnce
-                .and.to.have.been.calledWithExactly('the Error', stack);
+            try {
+                d$.get();
+            } catch (e) {
+                expect(e.stack).to.contain('the Error');
+                expect(e.stack).to.contain(d$.creationStack!);
+            }
         });
     });
 
@@ -88,6 +81,10 @@ describe('derivable/derive', () => {
         expect(deriver).to.have.been.calledOnce;
     });
 
+    it('should use the Derivation object as `this`', () => {
+        const derivation$ = new Derivation(function () { expect(this).to.equal(derivation$); return 1; });
+        expect(derivation$.get()).to.equal(1);
+    });
 });
 
 export function testAutocache(factory: (a$: Derivable<string>, deriver: (v: string) => string) => Derivable<string>) {

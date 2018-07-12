@@ -2,7 +2,7 @@ import { DerivableAtom, State } from '../interfaces';
 import { internalGetState, restorableState, unresolved } from '../symbols';
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { equals, ErrorWrapper } from '../utils';
+import { augmentState, equals, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 
 /**
@@ -24,7 +24,7 @@ export class Atom<V> extends BaseDerivable<V> implements DerivableAtom<V> {
      */
     constructor(state: State<V>) {
         super();
-        this[restorableState] = state;
+        this[restorableState] = augmentState(state, this);
     }
 
     /**
@@ -49,7 +49,7 @@ export class Atom<V> extends BaseDerivable<V> implements DerivableAtom<V> {
     set(newState: State<V>) {
         const oldState = this[restorableState];
         if (!equals(newState, oldState)) {
-            this[restorableState] = newState;
+            this[restorableState] = augmentState(newState, this);
             processChangedAtom(this, oldState, this.version++);
         }
     }

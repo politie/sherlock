@@ -1,7 +1,7 @@
 import { Derivable, SettableDerivable, State } from '../interfaces';
 import { autoCacheMode, connect, disconnect, internalGetState, observers } from '../symbols';
 import { independentTracking, isRecordingObservations, maybeDisconnectInNextTick, TrackedObservable, TrackedObserver } from '../tracking';
-import { uniqueId } from '../utils';
+import { prepareCreationStack, uniqueId } from '../utils';
 
 /**
  * The base class for all Derivables. Derivables must extend from this, to be 'tracked' and to classify as a Derivable.
@@ -15,6 +15,11 @@ export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V
      * The unique ID of this Derivable. Can be used to uniquely identify this Derivable.
      */
     readonly id = uniqueId();
+
+    /**
+     * Used for debugging. A stack that shows the location where this derivation was created.
+     */
+    readonly creationStack = prepareCreationStack(this);
 
     /**
      * The observers of this Derivable, do not use this in application code.
