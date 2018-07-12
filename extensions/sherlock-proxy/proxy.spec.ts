@@ -111,6 +111,26 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
                 expect(lhs.$value).to.deep.equal({ prop: 20 });
             });
 
+            it('should support reacting to derivables in settable $lens', () => {
+                const magic$ = atom(1);
+                const pd = new class extends ProxyDescriptor {
+                    $lens() {
+                        const addMagic = (v: number) => v + magic$.get();
+                        const removeMagic = (v: number) => v - magic$.get();
+                        return this.$expression ? { get: addMagic, set: removeMagic } : undefined;
+                    }
+                };
+                const lhs = pd.$create(atom({ prop: 10 })) as any;
+                let value = 0;
+                const done = lhs.prop.$react((v: number) => value = v);
+                expect(value).to.equal(11);
+                magic$.set(2);
+                expect(value).to.equal(12);
+                lhs.prop.$value = 3;
+                expect(lhs.$value).to.deep.equal({ prop: 1 });
+                done();
+            });
+
             it('should allow setting a pluckable property with an ordinary value when the target is an atom', () => {
                 const pd = new class extends ProxyDescriptor {
                     $lens() {
