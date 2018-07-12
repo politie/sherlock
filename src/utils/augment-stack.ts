@@ -7,11 +7,12 @@ export interface ObjectWithCreationStack { creationStack?: string; }
 
 export function augmentStack(err: Error, obj: ObjectWithCreationStack) {
     const { creationStack } = obj;
-    if (creationStack) {
-        err = clone(err);
-        err.stack += `\n${creationStack}`;
+    if (!creationStack) {
+        return err;
     }
-    return err;
+    return Object.defineProperty(clone(err), 'stack', {
+        value: `${err.stack}\n${creationStack}`,
+    });
 }
 
 export function augmentState<V>(state: State<V>, obj: ObjectWithCreationStack) {
