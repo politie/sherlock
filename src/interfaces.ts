@@ -162,8 +162,8 @@ export interface DerivableAtom<V> extends SettableDerivable<V> {
  * to create a new Lens.
  */
 export interface LensDescriptor<V, P> {
-    get(...ps: P[]): State<V>;
-    set(newValue: V, ...ps: P[]): void;
+    get(this: SettableDerivable<V>, ...ps: P[]): State<V>;
+    set(this: SettableDerivable<V>, newValue: V, ...ps: P[]): void;
 }
 
 export type ReactorOptionValue<V> = Unwrappable<boolean> | ((d: Derivable<V>) => Unwrappable<boolean>);

@@ -1,11 +1,11 @@
-import { atom, constant, Derivable, DerivableAtom, derive, unwrap } from '@politie/sherlock';
+import { _internal, atom, constant, Derivable, DerivableAtom, derive, unwrap } from '@politie/sherlock';
 import { expect } from 'chai';
 import * as immutable from 'immutable';
 import { SinonSpy, spy } from 'sinon';
 import { derivableCache, DerivableCache, MapImplementation } from './derivable-cache';
 import { template } from './template';
 
-describe('sherlock-utils/createCachedDeriver', () => {
+describe('sherlock-utils/derivableCache', () => {
     it('should support constants as output of the derivable factory', () => {
         const derivableFactory = spy(constant);
         const identityCache = derivableCache<number, number>({ derivableFactory });
@@ -33,6 +33,35 @@ describe('sherlock-utils/createCachedDeriver', () => {
         expect(derivableFactory).to.have.been.calledTwice
             .and.to.have.been.calledWithExactly('def');
         expect(output).to.equal('defdef');
+    });
+
+    it('should reuse proxies as much as possible', () => {
+        const cache = derivableCache<string, string>({ derivableFactory: constant });
+        const proxy1 = cache('abc');
+        const proxy2 = cache('abc');
+
+        // Cannot remember proxies without connection, because we don't know when to evict them.
+        expect(proxy2).to.not.equal(proxy1);
+
+        proxy1.autoCache().get();
+
+        // But when connected we can automatically reuse proxies when using simple keys.
+        expect(cache('abc')).to.equal(proxy1);
+
+        // Not possible when using derivables as input of course
+        expect(cache(constant('abc'))).to.not.equal(proxy1);
+    });
+
+    it('should keep the dependency tree clean', () => {
+        const a$ = atom(0);
+        const atoms = [atom('a'), atom('b'), atom('c')];
+        const cache = derivableCache<number, string>({
+            derivableFactory: key => atoms[key + a$.get()],
+        });
+
+        const result = cache(0).autoCache();
+        result.get();
+        expect(result[_internal.symbols.dependencies]).to.have.length(1);
     });
 
     context('(using the default JavaScript map implementation)', () => {
