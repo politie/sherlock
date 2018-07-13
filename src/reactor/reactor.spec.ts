@@ -798,9 +798,9 @@ describe('reactor/reactor error handling', () => {
 
     context('with an error handler', () => {
         context('when an error occurs in any derivation', () => {
-            let onError: sinon.SinonSpy;
+            let onError: sinon.SinonStub;
             beforeEach('start the reactor', () => {
-                onError = spy();
+                onError = stub();
                 react(d$, { onError });
                 shouldHaveReactedOnce('no error');
                 shouldNotHaveBeenCalled(onError);
@@ -822,7 +822,19 @@ describe('reactor/reactor error handling', () => {
                 expect(onError).to.not.have.been.called;
             });
 
-            it('should stop the reactor', () => {
+            it('should not stop the reactor', () => {
+                a$.set('whatever');
+                shouldHaveReactedOnce('whatever');
+
+                a$.set('error in derivation');
+                shouldNotHaveReacted();
+
+                a$.set('no error at all!');
+                shouldHaveReactedOnce('no error at all!');
+            });
+
+            it('should stop the reactor when the stop callback is used', () => {
+                onError.callsArg(1);
                 a$.set('whatever');
                 shouldHaveReactedOnce('whatever');
 
@@ -835,10 +847,10 @@ describe('reactor/reactor error handling', () => {
         });
 
         context('when an error occurs in any reactor', () => {
-            let onError: sinon.SinonSpy;
+            let onError: sinon.SinonStub;
             let latestValue: string;
             beforeEach('start an unstable reactor', () => {
-                onError = spy();
+                onError = stub();
                 d$.react(v => {
                     latestValue = v;
                     if (v === 'error in reactor') {
@@ -863,7 +875,19 @@ describe('reactor/reactor error handling', () => {
                 expect(onError).to.not.have.been.called;
             });
 
-            it('should stop the reactor', () => {
+            it('should not stop the reactor', () => {
+                a$.set('whatever');
+                expect(latestValue).to.equal('whatever');
+
+                a$.set('error in reactor');
+                expect(latestValue).to.equal('error in reactor');
+
+                a$.set('back to normal?');
+                expect(latestValue).to.equal('back to normal?');
+            });
+
+            it('should stop the reactor when the stop callback is used', () => {
+                onError.callsArg(1);
                 a$.set('whatever');
                 expect(latestValue).to.equal('whatever');
 

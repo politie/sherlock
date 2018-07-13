@@ -265,10 +265,10 @@ export class Reactor<V> implements Observer {
         }
 
         function errorHandler(error: any) {
-            done();
             if (resolvedOptions.onError) {
-                resolvedOptions.onError(error);
+                resolvedOptions.onError(error, done);
             } else {
+                done();
                 throw error;
             }
         }
