@@ -23,7 +23,7 @@ describe('derivable/data-source', () => {
     }
 
     context('(simple)', () => {
-        testDerivable(v => new SimpleDataSource(v), 'no-error-augmentation');
+        testDerivable(v => new SimpleDataSource(v), 'settable', 'no-error-augmentation');
     });
     context('(derived)', () => {
         testDerivable(
@@ -43,7 +43,7 @@ describe('derivable/data-source', () => {
                 .map<V>(
                     obj => obj.value,
                     value => ({ value }),
-            ), 'no-error-augmentation');
+            ), 'settable', 'no-error-augmentation');
     });
 
     context('(in transactions)', () => {

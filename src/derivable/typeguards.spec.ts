@@ -15,8 +15,11 @@ describe('derivable/typeguards', () => {
         { value: atom(123), settable: true, derivableAtom: true },
         { value: constant(123), settable: false, derivableAtom: false },
         { value: derive(() => 123), settable: false, derivableAtom: false },
-        { value: atom(123).map(v => v, v => v), settable: true, derivableAtom: false },
+        { value: atom(123).map(v => v), settable: false, derivableAtom: false },
+        { value: atom(123).map(v => v, v => v), settable: true, derivableAtom: true },
         { value: lens({ get: () => 0, set: () => 0 }), settable: true, derivableAtom: false },
+        { value: lens({ get: () => 0, set: () => 0 }).map(v => v), settable: false, derivableAtom: false },
+        { value: lens({ get: () => 0, set: () => 0 }).map(v => v, v => v), settable: true, derivableAtom: false },
         { value: new ReadonlyDataSource(), settable: false, derivableAtom: false },
         { value: new SettableDataSource(), settable: true, derivableAtom: false },
     ];

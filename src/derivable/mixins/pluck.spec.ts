@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 import { fromJS, Seq } from 'immutable';
+import { DerivableAtom, SettableDerivable } from 'interfaces';
 import { Atom } from '../atom';
-import { Factory } from '../base-derivable.spec';
+import { assertSettable, Factory } from '../base-derivable.spec';
 import { atom } from '../factories';
 import { Lens } from '../lens';
 import { BiMapping } from '../map';
@@ -10,7 +11,7 @@ import { isSettableDerivable } from '../typeguards';
 /**
  * Tests the `pluck()` method.
  */
-export function testPluck(factory: Factory) {
+export function testPluck(factory: Factory, isSettable: boolean) {
     describe('#pluck', () => {
         it('should pluck using a string or derivable string', () => {
             const obj$ = factory({ a: 'valueOfA', b: 'valueOfB' });
@@ -44,14 +45,14 @@ export function testPluck(factory: Factory) {
             expect(value1$.get()).to.equal('value2');
         });
 
-        context('(lensed with constant key)', () => {
+        if (isSettable) {
             class MyClass { constructor(public key: string) { } }
-            const value$ = factory(new MyClass('value'));
+            let value$: SettableDerivable<MyClass>;
+            beforeEach('setup the base', () => { value$ = assertSettable(factory(new MyClass('value'))); });
 
-            if (isSettableDerivable(value$)) {
-                beforeEach('reset the atom', () => value$.set(new MyClass('value')));
-
-                const plucked$ = value$.pluck('key');
+            context('(lensed with constant key)', () => {
+                let plucked$: SettableDerivable<string>;
+                beforeEach('setup the derivation', () => { plucked$ = value$.pluck('key'); });
 
                 it('should produce a SettableDerivable if the base was also a SettableDerivable', () => {
                     expect(plucked$).to.be.an.instanceof(BiMapping);
@@ -84,22 +85,13 @@ export function testPluck(factory: Factory) {
                     const immValue$ = factory(Seq.of(1, 2, 3)) as Atom<any>;
                     expect(() => immValue$.pluck(0).set(123)).to.throw();
                 });
-            }
-        });
+            });
 
-        context('(lensed with derivable key)', () => {
-            class MyClass { constructor(public key: string) { } }
-            const value$ = factory(new MyClass('value'));
-
-            if (isSettableDerivable(value$)) {
-
-                const key$ = atom('key');
-                const plucked$ = value$.pluck(key$);
-
-                beforeEach('reset the atoms', () => {
-                    value$.set(new MyClass('value'));
-                    key$.set('key');
-                });
+            context('(lensed with derivable key)', () => {
+                let key$: DerivableAtom<string>;
+                let plucked$: SettableDerivable<string>;
+                beforeEach('setup the key', () => { key$ = atom('key'); });
+                beforeEach('setup the derivation', () => { plucked$ = value$.pluck(key$); });
 
                 it('should produce a SettableDerivable if the base was also a SettableDerivable', () => {
                     expect(plucked$).to.be.an.instanceof(Lens);
@@ -120,7 +112,7 @@ export function testPluck(factory: Factory) {
                     expect(plucked$.get()).to.equal('level');
                     expect(value$.get()).to.deep.equal({ key: 'another value', another: 'level' });
                 });
-            }
-        });
+            });
+        }
     });
 }

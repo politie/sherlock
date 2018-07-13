@@ -3,9 +3,8 @@ import { unresolved } from '../symbols';
 import { ErrorWrapper } from '../utils';
 import { Atom } from './atom';
 import { testDerivable } from './base-derivable.spec';
-import { atom, lens } from './factories';
+import { lens } from './factories';
 import { Lens } from './lens';
-import { testSwap } from './mixins/swap.spec';
 
 describe('derivable/lens', () => {
     context('(standalone)', () => {
@@ -23,7 +22,7 @@ describe('derivable/lens', () => {
                     b$.set(x);
                 },
             });
-        });
+        }, 'settable');
     });
 
     context('(standalone with params)', () => {
@@ -41,10 +40,8 @@ describe('derivable/lens', () => {
                     obj2$.swap(obj => ({ ...obj, [prop2]: newValue }));
                 },
             }, 'prop1', 'prop2');
-        });
+        }, 'settable');
     });
-
-    testSwap(<V>(val: V) => atom(val).map(v => v, v => v));
 
     it('should use the Lens object as `this`', () => {
         const lens$ = new Lens({

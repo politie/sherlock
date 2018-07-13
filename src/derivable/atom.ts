@@ -1,8 +1,8 @@
 import { DerivableAtom, State } from '../interfaces';
-import { internalGetState, restorableState, unresolved } from '../symbols';
+import { internalGetState, restorableState } from '../symbols';
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { augmentState, equals, ErrorWrapper } from '../utils';
+import { augmentState, equals } from '../utils';
 import { BaseDerivable } from './base-derivable';
 
 /**
@@ -52,13 +52,5 @@ export class Atom<V> extends BaseDerivable<V> implements DerivableAtom<V> {
             this[restorableState] = augmentState(newState, this);
             processChangedAtom(this, oldState, this.version++);
         }
-    }
-
-    unset() {
-        this.set(unresolved);
-    }
-
-    setError(err: any) {
-        this.set(new ErrorWrapper(err));
     }
 }
