@@ -204,9 +204,9 @@ export interface ReactorOptions<V> {
 
     /**
      * An errorhandler that gets called when an error is thrown in any upstream derivation or the reactor itself. Any
-     * error will stop the reactor.
+     * error will not stop the reactor, call the provided stop callback to stop the reactor.
      */
-    onError?(error: any): void;
+    onError?(error: any, stop: () => void): void;
 }
 
 export type ToPromiseOptions<V> = Pick<ReactorOptions<V>, 'from' | 'until' | 'when' | 'skipFirst'>;
