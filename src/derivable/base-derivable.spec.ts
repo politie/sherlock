@@ -43,7 +43,7 @@ export function testDerivable(factory: Factory, ...modes: DerivableMode[]) {
     testAccessors(factory, isConstant);
     testFallbackTo(factory);
     testBooleanFuncs(factory);
-    testPluck(factory, isSettable);
+    testPluck(factory, isSettable, isAtom);
 
     if (isSettable) {
         testSwap(factory);

@@ -3,15 +3,13 @@ import { fromJS, Seq } from 'immutable';
 import { DerivableAtom, SettableDerivable } from 'interfaces';
 import { Atom } from '../atom';
 import { assertSettable, Factory } from '../base-derivable.spec';
-import { atom } from '../factories';
-import { Lens } from '../lens';
-import { BiMapping } from '../map';
-import { isSettableDerivable } from '../typeguards';
+import { atom, constant } from '../factories';
+import { isDerivableAtom, isSettableDerivable } from '../typeguards';
 
 /**
  * Tests the `pluck()` method.
  */
-export function testPluck(factory: Factory, isSettable: boolean) {
+export function testPluck(factory: Factory, isSettable: boolean, isAtom: boolean) {
     describe('#pluck', () => {
         it('should pluck using a string or derivable string', () => {
             const obj$ = factory({ a: 'valueOfA', b: 'valueOfB' });
@@ -45,6 +43,18 @@ export function testPluck(factory: Factory, isSettable: boolean) {
             expect(value1$.get()).to.equal('value2');
         });
 
+        it('should mirror the type of the input (being SettableDerivable or even DerivableAtom)', () => {
+            const value$ = factory({ a: 1 });
+            const plucked$ = value$.pluck('a');
+            expect(isSettableDerivable(plucked$), 'isSettableDerivable(plucked$)').to.equal(isSettable);
+            expect(isDerivableAtom(plucked$), 'isDerivableAtom(plucked$)').to.equal(isAtom);
+
+            const dynPlucked$ = value$.pluck(constant('a'));
+            expect(isSettableDerivable(dynPlucked$), 'isSettableDerivable(dynPlucked$)').to.equal(isSettable);
+            // Not (yet) supported:
+            expect(isDerivableAtom(dynPlucked$), 'isDerivableAtom(dynPlucked$)').to.be.false;
+        });
+
         if (isSettable) {
             class MyClass { constructor(public key: string) { } }
             let value$: SettableDerivable<MyClass>;
@@ -53,11 +63,6 @@ export function testPluck(factory: Factory, isSettable: boolean) {
             context('(lensed with constant key)', () => {
                 let plucked$: SettableDerivable<string>;
                 beforeEach('setup the derivation', () => { plucked$ = value$.pluck('key'); });
-
-                it('should produce a SettableDerivable if the base was also a SettableDerivable', () => {
-                    expect(plucked$).to.be.an.instanceof(BiMapping);
-                    expect(isSettableDerivable(plucked$)).to.be.true;
-                });
 
                 it('should produce a lens that can change a property (cloning the object)', () => {
                     const oldInstance = value$.get();
@@ -92,11 +97,6 @@ export function testPluck(factory: Factory, isSettable: boolean) {
                 let plucked$: SettableDerivable<string>;
                 beforeEach('setup the key', () => { key$ = atom('key'); });
                 beforeEach('setup the derivation', () => { plucked$ = value$.pluck(key$); });
-
-                it('should produce a SettableDerivable if the base was also a SettableDerivable', () => {
-                    expect(plucked$).to.be.an.instanceof(Lens);
-                    expect(isSettableDerivable(plucked$)).to.be.true;
-                });
 
                 it('should produce a lens that can change any property based on the current value of the key', () => {
                     const oldInstance = value$.get();
