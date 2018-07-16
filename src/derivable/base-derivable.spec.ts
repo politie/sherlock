@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { fromJS } from 'immutable';
 import { spy } from 'sinon';
-import { Derivable, SettableDerivable, State } from '../interfaces';
+import { Derivable, DerivableAtom, SettableDerivable, State } from '../interfaces';
 import { dependencies, disconnect, observers, unresolved } from '../symbols';
 import { config, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
@@ -12,20 +12,54 @@ import { testAccessors } from './mixins/accessors.spec';
 import { testBooleanFuncs } from './mixins/boolean-methods.spec';
 import { testFallbackTo } from './mixins/fallback-to.spec';
 import { testPluck } from './mixins/pluck.spec';
+import { testDerivableAtomSetters } from './mixins/setters.spec';
+import { testSwap } from './mixins/swap.spec';
 import { isDerivableAtom, isSettableDerivable } from './typeguards';
 
 export type Factory = <V>(state: State<V>) => Derivable<V>;
 
-export type DerivableMode = 'constant' | 'no-error-augmentation';
+export type DerivableMode = 'constant' | 'no-error-augmentation' | 'settable' | 'atom';
+
+export function assertSettable<V>(a$: Derivable<V>): SettableDerivable<V> {
+    if (!isSettableDerivable(a$)) {
+        throw new Error('expected a settable derivable, got: ' + a$);
+    }
+    return a$;
+}
+
+export function assertDerivableAtom<V>(a$: Derivable<V>): DerivableAtom<V> {
+    if (!isDerivableAtom(a$)) {
+        throw new Error('expected a derivable atom, got: ' + a$);
+    }
+    return a$;
+}
 
 export function testDerivable(factory: Factory, ...modes: DerivableMode[]) {
+    const isAtom = modes.includes('atom');
     const isConstant = modes.includes('constant');
+    const isSettable = modes.includes('settable');
     const noErrorAugmentation = modes.includes('no-error-augmentation');
 
     testAccessors(factory, isConstant);
     testFallbackTo(factory);
     testBooleanFuncs(factory);
-    testPluck(factory);
+    testPluck(factory, isSettable, isAtom);
+
+    if (isSettable) {
+        testSwap(factory);
+    } else {
+        it('should not be settable', () => {
+            expect(isSettableDerivable(factory(0))).to.be.false;
+        });
+    }
+
+    if (isAtom) {
+        testDerivableAtomSetters(factory);
+    } else {
+        it('should not be a derivable atom', () => {
+            expect(isDerivableAtom(factory(0))).to.be.false;
+        });
+    }
 
     const oneGigabyte = 1024 * 1024 * 1024;
     const bytes$ = factory(oneGigabyte);

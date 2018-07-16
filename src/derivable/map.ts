@@ -4,12 +4,11 @@ import { addObserver, independentTracking, removeObserver } from '../tracking';
 import { augmentStack, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 import { BaseDerivation } from './derivation';
-import { isSettableDerivable } from './typeguards';
 
 export class Mapping<B, V> extends BaseDerivation<V> implements Derivable<V> {
     constructor(
-        protected readonly _base: BaseDerivable<B>,
-        private readonly _pureFn: (this: Derivable<V>, state: State<B>) => State<V>,
+        readonly _base: BaseDerivable<B>,
+        private readonly _pureGetter: (this: Mapping<B, V>, state: State<B>) => State<V>,
     ) { super(); }
 
     private _baseVersion = 0;
@@ -27,7 +26,7 @@ export class Mapping<B, V> extends BaseDerivation<V> implements Derivable<V> {
      */
     protected _callDeriver() {
         try {
-            return independentTracking(() => this._pureFn(this._base.getState()));
+            return independentTracking(() => this._pureGetter(this._base.getState()));
         } catch (e) {
             return new ErrorWrapper(augmentStack(e, this));
         }
@@ -52,28 +51,36 @@ export class Mapping<B, V> extends BaseDerivation<V> implements Derivable<V> {
 }
 
 export class BiMapping<B, V> extends Mapping<B, V> implements SettableDerivable<V> {
-    protected readonly _base!: BaseDerivable<B> & SettableDerivable<B>;
+    readonly _base!: BaseDerivable<B> & SettableDerivable<B>;
 
     constructor(
         base: BaseDerivable<B> & SettableDerivable<B>,
-        pureGet: (this: Derivable<V>, baseValue: State<B>) => State<V>,
-        private readonly _pureSet: (this: SettableDerivable<V>, newValue: V, oldValue: B | undefined) => B,
+        pureGet: (this: Mapping<B, V>, baseValue: State<B>) => State<V>,
+        private readonly _pureSetter: (this: BiMapping<B, V>, newValue: V) => B,
     ) {
         super(base, pureGet);
     }
 
     set(newValue: V) {
-        this._base.set(this._pureSet(newValue, this._base.value));
+        this._base.set(this._pureSetter(newValue));
     }
 }
 
 export function mapMethod<B, V>(this: BaseDerivable<B>, get: (b: B) => State<V>, set?: (v: V, b?: B) => B): Derivable<V> {
-    const stateMapper = (state: State<B>) => state === unresolved || state instanceof ErrorWrapper ? state : get(state);
-    return set && isSettableDerivable(this)
-        ? new BiMapping(this, stateMapper, set)
+    const stateMapper = function (this: Mapping<B, V>, state: State<B>) {
+        return state === unresolved || state instanceof ErrorWrapper ? state : get.call(this, state);
+    };
+    return set && isSettable(this)
+        ? new BiMapping(this, stateMapper, function (v) { return v === unresolved || v instanceof ErrorWrapper ? v : set.call(this, v, this._base.value); })
         : new Mapping(this, stateMapper);
 }
 
-export function mapStateMethod<B, V>(this: BaseDerivable<B>, f: (state: State<B>) => State<V>): Derivable<V> {
-    return new Mapping(this, f);
+export function mapStateMethod<B, V>(this: BaseDerivable<B>, get: (state: State<B>) => State<V>, set?: (v: V, b: State<B>) => B): Derivable<V> {
+    return set && isSettable(this)
+        ? new BiMapping(this, get, function (v) { return set.call(this, v, this._base.getState()); })
+        : new Mapping(this, get);
+}
+
+function isSettable<V>(obj: BaseDerivable<V>): obj is BaseDerivable<V> & SettableDerivable<V> {
+    return obj.settable;
 }

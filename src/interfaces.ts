@@ -131,6 +131,8 @@ export interface SettableDerivable<V> extends Derivable<V> {
      */
     map<R>(get: (baseValue: V) => State<R>): Derivable<R>;
     map<R>(get: (baseValue: V) => State<R>, set: (newValue: R, oldBaseValue?: V) => V): SettableDerivable<R>;
+    mapState<R>(get: (baseState: State<V>) => State<R>): Derivable<R>;
+    mapState<R>(get: (baseState: State<V>) => State<R>, set: (newValue: R, oldBaseState: State<V>) => V): SettableDerivable<R>;
 
     /**
      * Create a lens that plucks the property with the given key of the current value of the SettableDerivable.
@@ -157,6 +159,10 @@ export interface DerivableAtom<V> extends SettableDerivable<V> {
     set(newState: State<V>): void;
     unset(): void;
     setError(err: any): void;
+    map<R>(get: (baseValue: V) => State<R>): Derivable<R>;
+    map<R>(get: (baseValue: V) => State<R>, set: (newValue: R, oldBaseValue?: V) => V): DerivableAtom<R>;
+    mapState<R>(get: (baseState: State<V>) => State<R>): Derivable<R>;
+    mapState<R>(get: (baseState: State<V>) => State<R>, set: (newValue: State<R>, oldBaseState: State<V>) => State<V>): DerivableAtom<R>;
 }
 
 /**

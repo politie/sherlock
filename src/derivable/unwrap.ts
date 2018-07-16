@@ -1,5 +1,5 @@
 import { Unwrappable } from '../interfaces';
-import { isDerivable } from './typeguards';
+import { BaseDerivable } from './base-derivable';
 
 /**
  * Unwraps a derivable or does nothing if `v` is not a derivable.
@@ -7,9 +7,9 @@ import { isDerivable } from './typeguards';
  * @param v a value or derivable
  */
 export function unwrap<T>(v: Unwrappable<T>): T {
-    return isDerivable(v) ? v.get() : v;
+    return v instanceof BaseDerivable ? v.get() : v;
 }
 
 export function safeUnwrap<T>(v: Unwrappable<T>): T | undefined {
-    return isDerivable(v) ? v.value : v;
+    return v instanceof BaseDerivable ? v.value : v;
 }
