@@ -10,14 +10,17 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
      * Indicates whether the current cachedValue of this derivation is known to be up to date, or might need an update. Is set to false
      * by our dependencies when needed. We should be able to trust `true`. It may only be set to true when connected, because true means
      * that we depend on upstream dependencies to keep us informed of changes.
+     * @internal
      */
     private _isUpToDate = false;
 
     /**
      * The last value that was calculated for this derivation. Is only used when connected.
+     * @internal
      */
     private _cachedState: State<V> | typeof emptyCache = emptyCache;
 
+    /** @internal */
     private _version = 0;
 
     /**
@@ -46,6 +49,7 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
     /**
      * Determine if this derivation needs an update (when connected). Compares the recorded dependencyVersions with the
      * current actual versions of the dependencies. If there is any mismatch between versions we need to update. Simple.
+     * @internal
      */
     private _updateIfNeeded() {
         if (!this.connected || this._isUpToDate) {
@@ -62,6 +66,7 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
 
     /**
      * Update the currently cached value of this derivation (only when connected).
+     * @internal
      */
     protected _update() {
         const newValue = this._callDeriver();
@@ -72,7 +77,9 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
         }
     }
 
+    /** @internal */
     protected abstract _compareVersions(): boolean;
+    /** @internal */
     protected abstract _callDeriver(): State<V>;
 
     /**
@@ -121,10 +128,12 @@ export class Derivation<V> extends BaseDerivation<V> implements Derivable<V> {
     constructor(
         /**
          * The deriver function that is used to calculate the value of this derivation.
+         * @internal
          */
         private readonly _deriver: (this: Derivable<V>, ...args: any[]) => State<V>,
         /**
          * Arguments that will be passed unwrapped to the deriver function.
+         * @internal
          */
         protected readonly _args?: any[],
     ) {
@@ -145,6 +154,7 @@ export class Derivation<V> extends BaseDerivation<V> implements Derivable<V> {
 
     /**
      * Update the currently cached value of this derivation (only when connected).
+     * @internal
      */
     protected _update() {
         startRecordingObservations(this);
@@ -157,6 +167,7 @@ export class Derivation<V> extends BaseDerivation<V> implements Derivable<V> {
 
     /**
      * Call the deriver function and log debug stack traces when applicable.
+     * @internal
      */
     protected _callDeriver() {
         ++derivationStackDepth;
@@ -172,6 +183,7 @@ export class Derivation<V> extends BaseDerivation<V> implements Derivable<V> {
         }
     }
 
+    /** @internal */
     protected _compareVersions() {
         return this[dependencies].every(obs => this[dependencyVersions][obs.id] === obs.version);
     }

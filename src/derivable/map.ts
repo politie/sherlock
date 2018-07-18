@@ -7,14 +7,18 @@ import { BaseDerivation } from './derivation';
 
 export class Mapping<B, V> extends BaseDerivation<V> implements Derivable<V> {
     constructor(
+        /** @internal */
         readonly _base: BaseDerivable<B>,
+        /** @internal */
         private readonly _pureGetter: (this: Mapping<B, V>, state: State<B>) => State<V>,
     ) { super(); }
 
+    /** @internal */
     private _baseVersion = 0;
 
     /**
      * Update the currently cached value of this derivation (only when connected).
+     * @internal
      */
     protected _update() {
         super._update();
@@ -23,6 +27,7 @@ export class Mapping<B, V> extends BaseDerivation<V> implements Derivable<V> {
 
     /**
      * Call the deriver function without `this` context and log debug stack traces when applicable.
+     * @internal
      */
     protected _callDeriver() {
         try {
@@ -32,6 +37,7 @@ export class Mapping<B, V> extends BaseDerivation<V> implements Derivable<V> {
         }
     }
 
+    /** @internal */
     protected _compareVersions() {
         return this._baseVersion === this._base.version;
     }
@@ -51,6 +57,7 @@ export class Mapping<B, V> extends BaseDerivation<V> implements Derivable<V> {
 }
 
 export class BiMapping<B, V> extends Mapping<B, V> implements SettableDerivable<V> {
+    /** @internal */
     readonly _base!: BaseDerivable<B> & SettableDerivable<B>;
 
     constructor(
