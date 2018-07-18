@@ -330,7 +330,7 @@ export function testDerivable(factory: Factory, ...modes: DerivableMode[]) {
             try {
                 await d$.toPromise();
             } catch (e) {
-                expect(d$[observers]).to.empty;
+                expect(d$[observers]).to.be.empty;
                 return;
             }
             throw new Error('expected promise to reject');
