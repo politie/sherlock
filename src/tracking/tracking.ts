@@ -152,6 +152,7 @@ export interface TrackedObserver extends Observer {
 }
 
 export interface TrackedReactor {
+    /** @internal */
     _reactIfNeeded(): void;
 }
 
@@ -202,10 +203,19 @@ export function maybeDisconnectInNextTick(observable: TrackedObservable) {
 }
 
 interface Recording {
-    /** The observer that is interested in its dependencies. */
+    /**
+     * The observer that is interested in its dependencies.
+     * @internal
+     */
     _observer: TrackedObserver;
-    /** The slice of observer.dependencies that is confirmed (again) as an actual dependency. */
+    /**
+     * The slice of observer.dependencies that is confirmed (again) as an actual dependency.
+     * @internal
+     */
     _confirmed: number;
-    /** The recording to return to after this recording ends, if applicable. */
+    /**
+     * The recording to return to after this recording ends, if applicable.
+     * @internal
+     */
     _previousRecording: Recording | undefined;
 }
