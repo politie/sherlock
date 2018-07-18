@@ -12,6 +12,7 @@ import { safeUnwrap } from './unwrap';
 export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
     /**
      * The setter that was provided in the constructor.
+     * @internal
      */
     private _setter: (newValue: V, ...args: any[]) => void;
 

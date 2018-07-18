@@ -22,6 +22,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
 
     /**
      * The last value that was calculated for this datasource. Is only used when connected.
+     * @internal
      */
     private _cachedState: State<V> | typeof emptyCache = emptyCache;
 
@@ -75,6 +76,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
 
     /**
      * Call the deriver function without `this` context and log debug stack traces when applicable.
+     * @internal
      */
     private _callCalculationFn() {
         try {
