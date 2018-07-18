@@ -34,7 +34,11 @@ BaseDerivable.prototype.react = function react(reaction, options) {
 };
 
 BaseDerivable.prototype.toPromise = function toPromise(options) {
-    return new Promise((resolve, reject) => this.react(resolve, { ...options, once: true, onError: reject }));
+    return new Promise((resolve, reject) => this.react(resolve, {
+        ...options,
+        once: true,
+        onError(err, done) { done(); reject(err); }
+    }));
 };
 
 /**

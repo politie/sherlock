@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { fromJS } from 'immutable';
 import { spy } from 'sinon';
 import { Derivable, DerivableAtom, SettableDerivable, State } from '../interfaces';
-import { dependencies, disconnect, observers, unresolved } from '../symbols';
+import { dependencies, observers, unresolved } from '../symbols';
 import { config, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 import { Derivation } from './derivation';
@@ -190,7 +190,9 @@ export function testDerivable(factory: Factory, ...modes: DerivableMode[]) {
     });
 
     describe('#react', () => {
-        const value$ = factory('the value');
+        let value$: Derivable<string>;
+        beforeEach(() => { value$ = factory('the value'); });
+
         it('should react immediately', () => {
             let receivedValue: string | undefined;
             let reactions = 0;
@@ -199,41 +201,42 @@ export function testDerivable(factory: Factory, ...modes: DerivableMode[]) {
             expect(reactions).to.equal(1);
         });
 
-        if (isSettableDerivable(value$)) {
-            beforeEach('reset the atom', () => resetAtomTo(value$, 'the value'));
+        if (isSettable) {
+            let settableValue$: SettableDerivable<string>;
+            beforeEach(() => { settableValue$ = assertSettable(value$); });
 
             it('should react to change', () => {
                 let receivedValue: string | undefined;
                 let reactions = 0;
-                value$.react(value => { receivedValue = value; reactions++; });
+                settableValue$.react(value => { receivedValue = value; reactions++; });
                 expect(receivedValue).to.equal('the value');
                 expect(reactions).to.equal(1);
-                value$.set('another value');
+                settableValue$.set('another value');
                 expect(receivedValue).to.equal('another value');
                 expect(reactions).to.equal(2);
             });
 
             it('should not react on no change', () => {
-                const derived$ = value$.derive(() => 'constant');
+                const derived$ = settableValue$.derive(() => 'constant');
                 let receivedValue: string | undefined;
                 let reactions = 0;
                 derived$.react(value => { receivedValue = value; reactions++; });
                 expect(receivedValue).to.equal('constant');
                 expect(reactions).to.equal(1);
-                value$.set('b');
+                settableValue$.set('b');
                 expect(receivedValue).to.equal('constant');
                 expect(reactions).to.equal(1);
             });
 
             it('should react on a derivation', () => {
                 const base2$ = factory('other value');
-                const derived$ = value$.derive((a, b) => `${a},${b}`, base2$);
+                const derived$ = settableValue$.derive((a, b) => `${a},${b}`, base2$);
                 let receivedValue: string | undefined;
                 let reactions = 0;
                 derived$.react(value => { receivedValue = value; reactions++; });
                 expect(receivedValue).to.equal('the value,other value');
                 expect(reactions).to.equal(1);
-                value$.set('123');
+                settableValue$.set('123');
                 expect(receivedValue).to.equal('123,other value');
                 expect(reactions).to.equal(2);
                 if (isSettableDerivable(base2$)) {
@@ -245,7 +248,7 @@ export function testDerivable(factory: Factory, ...modes: DerivableMode[]) {
 
             it('should not recompute when no dependency changed', () => {
                 // First derived value will have to recompute, because it doesn't know it always returns the same value
-                const derived1$ = value$.derive(() => 'constant');
+                const derived1$ = settableValue$.derive(() => 'constant');
                 const computation = spy((v: any) => v);
                 // Second derived value should never recompute, because the input never changes.
                 const derived2$ = derived1$.derive(computation);
@@ -260,7 +263,7 @@ export function testDerivable(factory: Factory, ...modes: DerivableMode[]) {
                 expect(receivedValue).to.equal('constant');
                 expect(reactions).to.equal(1);
 
-                value$.set('another value');
+                settableValue$.set('another value');
 
                 expect(computation).to.have.been.calledOnce.and.to.have.been.calledWith('constant');
                 expect(receivedValue).to.equal('constant');
@@ -301,7 +304,9 @@ export function testDerivable(factory: Factory, ...modes: DerivableMode[]) {
     });
 
     describe('#toPromise', () => {
-        const value$ = factory('the value');
+        let value$: Derivable<string>;
+        beforeEach(() => { value$ = factory('the value'); });
+
         it('should resolve immediately when no options are given', async () => {
             expect(await value$.toPromise()).to.equal('the value');
         });
@@ -319,27 +324,43 @@ export function testDerivable(factory: Factory, ...modes: DerivableMode[]) {
             throw new Error('expected promise to reject');
         });
 
-        if (isSettableDerivable(value$)) {
-            beforeEach('reset the atom', () => resetAtomTo(value$, 'the value'));
+        it('should stop the reactor on an error upstream', async () => {
+            const d$ = value$.derive(() => { throw new Error('with a message'); });
+
+            try {
+                await d$.toPromise();
+            } catch (e) {
+                expect(d$[observers]).to.be.empty;
+                return;
+            }
+            throw new Error('expected promise to reject');
+        });
+
+        if (isSettable) {
+            let settableValue$: SettableDerivable<string>;
+            beforeEach(() => { settableValue$ = assertSettable(value$); });
 
             it('should resolve on the first reaction according to the lifecycle options', async () => {
-                const promise = value$.toPromise({ skipFirst: true });
-                value$.set('as promised');
+                const promise = settableValue$.toPromise({ skipFirst: true });
+                settableValue$.set('as promised');
                 expect(await promise).to.equal('as promised');
             });
 
-            if (isDerivableAtom(value$)) {
+            if (isAtom) {
+                let atomValue$: DerivableAtom<string>;
+                beforeEach(() => { atomValue$ = assertDerivableAtom(value$); });
+
                 it('should resolve on the first resolved value', async () => {
-                    value$.unset();
-                    value$.set('some other value');
-                    expect(await value$.toPromise()).to.equal('some other value');
+                    atomValue$.unset();
+                    atomValue$.set('some other value');
+                    expect(await atomValue$.toPromise()).to.equal('some other value');
                 });
 
                 it('should resolve on the first resolved value according to the lifecycle options', async () => {
-                    value$.unset();
-                    const promise = value$.toPromise({ skipFirst: true });
-                    value$.set('first real value');
-                    value$.set('second real value');
+                    atomValue$.unset();
+                    const promise = atomValue$.toPromise({ skipFirst: true });
+                    atomValue$.set('first real value');
+                    atomValue$.set('second real value');
                     expect(await promise).to.equal('second real value');
                 });
             }
@@ -413,19 +434,6 @@ export function testDerivable(factory: Factory, ...modes: DerivableMode[]) {
             }
         });
     });
-}
-
-function resetAtomTo<V>(a$: SettableDerivable<V>, value: V) {
-    disconnectTree(a$);
-    a$.set(value);
-}
-
-function disconnectTree(bd: any) {
-    while (bd[observers] && bd[observers].length) {
-        const obs = bd[observers][0];
-        disconnectTree(obs);
-        obs[disconnect] && obs[disconnect]();
-    }
 }
 
 export function $<V>(d: SettableDerivable<V>): SettableDerivable<V> & BaseDerivable<V>;
