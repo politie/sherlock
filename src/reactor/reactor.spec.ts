@@ -403,6 +403,17 @@ describe('reactor/reactor', () => {
         shouldNotHaveReacted();
     });
 
+    it('should never react twice when `once` is `true`', () => {
+        currentReactorTest = { reactions: 0, value: undefined };
+        a$.react(v => {
+            currentReactorTest!.reactions++;
+            currentReactorTest!.value = v;
+            a$.set(v + '!');
+        }, { once: true });
+
+        shouldHaveReactedOnce('a');
+    });
+
     it('should support combining `skipFirst` and `once`, skipping 1 and taking 1', () => {
         react(a$, { skipFirst: true, once: true });
 
