@@ -9,13 +9,14 @@ import { BaseDerivable } from './base-derivable';
 export class Constant<V> extends BaseDerivable<V> implements Derivable<V> {
     /**
      * The readonly state of this Constant.
+     * @internal
      */
     private readonly _state: State<V>;
 
     /**
      * Creates a new Constant with the given state.
      *
-     * @param _state the readonly state of this Constant
+     * @paramstate the readonly state of this Constant
      */
     constructor(state: State<V>) {
         super();

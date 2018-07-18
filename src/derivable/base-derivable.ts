@@ -66,6 +66,7 @@ export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V
     abstract readonly version: number;
 
     connected = false;
+    /** @internal */
     _connected$?: SettableDerivable<boolean> = undefined;
     [connect]() { setConnectionStatus(this, true); }
     [disconnect]() { setConnectionStatus(this, false); }

@@ -61,11 +61,13 @@ export const defaultOptions: ReactorOptions<any> = {
 export class Reactor<V> implements Observer {
     /**
      * A Reactor can have a controller that should always be allowed to react before the current Reactor reacts.
+     * @internal
      */
     _controller?: Reactor<any>;
 
     /**
      * When a reactor is active it observes its derivable (parent) and reacts to changes.
+     * @internal
      */
     _active = false;
 
@@ -76,6 +78,7 @@ export class Reactor<V> implements Observer {
 
     /**
      * The current recursion depth of reactions. Can reach a maximum at which point an Error will be thrown.
+     * @internal
      */
     private _reactionDepth = 0;
 
@@ -86,6 +89,7 @@ export class Reactor<V> implements Observer {
 
     /**
      * The value of the parent when this reactor last reacted. Is used to determine whether it should react again or not.
+     * @internal
      */
     private _lastValue: V | typeof emptyCache | typeof unresolved = emptyCache;
 
@@ -98,22 +102,26 @@ export class Reactor<V> implements Observer {
     protected constructor(
         /**
          * The derivable that is observed to determine changes.
+         * @internal
          */
         private readonly _parent: BaseDerivable<V>,
 
         /**
          * The error handler, is called when either the observed derivable or the reactor throws.
+         * @internal
          */
         private readonly _errorHandler: (error: any) => void,
 
         /**
          * The reaction that should fire when the derivable changes.
+         * @internal
          */
         private readonly _reaction: (value: V) => void,
     ) { }
 
     /**
      * Start this reactor if not already started. Will always run the reaction once with the current value of parent on start.
+     * @internal
      */
     _start() {
         if (this._active) {
@@ -126,6 +134,7 @@ export class Reactor<V> implements Observer {
 
     /**
      * React when active and needed. Does nothing when a reaction is not appropriate.
+     * @internal
      */
     _reactIfNeeded() {
         if (!this._active) {
@@ -155,6 +164,7 @@ export class Reactor<V> implements Observer {
     /**
      * React once. Will call the reaction with the current value of parent and remember the current version of the parent to
      * be able to determine when to react next.
+     * @internal
      */
     private _react(value: V) {
         this._reactionDepth++;
@@ -172,6 +182,7 @@ export class Reactor<V> implements Observer {
 
     /**
      * Stop reacting on parent changes, will remove this reactor as an observer from the parent which might disconnect the parent.
+     * @internal
      */
     _stop() {
         if (!this._active) {
