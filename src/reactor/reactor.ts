@@ -222,11 +222,12 @@ export class Reactor<V> implements Observer {
         const reactor = new Reactor<W>(parent, errorHandler, value => {
             if (skipFirst) {
                 skipFirst = false;
+            } else if (once) {
+                stopReactors();
+                reaction(value);
+                ended && ended();
             } else {
                 reaction(value);
-                if (once) {
-                    done();
-                }
             }
         });
 
@@ -257,10 +258,14 @@ export class Reactor<V> implements Observer {
                 }
             });
 
-        function done() {
+        function stopReactors() {
             starter && starter._stop();
             controller && controller._stop();
             reactor._stop();
+        }
+
+        function done() {
+            stopReactors();
             ended && ended();
         }
 
