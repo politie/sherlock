@@ -32,23 +32,32 @@ export function processChangedAtom<V>(atom: TrackedObservable | TransactionAtom<
 }
 
 interface Transaction {
-    /** The atoms that were touched in this transaction. */
+    /**
+     * The atoms that were touched in this transaction.
+     * @internal
+     */
     _touchedAtoms: Array<TransactionAtom<any>>;
-    /** The reactors that were reached in this transaction. */
+    /**
+     * The reactors that were reached in this transaction.
+     * @internal
+     */
     _touchedReactors: TrackedReactor[];
     /**
      * A mapping from atom.id to its value before this transaction. All atoms in touchedAtoms will have a corresponding
      * entry in this map.
+     * @internal
      */
     _oldValues: { [id: string]: any };
     /**
      * A mapping from atom.id to its version number before this transaction. All atoms in touchedAtoms will have a corresponding
      * entry in this map.
+     * @internal
      */
     _oldVersions: { [id: string]: number };
     /**
      * The parent transaction, if applicable, will become active again after this transaction ends and will inherit the
      * touched atoms and reactors.
+     * @internal
      */
     _parentTransaction: Transaction | undefined;
 }
