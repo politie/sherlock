@@ -300,7 +300,7 @@ export class Reactor<V> implements Observer {
     }
 }
 
-export function toDerivable<V>(option: ReactorOptionValue<V>, derivable: Derivable<V>) {
+function toDerivable<V>(option: ReactorOptionValue<V>, derivable: Derivable<V>) {
     if (option instanceof BaseDerivable) {
         return option;
     }

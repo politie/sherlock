@@ -2,11 +2,12 @@ import { expect } from 'chai';
 import { SinonFakeTimers, spy, useFakeTimers } from 'sinon';
 import { State } from '../interfaces';
 import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from '../reactor/reactor.spec';
-import { connect, disconnect, unresolved } from '../symbols';
+import { connect, dependencies, disconnect, unresolved } from '../symbols';
 import { basicTransactionsTests } from '../transaction/transaction.spec';
 import { config, ErrorWrapper } from '../utils';
 import { testDerivable } from './base-derivable.spec';
 import { PullDataSource } from './data-source';
+import { atom } from './factories';
 
 describe('derivable/data-source', () => {
 
@@ -207,6 +208,21 @@ describe('derivable/data-source', () => {
                 expect(e.stack).to.contain('the error');
                 expect(e.stack).to.contain(d$.creationStack!);
             }
+        });
+    });
+
+    context('when using other derivables', () => {
+        it('should not polute outer derivation dependency administration', () => {
+            const a$ = atom('abc');
+            const b$ = new class extends PullDataSource<string> {
+                calculateCurrentValue() {
+                    return a$.get();
+                }
+            };
+
+            const d$ = b$.derive(v => v).autoCache();
+            d$.get();
+            expect(d$[dependencies]).not.to.include(a$);
         });
     });
 
