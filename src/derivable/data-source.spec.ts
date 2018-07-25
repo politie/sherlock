@@ -145,7 +145,7 @@ describe('derivable/data-source', () => {
             expect(ds$.calculateCurrentValue).to.have.been.calledOnce;
 
             const received: string[] = [];
-            ds$.react(received.push.bind(received));
+            ds$.react(v => received.push(v));
             expect(received).to.deep.equal(['value']);
             expect(ds$.calculateCurrentValue).to.have.been.calledOnce;
 
@@ -158,7 +158,7 @@ describe('derivable/data-source', () => {
             expect(ds$.get()).to.equal('value');
 
             const received: string[] = [];
-            ds$.react(received.push.bind(received));
+            ds$.react(v => received.push(v));
             expect(received).to.deep.equal(['value']);
 
             clock.tick(0);

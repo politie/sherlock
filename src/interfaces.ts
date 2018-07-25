@@ -95,7 +95,7 @@ export interface Derivable<V> {
      * @param reaction function to call on each reaction
      * @param options lifecycle options
      */
-    react(reaction: (value: V) => void, options?: Partial<ReactorOptions<V>>): () => void;
+    react(reaction: (value: V, stop: () => void) => void, options?: Partial<ReactorOptions<V>>): () => void;
 
     /**
      * Returns a promise that resolves with the first value that passes the lifecycle options. Reject on any error in an upstream

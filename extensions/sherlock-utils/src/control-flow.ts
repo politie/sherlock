@@ -74,16 +74,12 @@ class ControlFlow<V> extends _internal.BaseDerivable<V> implements Derivable<V> 
     }
 
     [_internal.symbols.connect]() {
-        let stopped = false;
+        let alreadyStopped = false;
 
         // tslint:disable-next-line:prefer-const
         let { once, skipFirst, ...opts } = this.opts;
 
-        const stop = () => {
-            stopped = true;
-            this._disconnectFromBase();
-        };
-        const update = (newState: StateObject<V>) => {
+        const update = (newState: StateObject<V>, stop: () => void) => {
             if (this.opts && this.opts.includeUnresolved || newState.resolved) {
                 if (skipFirst) {
                     skipFirst = false;
@@ -95,30 +91,27 @@ class ControlFlow<V> extends _internal.BaseDerivable<V> implements Derivable<V> 
                 }
             }
         };
+        const cleanup = () => {
+            alreadyStopped = true;
+            this._baseConnectionStopper = undefined;
+        };
 
         const mBase = materialize(this.base) as _internal.BaseDerivable<StateObject<V>>;
-        const stopper = _internal.Reactor.create(mBase, update, opts, stop);
-        if (stopped) {
-            stopper();
-        } else {
+        const stopper = _internal.Reactor.create(mBase, update, opts, cleanup);
+        if (!alreadyStopped) {
             this._baseConnectionStopper = stopper;
         }
 
         super[_internal.symbols.connect]();
     }
 
-    private _disconnectFromBase() {
-        if (this._baseConnectionStopper) {
-            const stopper = this._baseConnectionStopper;
-            this._baseConnectionStopper = undefined;
-            stopper();
-        }
-    }
-
     [_internal.symbols.disconnect]() {
         super[_internal.symbols.disconnect]();
         this._currentState = _internal.symbols.unresolved;
-        this._disconnectFromBase();
+        if (this._baseConnectionStopper) {
+            this._baseConnectionStopper();
+            this._baseConnectionStopper = undefined;
+        }
     }
 }
 

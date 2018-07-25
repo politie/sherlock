@@ -654,9 +654,14 @@ describe('sherlock-utils/filterUpdates', () => {
 
             function stopTest() {
                 currentStopper!();
+                currentStopper = undefined;
             }
 
-            afterEach(() => currentTest = undefined);
+            afterEach(() => {
+                currentTest = undefined;
+                currentStopper && currentStopper();
+                currentStopper = undefined;
+            });
 
             function shouldNotHaveReacted(currentValue: State<any>) {
                 expect(currentTest!.reactions).to.equal(0, 'should not have reacted');
