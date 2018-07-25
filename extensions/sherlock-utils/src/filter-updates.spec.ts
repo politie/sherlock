@@ -162,6 +162,39 @@ describe('sherlock-utils/filterUpdates', () => {
     });
 
     context('connected, shaping the flow using', () => {
+        describe('no options', () => {
+            it('should never return to unresolved while connected', () => {
+                startTest();
+
+                shouldNotHaveReacted(unresolved);
+
+                a$.set('a');
+
+                shouldHaveReactedOnce('a');
+
+                a$.unset();
+
+                shouldNotHaveReacted('a');
+            });
+
+            it('should return to unresolved when disconnected', () => {
+                startTest();
+                a$.set('a');
+                shouldHaveReactedOnce('a');
+                a$.unset();
+                shouldNotHaveReacted('a');
+                stopTest();
+                shouldNotHaveReacted(unresolved);
+            });
+
+            it('should disconnect when the reactor disconnects', () => {
+                startTest();
+                expect(a$.connected).to.be.true;
+                stopTest();
+                expect(a$.connected).to.be.false;
+            });
+        });
+
         describe('from', () => {
             let from: DerivableAtom<boolean>;
             beforeEach(() => { from = atom.unresolved<boolean>(); });
@@ -200,6 +233,10 @@ describe('sherlock-utils/filterUpdates', () => {
 
                 expect(a$.connected).to.be.true;
                 expect(from.connected).to.be.false;
+
+                stopTest();
+
+                expect(a$.connected).to.be.false;
             });
 
             context('inside transactions', () => {
@@ -389,6 +426,10 @@ describe('sherlock-utils/filterUpdates', () => {
 
                 expect(a$.connected).to.be.false;
                 expect(when.connected).to.be.true;
+
+                stopTest();
+
+                expect(when.connected).to.be.false;
             });
 
             context('inside transactions', () => {
@@ -572,6 +613,7 @@ describe('sherlock-utils/filterUpdates', () => {
     });
 
     let currentTest: { reactions: number, value: any, f$: Derivable<any> } | undefined;
+    let currentStopper: (() => void) | undefined;
     function startTest(opts?: FilterUpdatesOptions<string>) {
         const f$ = filterUpdates(a$, opts);
         currentTest = { reactions: 0, value: undefined, f$ };
@@ -579,8 +621,12 @@ describe('sherlock-utils/filterUpdates', () => {
             currentTest!.reactions++;
             currentTest!.value = v;
         };
-        f$.react(reaction, { onError: err => reaction(new _internal.ErrorWrapper(err)) });
+        currentStopper = f$.react(reaction, { onError: err => reaction(new _internal.ErrorWrapper(err)) });
         return f$;
+    }
+
+    function stopTest() {
+        currentStopper!();
     }
 
     afterEach(() => currentTest = undefined);
