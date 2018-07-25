@@ -1,12 +1,19 @@
-import { _internal, Derivable, inTransaction, ReactorOptions, ReactorOptionValue, safeUnwrap, State } from '@politie/sherlock';
+import { _internal, Derivable, derive, inTransaction, ReactorOptions, safeUnwrap, State, unwrap } from '@politie/sherlock';
 
 export type FilterUpdatesOptions<V> = Partial<Pick<ReactorOptions<V>, Exclude<keyof ReactorOptions<V>, 'onError'>>>;
+// tslint:disable-next-line:ban-types
+type PreparedOptions<V> = { [P in keyof FilterUpdatesOptions<V>]?: Exclude<FilterUpdatesOptions<V>[P], Function> };
 
 class FilterUpdates<V> extends _internal.BaseDerivable<V> implements Derivable<V> {
+    private readonly opts?: PreparedOptions<V>;
+
     constructor(
         private readonly base: _internal.BaseDerivable<V>,
-        private readonly opts?: FilterUpdatesOptions<V>,
-    ) { super(); }
+        opts?: FilterUpdatesOptions<V>,
+    ) {
+        super();
+        this.opts = opts && prepareOptions(base, opts);
+    }
 
     /**
      * The last state that was calculated for this derivable. Is only used when connected.
@@ -25,7 +32,7 @@ class FilterUpdates<V> extends _internal.BaseDerivable<V> implements Derivable<V
 
     [_internal.symbols.internalGetState]() {
         _internal.recordObservation(this);
-        if (this.connected && !inTransaction() || !shouldBeLive(this.base, this.opts)) {
+        if (this.connected && !inTransaction() || !shouldBeLive(this.opts)) {
             return this._currentState;
         }
         return _internal.independentTracking(() => this.base.getState());
@@ -72,14 +79,18 @@ export function filterUpdates<V>(base: Derivable<V>, opts?: FilterUpdatesOptions
     return new FilterUpdates(base as _internal.BaseDerivable<V>, opts);
 }
 
-function shouldBeLive<V>(base: Derivable<V>, opts?: FilterUpdatesOptions<V>): boolean {
-    function checkValue(opt: ReactorOptionValue<V>, want: boolean) {
-        const value = safeUnwrap(typeof opt === 'function' ? opt(base) : opt);
-        return value === want;
-    }
-
+function shouldBeLive<V>(opts?: PreparedOptions<V>): boolean {
     return !opts || !opts.skipFirst &&
-        (!opts.from || checkValue(opts.from, true)) &&
-        (!opts.until || checkValue(opts.until, false)) &&
-        (!opts.when || checkValue(opts.when, true));
+        (opts.from === undefined || safeUnwrap(opts.from) === true) &&
+        (opts.until === undefined || safeUnwrap(opts.until) === false) &&
+        (opts.when === undefined || safeUnwrap(opts.when) === true);
+}
+
+function prepareOptions<V>(base: Derivable<V>, opts: FilterUpdatesOptions<V>, ): PreparedOptions<V> {
+    const result: PreparedOptions<V> = {};
+    for (const key of Object.keys(opts) as Array<keyof typeof opts>) {
+        const opt = opts[key];
+        result[key] = typeof opt === 'function' ? derive(() => unwrap(opt(base))) : opt;
+    }
+    return result;
 }

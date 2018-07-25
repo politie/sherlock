@@ -37,6 +37,12 @@ describe('sherlock-utils/filterUpdates', () => {
         describe('from', () => {
             it('should be unresolved if `from` is false', () => {
                 a$.set('value');
+                const f$ = filterUpdates(a$, { from: false });
+                expect(f$.resolved).to.be.false;
+            });
+
+            it('should be unresolved while `from` is false', () => {
+                a$.set('value');
                 const from = atom(false);
                 const f$ = filterUpdates(a$, { from });
                 expect(f$.resolved).to.be.false;
@@ -65,6 +71,12 @@ describe('sherlock-utils/filterUpdates', () => {
         describe('until', () => {
             it('should be unresolved if `until` is true', () => {
                 a$.set('value');
+                const f$ = filterUpdates(a$, { until: true });
+                expect(f$.resolved).to.be.false;
+            });
+
+            it('should be unresolved while `until` is true', () => {
+                a$.set('value');
                 const until = atom(false);
                 const f$ = filterUpdates(a$, { until });
                 expect(f$.value).to.equal('value');
@@ -92,6 +104,12 @@ describe('sherlock-utils/filterUpdates', () => {
 
         describe('when', () => {
             it('should be unresolved if `when` is false', () => {
+                a$.set('value');
+                const f$ = filterUpdates(a$, { when: false });
+                expect(f$.resolved).to.be.false;
+            });
+
+            it('should be unresolved while `when` is false', () => {
                 a$.set('value');
                 const when = atom(false);
                 const f$ = filterUpdates(a$, { when });
@@ -149,7 +167,7 @@ describe('sherlock-utils/filterUpdates', () => {
             beforeEach(() => { from = atom.unresolved<boolean>(); });
 
             it('should not start updating until `from` becomes true', () => {
-                test(a$, { from });
+                startTest({ from });
 
                 shouldNotHaveReacted(unresolved);
 
@@ -173,7 +191,7 @@ describe('sherlock-utils/filterUpdates', () => {
 
             it('should disconnect from the `from` derivable when it becomes true', () => {
                 from.set(false);
-                test(a$, { from });
+                startTest({ from });
 
                 expect(a$.connected).to.be.false;
                 expect(from.connected).to.be.true;
@@ -188,7 +206,7 @@ describe('sherlock-utils/filterUpdates', () => {
                 it('should be live', () => {
                     from.set(false);
                     a$.set('a');
-                    const f$ = filterUpdates(a$, { from }).autoCache();
+                    const f$ = startTest({ from });
 
                     transact(() => {
                         expect(f$.resolved).to.be.false;
@@ -208,7 +226,7 @@ describe('sherlock-utils/filterUpdates', () => {
                 it('should be consistent', () => {
                     from.set(false);
                     a$.set('a');
-                    test(a$, { from });
+                    startTest({ from });
 
                     shouldNotHaveReacted(unresolved);
 
@@ -229,7 +247,7 @@ describe('sherlock-utils/filterUpdates', () => {
             beforeEach(() => { until = atom.unresolved<boolean>(); });
 
             it('should update until the `until` derivable becomes true', () => {
-                test(a$, { until });
+                startTest({ until });
 
                 shouldNotHaveReacted(unresolved);
 
@@ -255,7 +273,7 @@ describe('sherlock-utils/filterUpdates', () => {
 
             it('should disconnect from the base when `until` becomes true', () => {
                 until.set(false);
-                test(a$, { until });
+                startTest({ until });
 
                 expect(a$.connected).to.be.true;
                 expect(until.connected).to.be.true;
@@ -267,7 +285,7 @@ describe('sherlock-utils/filterUpdates', () => {
             });
 
             it('should support derived `until` option', () => {
-                test(a$, { until: d => d.is('stop now') });
+                startTest({ until: d => d.is('stop now') });
 
                 shouldNotHaveReacted(unresolved);
 
@@ -285,7 +303,7 @@ describe('sherlock-utils/filterUpdates', () => {
                 it('should be live', () => {
                     until.set(false);
                     a$.set('a');
-                    const f$ = filterUpdates(a$, { until }).autoCache();
+                    const f$ = startTest({ until });
 
                     transact(() => {
                         expect(f$.value).to.equal('a');
@@ -311,7 +329,7 @@ describe('sherlock-utils/filterUpdates', () => {
                 it('should be consistent', () => {
                     until.set(false);
                     a$.set('a');
-                    test(a$, { until });
+                    startTest({ until });
 
                     shouldHaveReactedOnce('a');
 
@@ -331,7 +349,7 @@ describe('sherlock-utils/filterUpdates', () => {
             beforeEach(() => { when = atom.unresolved<boolean>(); });
 
             it('should only update when `when` is true', () => {
-                test(a$, { when });
+                startTest({ when });
 
                 shouldNotHaveReacted(unresolved);
 
@@ -362,7 +380,7 @@ describe('sherlock-utils/filterUpdates', () => {
 
             it('should disconnect from the base when `when` is false', () => {
                 when.set(true);
-                test(a$, { when });
+                startTest({ when });
 
                 expect(a$.connected).to.be.true;
                 expect(when.connected).to.be.true;
@@ -376,7 +394,7 @@ describe('sherlock-utils/filterUpdates', () => {
             context('inside transactions', () => {
                 it('should be live', () => {
                     a$.set('a');
-                    const f$ = filterUpdates(a$, { when }).autoCache();
+                    const f$ = startTest({ when });
 
                     when.set(true);
                     expect(f$.value).to.equal('a');
@@ -401,7 +419,7 @@ describe('sherlock-utils/filterUpdates', () => {
                 it('should be consistent', () => {
                     when.set(true);
                     a$.set('a');
-                    test(a$, { when });
+                    startTest({ when });
 
                     shouldHaveReactedOnce('a');
 
@@ -416,12 +434,34 @@ describe('sherlock-utils/filterUpdates', () => {
 
                     shouldNotHaveReacted('a');
                 });
+
+                it('should also work with derived `when` option', () => {
+                    const f$ = startTest({ when: d => d.get().length > 3 });
+
+                    shouldNotHaveReacted(unresolved);
+
+                    a$.set('abc');
+                    expect(f$.value).to.be.undefined;
+                    a$.set('abcd');
+                    expect(f$.value).to.be.equal('abcd');
+
+                    transact(() => {
+                        a$.set('abcde');
+                        expect(f$.value).to.be.equal('abcde');
+                        a$.set('ab');
+                        expect(f$.value).to.be.equal('abcd');
+                        a$.unset();
+                        expect(f$.value).to.be.equal('abcd');
+                    });
+
+                    expect(f$.value).to.be.equal('abcd');
+                });
             });
         });
 
         describe('once', () => {
             it('should update only once and keep the value after that', () => {
-                test(a$, { once: true });
+                startTest({ once: true });
                 shouldNotHaveReacted(unresolved);
                 a$.set('a');
                 shouldHaveReactedOnce('a');
@@ -430,7 +470,7 @@ describe('sherlock-utils/filterUpdates', () => {
             });
 
             it('should not count an error as a value and thus not stop after the first', () => {
-                test(a$, { once: true });
+                startTest({ once: true });
                 shouldNotHaveReacted(unresolved);
 
                 a$.setError('my error');
@@ -481,8 +521,7 @@ describe('sherlock-utils/filterUpdates', () => {
             });
 
             it('should consider a transaction as one big update', () => {
-                test(a$, { once: true });
-                const { f$ } = currentTest!;
+                const f$ = startTest({ once: true });
 
                 transact(() => {
                     a$.set('a');
@@ -500,7 +539,7 @@ describe('sherlock-utils/filterUpdates', () => {
         describe('skipFirst', () => {
             it('should never present the first state from the returned derivable (synchronous start)', () => {
                 a$.set('first value');
-                test(a$, { skipFirst: true });
+                startTest({ skipFirst: true });
                 shouldNotHaveReacted(unresolved);
 
                 a$.set('second value');
@@ -514,7 +553,7 @@ describe('sherlock-utils/filterUpdates', () => {
             });
 
             it('should never present the first state from the returned derivable (asynchronous start)', () => {
-                test(a$, { skipFirst: true });
+                startTest({ skipFirst: true });
                 shouldNotHaveReacted(unresolved);
 
                 a$.set('first value');
@@ -531,30 +570,31 @@ describe('sherlock-utils/filterUpdates', () => {
             });
         });
     });
+
+    let currentTest: { reactions: number, value: any, f$: Derivable<any> } | undefined;
+    function startTest(opts?: FilterUpdatesOptions<string>) {
+        const f$ = filterUpdates(a$, opts);
+        currentTest = { reactions: 0, value: undefined, f$ };
+        const reaction = (v: any) => {
+            currentTest!.reactions++;
+            currentTest!.value = v;
+        };
+        f$.react(reaction, { onError: err => reaction(new _internal.ErrorWrapper(err)) });
+        return f$;
+    }
+
+    afterEach(() => currentTest = undefined);
+
+    function shouldNotHaveReacted(currentValue: State<any>) {
+        expect(currentTest!.reactions).to.equal(0, 'should not have reacted');
+        expect(currentTest!.f$.getState()).to.deep.equal(currentValue);
+        currentTest!.reactions = 0;
+    }
+
+    function shouldHaveReactedOnce(value: any) {
+        expect(currentTest!.reactions).to.equal(1, `should have reacted once`);
+        expect(currentTest!.value).to.deep.equal(value);
+        expect(currentTest!.f$.getState()).to.deep.equal(value);
+        currentTest!.reactions = 0;
+    }
 });
-
-let currentTest: { reactions: number, value: any, f$: Derivable<any> } | undefined;
-export function test<V>(d$: Derivable<V>, opts?: FilterUpdatesOptions<V>) {
-    const f$ = filterUpdates(d$, opts);
-    currentTest = { reactions: 0, value: undefined, f$ };
-    const reaction = (v: any) => {
-        currentTest!.reactions++;
-        currentTest!.value = v;
-    };
-    f$.react(reaction, { onError: err => reaction(new _internal.ErrorWrapper(err)) });
-}
-
-afterEach(() => currentTest = undefined);
-
-export function shouldNotHaveReacted(currentValue: State<any>) {
-    expect(currentTest!.reactions).to.equal(0, 'should not have reacted');
-    expect(currentTest!.f$.getState()).to.deep.equal(currentValue);
-    currentTest!.reactions = 0;
-}
-
-export function shouldHaveReactedOnce(value: any) {
-    expect(currentTest!.reactions).to.equal(1, `should have reacted once`);
-    expect(currentTest!.value).to.deep.equal(value);
-    expect(currentTest!.f$.getState()).to.deep.equal(value);
-    currentTest!.reactions = 0;
-}
