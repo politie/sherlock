@@ -1,7 +1,7 @@
 import { _internal, atom, Derivable, DerivableAtom, State, transact } from '@politie/sherlock';
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { filterUpdates, FilterUpdatesOptions } from './filter-updates';
+import { controlFlow, ControlFlowOptions } from './control-flow';
 
 const { unresolved } = _internal.symbols;
 
@@ -14,7 +14,7 @@ describe('sherlock-utils/filterUpdates', () => {
         context('no options', () => {
             it('should always forward a get request when not connected', () => {
                 spy(a$, 'getState');
-                const f$ = filterUpdates(a$);
+                const f$ = controlFlow(a$);
                 expect(a$.getState).to.not.have.been.called;
                 expect(f$.resolved).to.be.false;
                 expect(a$.getState).to.have.been.calledOnce;
@@ -24,7 +24,7 @@ describe('sherlock-utils/filterUpdates', () => {
             });
 
             it('should propagate errors', () => {
-                const f$ = filterUpdates(a$);
+                const f$ = controlFlow(a$);
                 a$.setError('my error');
                 expect(f$.value).to.be.undefined;
                 expect(f$.error).to.equal('my error');
@@ -37,14 +37,14 @@ describe('sherlock-utils/filterUpdates', () => {
         describe('from', () => {
             it('should be unresolved if `from` is false', () => {
                 a$.set('value');
-                const f$ = filterUpdates(a$, { from: false });
+                const f$ = controlFlow(a$, { from: false });
                 expect(f$.resolved).to.be.false;
             });
 
             it('should be unresolved while `from` is false', () => {
                 a$.set('value');
                 const from = atom(false);
-                const f$ = filterUpdates(a$, { from });
+                const f$ = controlFlow(a$, { from });
                 expect(f$.resolved).to.be.false;
                 from.set(true);
                 expect(f$.value).to.equal('value');
@@ -57,7 +57,7 @@ describe('sherlock-utils/filterUpdates', () => {
             it('should propagate errors iff `from` is true', () => {
                 a$.setError('my error');
                 const from = atom(false);
-                const f$ = filterUpdates(a$, { from });
+                const f$ = controlFlow(a$, { from });
                 expect(f$.error).to.be.undefined;
                 from.set(true);
                 expect(f$.error).to.equal('my error');
@@ -71,14 +71,14 @@ describe('sherlock-utils/filterUpdates', () => {
         describe('until', () => {
             it('should be unresolved if `until` is true', () => {
                 a$.set('value');
-                const f$ = filterUpdates(a$, { until: true });
+                const f$ = controlFlow(a$, { until: true });
                 expect(f$.resolved).to.be.false;
             });
 
             it('should be unresolved while `until` is true', () => {
                 a$.set('value');
                 const until = atom(false);
-                const f$ = filterUpdates(a$, { until });
+                const f$ = controlFlow(a$, { until });
                 expect(f$.value).to.equal('value');
                 until.set(true);
                 expect(f$.resolved).to.be.false;
@@ -91,7 +91,7 @@ describe('sherlock-utils/filterUpdates', () => {
             it('should propagate errors iff `until` is false', () => {
                 a$.setError('an error');
                 const until = atom(false);
-                const f$ = filterUpdates(a$, { until });
+                const f$ = controlFlow(a$, { until });
                 expect(f$.error).to.equal('an error');
                 until.set(true);
                 expect(f$.error).to.be.undefined;
@@ -105,14 +105,14 @@ describe('sherlock-utils/filterUpdates', () => {
         describe('when', () => {
             it('should be unresolved if `when` is false', () => {
                 a$.set('value');
-                const f$ = filterUpdates(a$, { when: false });
+                const f$ = controlFlow(a$, { when: false });
                 expect(f$.resolved).to.be.false;
             });
 
             it('should be unresolved while `when` is false', () => {
                 a$.set('value');
                 const when = atom(false);
-                const f$ = filterUpdates(a$, { when });
+                const f$ = controlFlow(a$, { when });
                 expect(f$.resolved).to.be.false;
                 when.set(true);
                 expect(f$.value).to.equal('value');
@@ -125,7 +125,7 @@ describe('sherlock-utils/filterUpdates', () => {
             it('should propagate errors iff `when` is true', () => {
                 a$.setError('foo');
                 const when = atom(false);
-                const f$ = filterUpdates(a$, { when });
+                const f$ = controlFlow(a$, { when });
                 expect(f$.error).to.be.undefined;
                 when.set(true);
                 expect(f$.error).to.equal('foo');
@@ -139,7 +139,7 @@ describe('sherlock-utils/filterUpdates', () => {
         describe('once', () => {
             it('should have no impact on the output', () => {
                 a$.set('value');
-                const f$ = filterUpdates(a$, { once: true });
+                const f$ = controlFlow(a$, { once: true });
                 expect(f$.value).to.equal('value');
                 expect(f$.value).to.equal('value');
 
@@ -151,7 +151,7 @@ describe('sherlock-utils/filterUpdates', () => {
         describe('skipFirst', () => {
             it('should always be unresolved', () => {
                 a$.set('value');
-                const f$ = filterUpdates(a$, { skipFirst: true });
+                const f$ = controlFlow(a$, { skipFirst: true });
                 expect(f$.resolved).to.be.false;
                 expect(f$.resolved).to.be.false;
 
@@ -543,34 +543,46 @@ describe('sherlock-utils/filterUpdates', () => {
                     let connectionChanges = 0;
                     a$.connected$.react(() => connectionChanges++, { skipFirst: true });
 
-                    const f$ = filterUpdates(a$, { once: true }).autoCache();
-
-                    expect(connectionChanges).to.equal(0);
-                    expect(f$.get()).to.equal('synchronous value');
-                    expect(connectionChanges).to.equal(2);
-                    expect(f$.get()).to.equal('synchronous value');
-                    expect(connectionChanges).to.equal(2);
+                    const f$ = startTest({ once: true });
 
                     expect((f$ as any)._baseConnectionStopper).to.be.undefined;
+
+                    expect(connectionChanges).to.equal(2);
+                    expect(f$.get()).to.equal('synchronous value');
+                    expect(connectionChanges).to.equal(2);
                 });
 
                 it('should disconnect after the first value', () => {
                     let connectionChanges = 0;
                     a$.connected$.react(() => connectionChanges++, { skipFirst: true });
 
-                    const f$ = filterUpdates(a$, { once: true }).autoCache();
+                    const f$ = startTest({ once: true });
 
-                    expect(connectionChanges).to.equal(0);
                     expect(f$.resolved).to.be.false;
-                    expect(connectionChanges).to.equal(1);
-                    expect((f$ as any)._baseConnectionStopper).to.be.a('function');
 
-                    a$.set('asynchronous value');
-                    expect(connectionChanges).to.equal(2);
-                    expect((f$ as any)._baseConnectionStopper).to.be.undefined;
+                    if (includeUnresolved) {
 
-                    expect(f$.get()).to.equal('asynchronous value');
-                    expect(connectionChanges).to.equal(2);
+                        expect(connectionChanges).to.equal(2);
+                        expect((f$ as any)._baseConnectionStopper).to.be.undefined;
+
+                        a$.set('asynchronous value');
+
+                        expect(f$.resolved).to.be.false;
+                        expect(connectionChanges).to.equal(2);
+
+                    } else {
+
+                        expect(connectionChanges).to.equal(1);
+                        expect((f$ as any)._baseConnectionStopper).to.be.a('function');
+
+                        a$.set('asynchronous value');
+
+                        expect(connectionChanges).to.equal(2);
+                        expect((f$ as any)._baseConnectionStopper).to.be.undefined;
+
+                        expect(f$.get()).to.equal('asynchronous value');
+                        expect(connectionChanges).to.equal(2);
+                    }
                 });
 
                 it('should consider a transaction as one big update', () => {
@@ -629,8 +641,8 @@ describe('sherlock-utils/filterUpdates', () => {
 
             let currentTest: { reactions: number, value: any, f$: Derivable<any> } | undefined;
             let currentStopper: (() => void) | undefined;
-            function startTest(opts?: FilterUpdatesOptions<string>) {
-                const f$ = filterUpdates(a$, { ...opts, includeUnresolved });
+            function startTest(opts?: ControlFlowOptions<string>) {
+                const f$ = controlFlow(a$, { ...opts, includeUnresolved });
                 currentTest = { reactions: 0, value: undefined, f$ };
                 const reaction = (v: any) => {
                     currentTest!.reactions++;

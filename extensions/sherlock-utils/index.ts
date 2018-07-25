@@ -1,5 +1,5 @@
+export * from './src/control-flow';
 export * from './src/derivable-cache';
-export * from './src/filter-updates';
 export * from './src/from-promise';
 export * from './src/lift';
 export * from './src/pairwise';

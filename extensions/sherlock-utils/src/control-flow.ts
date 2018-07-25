@@ -1,7 +1,7 @@
 import { _internal, Derivable, derive, inTransaction, ReactorOptionValue, safeUnwrap, State, unwrap } from '@politie/sherlock';
 import { fromStateObject, materialize, StateObject } from './state';
 
-export interface FilterUpdatesOptions<V> {
+export interface ControlFlowOptions<V> {
     /**
      * Indicates when the derivable should become active. The output derivable gets its first value when `from` becomes true. After that `from` is
      * not observed anymore.
@@ -37,14 +37,14 @@ export interface FilterUpdatesOptions<V> {
 }
 
 // tslint:disable-next-line:ban-types
-type PreparedOptions<V> = { [P in keyof FilterUpdatesOptions<V>]?: Exclude<FilterUpdatesOptions<V>[P], Function> };
+type PreparedOptions<V> = { [P in keyof ControlFlowOptions<V>]?: Exclude<ControlFlowOptions<V>[P], Function> };
 
-class FilterUpdates<V> extends _internal.BaseDerivable<V> implements Derivable<V> {
+class ControlFlow<V> extends _internal.BaseDerivable<V> implements Derivable<V> {
     private readonly opts: PreparedOptions<V>;
 
     constructor(
         private readonly base: Derivable<V>,
-        opts?: FilterUpdatesOptions<V>,
+        opts?: ControlFlowOptions<V>,
     ) {
         super();
         this.opts = prepareOptions(base, opts);
@@ -122,8 +122,8 @@ class FilterUpdates<V> extends _internal.BaseDerivable<V> implements Derivable<V
     }
 }
 
-export function filterUpdates<V>(base: Derivable<V>, opts?: FilterUpdatesOptions<V>): Derivable<V> {
-    return new FilterUpdates(base, opts);
+export function controlFlow<V>(base: Derivable<V>, opts?: ControlFlowOptions<V>): Derivable<V> {
+    return new ControlFlow(base, opts);
 }
 
 function shouldBeLive<V>(opts?: PreparedOptions<V>): boolean {
@@ -133,7 +133,7 @@ function shouldBeLive<V>(opts?: PreparedOptions<V>): boolean {
         (opts.when === undefined || safeUnwrap(opts.when) === true);
 }
 
-function prepareOptions<V>(base: Derivable<V>, opts?: FilterUpdatesOptions<V>, ): PreparedOptions<V> {
+function prepareOptions<V>(base: Derivable<V>, opts?: ControlFlowOptions<V>, ): PreparedOptions<V> {
     const result: PreparedOptions<V> = {};
     if (opts) {
         for (const key of Object.keys(opts) as Array<keyof typeof opts>) {
