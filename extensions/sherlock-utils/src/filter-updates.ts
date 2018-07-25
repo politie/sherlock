@@ -1,11 +1,11 @@
 import { _internal, Derivable, inTransaction, ReactorOptions, ReactorOptionValue, safeUnwrap, State } from '@politie/sherlock';
 
-export type RetainValueOptions<V> = Partial<Pick<ReactorOptions<V>, Exclude<keyof ReactorOptions<V>, 'onError'>>>;
+export type FilterUpdatesOptions<V> = Partial<Pick<ReactorOptions<V>, Exclude<keyof ReactorOptions<V>, 'onError'>>>;
 
-class RetainValue<V> extends _internal.BaseDerivable<V> implements Derivable<V> {
+class FilterUpdates<V> extends _internal.BaseDerivable<V> implements Derivable<V> {
     constructor(
         private readonly base: _internal.BaseDerivable<V>,
-        private readonly opts?: RetainValueOptions<V>,
+        private readonly opts?: FilterUpdatesOptions<V>,
     ) { super(); }
 
     /**
@@ -25,7 +25,7 @@ class RetainValue<V> extends _internal.BaseDerivable<V> implements Derivable<V> 
 
     [_internal.symbols.internalGetState]() {
         _internal.recordObservation(this);
-        if (this.connected && !inTransaction() || !shouldGetValueFromSource(this.base, this.opts)) {
+        if (this.connected && !inTransaction() || !shouldBeLive(this.base, this.opts)) {
             return this._currentState;
         }
         return _internal.independentTracking(() => this.base.getState());
@@ -68,11 +68,11 @@ class RetainValue<V> extends _internal.BaseDerivable<V> implements Derivable<V> 
     }
 }
 
-export function retainValue<V>(base: Derivable<V>, opts?: RetainValueOptions<V>): Derivable<V> {
-    return new RetainValue(base as _internal.BaseDerivable<V>, opts);
+export function filterUpdates<V>(base: Derivable<V>, opts?: FilterUpdatesOptions<V>): Derivable<V> {
+    return new FilterUpdates(base as _internal.BaseDerivable<V>, opts);
 }
 
-function shouldGetValueFromSource<V>(base: Derivable<V>, opts?: RetainValueOptions<V>): boolean {
+function shouldBeLive<V>(base: Derivable<V>, opts?: FilterUpdatesOptions<V>): boolean {
     function checkValue(opt: ReactorOptionValue<V>, want: boolean) {
         const value = safeUnwrap(typeof opt === 'function' ? opt(base) : opt);
         return value === want;

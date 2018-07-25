@@ -1,11 +1,11 @@
 import { _internal, atom, Derivable, DerivableAtom, State, transact } from '@politie/sherlock';
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { retainValue, RetainValueOptions } from './retain-value';
+import { filterUpdates, FilterUpdatesOptions } from './filter-updates';
 
 const { unresolved } = _internal.symbols;
 
-describe('sherlock-utils/retainValue', () => {
+describe('sherlock-utils/filterUpdates', () => {
     let a$: DerivableAtom<string>;
 
     beforeEach('create the base atom', () => { a$ = atom.unresolved(); });
@@ -14,7 +14,7 @@ describe('sherlock-utils/retainValue', () => {
         context('no options', () => {
             it('should always forward a get request when not connected', () => {
                 spy(a$, 'getState');
-                const f$ = retainValue(a$);
+                const f$ = filterUpdates(a$);
                 expect(a$.getState).to.not.have.been.called;
                 expect(f$.resolved).to.be.false;
                 expect(a$.getState).to.have.been.calledOnce;
@@ -24,7 +24,7 @@ describe('sherlock-utils/retainValue', () => {
             });
 
             it('should propagate errors', () => {
-                const f$ = retainValue(a$);
+                const f$ = filterUpdates(a$);
                 a$.setError('my error');
                 expect(f$.value).to.be.undefined;
                 expect(f$.error).to.equal('my error');
@@ -38,7 +38,7 @@ describe('sherlock-utils/retainValue', () => {
             it('should be unresolved if `from` is false', () => {
                 a$.set('value');
                 const from = atom(false);
-                const f$ = retainValue(a$, { from });
+                const f$ = filterUpdates(a$, { from });
                 expect(f$.resolved).to.be.false;
                 from.set(true);
                 expect(f$.value).to.equal('value');
@@ -51,7 +51,7 @@ describe('sherlock-utils/retainValue', () => {
             it('should propagate errors iff `from` is true', () => {
                 a$.setError('my error');
                 const from = atom(false);
-                const f$ = retainValue(a$, { from });
+                const f$ = filterUpdates(a$, { from });
                 expect(f$.error).to.be.undefined;
                 from.set(true);
                 expect(f$.error).to.equal('my error');
@@ -66,7 +66,7 @@ describe('sherlock-utils/retainValue', () => {
             it('should be unresolved if `until` is true', () => {
                 a$.set('value');
                 const until = atom(false);
-                const f$ = retainValue(a$, { until });
+                const f$ = filterUpdates(a$, { until });
                 expect(f$.value).to.equal('value');
                 until.set(true);
                 expect(f$.resolved).to.be.false;
@@ -79,7 +79,7 @@ describe('sherlock-utils/retainValue', () => {
             it('should propagate errors iff `until` is false', () => {
                 a$.setError('an error');
                 const until = atom(false);
-                const f$ = retainValue(a$, { until });
+                const f$ = filterUpdates(a$, { until });
                 expect(f$.error).to.equal('an error');
                 until.set(true);
                 expect(f$.error).to.be.undefined;
@@ -94,7 +94,7 @@ describe('sherlock-utils/retainValue', () => {
             it('should be unresolved if `when` is false', () => {
                 a$.set('value');
                 const when = atom(false);
-                const f$ = retainValue(a$, { when });
+                const f$ = filterUpdates(a$, { when });
                 expect(f$.resolved).to.be.false;
                 when.set(true);
                 expect(f$.value).to.equal('value');
@@ -107,7 +107,7 @@ describe('sherlock-utils/retainValue', () => {
             it('should propagate errors iff `when` is true', () => {
                 a$.setError('foo');
                 const when = atom(false);
-                const f$ = retainValue(a$, { when });
+                const f$ = filterUpdates(a$, { when });
                 expect(f$.error).to.be.undefined;
                 when.set(true);
                 expect(f$.error).to.equal('foo');
@@ -121,7 +121,7 @@ describe('sherlock-utils/retainValue', () => {
         describe('once', () => {
             it('should have no impact on the output', () => {
                 a$.set('value');
-                const f$ = retainValue(a$, { once: true });
+                const f$ = filterUpdates(a$, { once: true });
                 expect(f$.value).to.equal('value');
                 expect(f$.value).to.equal('value');
 
@@ -133,7 +133,7 @@ describe('sherlock-utils/retainValue', () => {
         describe('skipFirst', () => {
             it('should always be unresolved', () => {
                 a$.set('value');
-                const f$ = retainValue(a$, { skipFirst: true });
+                const f$ = filterUpdates(a$, { skipFirst: true });
                 expect(f$.resolved).to.be.false;
                 expect(f$.resolved).to.be.false;
 
@@ -188,7 +188,7 @@ describe('sherlock-utils/retainValue', () => {
                 it('should be live', () => {
                     from.set(false);
                     a$.set('a');
-                    const f$ = retainValue(a$, { from }).autoCache();
+                    const f$ = filterUpdates(a$, { from }).autoCache();
 
                     transact(() => {
                         expect(f$.resolved).to.be.false;
@@ -285,7 +285,7 @@ describe('sherlock-utils/retainValue', () => {
                 it('should be live', () => {
                     until.set(false);
                     a$.set('a');
-                    const f$ = retainValue(a$, { until }).autoCache();
+                    const f$ = filterUpdates(a$, { until }).autoCache();
 
                     transact(() => {
                         expect(f$.value).to.equal('a');
@@ -376,7 +376,7 @@ describe('sherlock-utils/retainValue', () => {
             context('inside transactions', () => {
                 it('should be live', () => {
                     a$.set('a');
-                    const f$ = retainValue(a$, { when }).autoCache();
+                    const f$ = filterUpdates(a$, { when }).autoCache();
 
                     when.set(true);
                     expect(f$.value).to.equal('a');
@@ -421,7 +421,6 @@ describe('sherlock-utils/retainValue', () => {
 
         describe('once', () => {
             it('should update only once and keep the value after that', () => {
-                // const f$ = retainValue(a$, { once: true }).autoCache();
                 test(a$, { once: true });
                 shouldNotHaveReacted(unresolved);
                 a$.set('a');
@@ -451,7 +450,7 @@ describe('sherlock-utils/retainValue', () => {
                 let connectionChanges = 0;
                 a$.connected$.react(() => connectionChanges++, { skipFirst: true });
 
-                const f$ = retainValue(a$, { once: true }).autoCache();
+                const f$ = filterUpdates(a$, { once: true }).autoCache();
 
                 expect(connectionChanges).to.equal(0);
                 expect(f$.get()).to.equal('synchronous value');
@@ -466,7 +465,7 @@ describe('sherlock-utils/retainValue', () => {
                 let connectionChanges = 0;
                 a$.connected$.react(() => connectionChanges++, { skipFirst: true });
 
-                const f$ = retainValue(a$, { once: true }).autoCache();
+                const f$ = filterUpdates(a$, { once: true }).autoCache();
 
                 expect(connectionChanges).to.equal(0);
                 expect(f$.resolved).to.be.false;
@@ -501,7 +500,6 @@ describe('sherlock-utils/retainValue', () => {
         describe('skipFirst', () => {
             it('should never present the first state from the returned derivable (synchronous start)', () => {
                 a$.set('first value');
-                // const f$ = retainValue(a$, { skipFirst: true }).autoCache();
                 test(a$, { skipFirst: true });
                 shouldNotHaveReacted(unresolved);
 
@@ -516,7 +514,6 @@ describe('sherlock-utils/retainValue', () => {
             });
 
             it('should never present the first state from the returned derivable (asynchronous start)', () => {
-                // const f$ = retainValue(a$, { skipFirst: true }).autoCache();
                 test(a$, { skipFirst: true });
                 shouldNotHaveReacted(unresolved);
 
@@ -537,8 +534,8 @@ describe('sherlock-utils/retainValue', () => {
 });
 
 let currentTest: { reactions: number, value: any, f$: Derivable<any> } | undefined;
-export function test<V>(d$: Derivable<V>, opts?: RetainValueOptions<V>) {
-    const f$ = retainValue(d$, opts);
+export function test<V>(d$: Derivable<V>, opts?: FilterUpdatesOptions<V>) {
+    const f$ = filterUpdates(d$, opts);
     currentTest = { reactions: 0, value: undefined, f$ };
     const reaction = (v: any) => {
         currentTest!.reactions++;
