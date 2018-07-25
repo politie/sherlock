@@ -1,18 +1,53 @@
-import { _internal, Derivable, derive, inTransaction, ReactorOptions, safeUnwrap, State, unwrap } from '@politie/sherlock';
+import { _internal, Derivable, derive, inTransaction, ReactorOptionValue, safeUnwrap, State, unwrap } from '@politie/sherlock';
+import { fromStateObject, materialize, StateObject } from './state';
 
-export type FilterUpdatesOptions<V> = Partial<Pick<ReactorOptions<V>, Exclude<keyof ReactorOptions<V>, 'onError'>>>;
+export interface FilterUpdatesOptions<V> {
+    /**
+     * Indicates when the derivable should become active. The output derivable gets its first value when `from` becomes true. After that `from` is
+     * not observed anymore.
+     */
+    from?: ReactorOptionValue<V>;
+
+    /**
+     * Indicates when the derivable should stop updating. The updates are stopped indefinitely when `until` becomes false.
+     */
+    until?: ReactorOptionValue<V>;
+
+    /**
+     * Indicates when the derivable should update, starts and stops the updates whenever the value changes. The first time
+     * `when` becomes true, `skipFirst` is respected if applicable. After that the derivable will update each time `when` becomes
+     * true and the parent derivable has a value that differs from the current value of the output derivable.
+     */
+    when?: ReactorOptionValue<V>;
+
+    /**
+     * When `true` the derivable will update only once, after which it will stop updating indefinitely.
+     */
+    once?: boolean;
+
+    /**
+     * When `true` the derivable will not update the first time it receives an update from the parent derivable. After that it has no effect.
+     */
+    skipFirst?: boolean;
+
+    /*
+     * Indicates whether an update to unresolved state is considered an update. Default: false.
+     */
+    includeUnresolved?: boolean;
+}
+
 // tslint:disable-next-line:ban-types
 type PreparedOptions<V> = { [P in keyof FilterUpdatesOptions<V>]?: Exclude<FilterUpdatesOptions<V>[P], Function> };
 
 class FilterUpdates<V> extends _internal.BaseDerivable<V> implements Derivable<V> {
-    private readonly opts?: PreparedOptions<V>;
+    private readonly opts: PreparedOptions<V>;
 
     constructor(
-        private readonly base: _internal.BaseDerivable<V>,
+        private readonly base: Derivable<V>,
         opts?: FilterUpdatesOptions<V>,
     ) {
         super();
-        this.opts = opts && prepareOptions(base, opts);
+        this.opts = prepareOptions(base, opts);
     }
 
     /**
@@ -39,22 +74,33 @@ class FilterUpdates<V> extends _internal.BaseDerivable<V> implements Derivable<V
     }
 
     [_internal.symbols.connect]() {
-        let connecting = true;
+        let stopped = false;
 
-        const update = (newState: State<V>) => {
-            const oldState = this._currentState;
-            this._currentState = newState;
-            _internal.processChangedAtom(this, oldState, this.version++);
+        // tslint:disable-next-line:prefer-const
+        let { once, skipFirst, ...opts } = this.opts;
+
+        const stop = () => {
+            stopped = true;
+            this._disconnectFromBase();
         };
-        const onError = (err: any) => update(new _internal.ErrorWrapper(err));
-        const cleanup = () => {
-            connecting = false;
-            this._baseConnectionStopper = undefined;
+        const update = (newState: StateObject<V>) => {
+            if (this.opts && this.opts.includeUnresolved || newState.resolved) {
+                if (skipFirst) {
+                    skipFirst = false;
+                } else {
+                    once && stop();
+                    const oldState = this._currentState;
+                    this._currentState = fromStateObject(newState);
+                    _internal.processChangedAtom(this, oldState, this.version++);
+                }
+            }
         };
 
-        const stopper = _internal.Reactor.create(this.base, update, { ...this.opts, onError }, cleanup);
-        if (connecting) {
-            connecting = false;
+        const mBase = materialize(this.base) as _internal.BaseDerivable<StateObject<V>>;
+        const stopper = _internal.Reactor.create(mBase, update, opts, stop);
+        if (stopped) {
+            stopper();
+        } else {
             this._baseConnectionStopper = stopper;
         }
 
@@ -63,8 +109,9 @@ class FilterUpdates<V> extends _internal.BaseDerivable<V> implements Derivable<V
 
     private _disconnectFromBase() {
         if (this._baseConnectionStopper) {
-            this._baseConnectionStopper();
+            const stopper = this._baseConnectionStopper;
             this._baseConnectionStopper = undefined;
+            stopper();
         }
     }
 
@@ -76,7 +123,7 @@ class FilterUpdates<V> extends _internal.BaseDerivable<V> implements Derivable<V
 }
 
 export function filterUpdates<V>(base: Derivable<V>, opts?: FilterUpdatesOptions<V>): Derivable<V> {
-    return new FilterUpdates(base as _internal.BaseDerivable<V>, opts);
+    return new FilterUpdates(base, opts);
 }
 
 function shouldBeLive<V>(opts?: PreparedOptions<V>): boolean {
@@ -86,11 +133,13 @@ function shouldBeLive<V>(opts?: PreparedOptions<V>): boolean {
         (opts.when === undefined || safeUnwrap(opts.when) === true);
 }
 
-function prepareOptions<V>(base: Derivable<V>, opts: FilterUpdatesOptions<V>, ): PreparedOptions<V> {
+function prepareOptions<V>(base: Derivable<V>, opts?: FilterUpdatesOptions<V>, ): PreparedOptions<V> {
     const result: PreparedOptions<V> = {};
-    for (const key of Object.keys(opts) as Array<keyof typeof opts>) {
-        const opt = opts[key];
-        result[key] = typeof opt === 'function' ? derive(() => unwrap(opt(base))) : opt;
+    if (opts) {
+        for (const key of Object.keys(opts) as Array<keyof typeof opts>) {
+            const opt = opts[key];
+            result[key] = typeof opt === 'function' ? derive(() => unwrap(opt(base))) : opt;
+        }
     }
     return result;
 }
