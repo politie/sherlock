@@ -637,6 +637,29 @@ describe('sherlock-utils/filterUpdates', () => {
                     a$.unset();
                     shouldNotHaveReacted(includeUnresolved ? unresolved : 'third value');
                 });
+
+                it('should consider a transaction as one big update', () => {
+                    const f$ = startTest({ skipFirst: true });
+
+                    shouldNotHaveReacted(unresolved);
+
+                    transact(() => {
+                        a$.set('a');
+                        expect(f$.value).to.be.undefined;
+                        a$.set('b');
+                        expect(f$.value).to.be.undefined;
+                        a$.set('c');
+                        expect(f$.value).to.be.undefined;
+                    });
+
+                    includeUnresolved
+                        ? shouldHaveReactedOnce('c')
+                        : shouldNotHaveReacted(unresolved);
+
+                    a$.set('d');
+
+                    shouldHaveReactedOnce('d');
+                });
             });
 
             let currentTest: { reactions: number, value: any, f$: Derivable<any> } | undefined;
