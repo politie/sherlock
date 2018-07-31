@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { SinonFakeTimers, SinonStub, spy, stub, useFakeTimers } from 'sinon';
+import { SinonFakeTimers, spy, useFakeTimers } from 'sinon';
 import { State } from '../interfaces';
 import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from '../reactor/reactor.spec';
 import { connect, disconnect, unresolved } from '../symbols';
@@ -23,19 +23,27 @@ describe('derivable/data-source', () => {
     }
 
     context('(simple)', () => {
-        testDerivable(v => new SimpleDataSource(v), false);
+        testDerivable(v => new SimpleDataSource(v), 'settable', 'no-error-augmentation');
     });
     context('(derived)', () => {
-        testDerivable(v => new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v }).derive(obj => obj.value), false);
+        testDerivable(
+            v => new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v }).derive(obj => obj.value),
+            'no-error-augmentation'
+        );
     });
-    context('(lensed)', () => {
+    context('(mapped)', () => {
+        testDerivable(
+            v => new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v }).map(obj => obj.value),
+            'no-error-augmentation'
+        );
+    });
+    context('(bi-mapped)', () => {
         testDerivable(<V>(v: State<V>) =>
             new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v })
-                .lens<V>({
-                    get: obj => obj.value,
-                    set: value => ({ value }),
-                }),
-            false);
+                .map<V>(
+                    obj => obj.value,
+                    value => ({ value }),
+            ), 'settable', 'no-error-augmentation');
     });
 
     context('(in transactions)', () => {
@@ -190,22 +198,15 @@ describe('derivable/data-source', () => {
         before('setDebugMode', () => { config.debugMode = true; });
         after('resetDebugMode', () => { config.debugMode = false; });
 
-        let consoleErrorStub: SinonStub;
-        beforeEach('stub console.error', () => { consoleErrorStub = stub(console, 'error'); });
-        afterEach('restore console.error', () => { consoleErrorStub.restore(); });
-
-        it('should generate a stacktrace on instantiation', () => {
-            // tslint:disable-next-line:no-string-literal
-            expect(new FaultyDataSource()['_stack']).to.be.a('string');
-        });
-
-        it('should log the recorded stacktrace on error', () => {
+        it('should augment an error when it is caught in the datasource', () => {
             const d$ = new FaultyDataSource();
-            // tslint:disable-next-line:no-string-literal
-            const stack = d$['_stack'];
             expect(() => d$.get()).to.throw('the error');
-            expect(console.error).to.have.been.calledOnce
-                .and.to.have.been.calledWithExactly('the error', stack);
+            try {
+                d$.get();
+            } catch (e) {
+                expect(e.stack).to.contain('the error');
+                expect(e.stack).to.contain(d$.creationStack!);
+            }
         });
     });
 

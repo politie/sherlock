@@ -1,8 +1,8 @@
 import { BaseDerivable, Constant, Derivation, unwrap } from '../derivable';
 import { Derivable, ReactorOptions, ReactorOptionValue, ToPromiseOptions } from '../interfaces';
-import { disconnect, emptyCache, getState, mark, unresolved } from '../symbols';
-import { addObserver, Observer, removeObserver } from '../tracking';
-import { config, equals, ErrorWrapper, uniqueId } from '../utils';
+import { disconnect, emptyCache, internalGetState, mark, unresolved } from '../symbols';
+import { addObserver, independentTracking, Observer, removeObserver } from '../tracking';
+import { augmentStack, equals, ErrorWrapper, prepareCreationStack, uniqueId } from '../utils';
 
 // Adds the react and toPromise methods to Derivables.
 declare module '../derivable/extension' {
@@ -30,11 +30,15 @@ const true$ = new Constant(true);
 const false$ = new Constant(false);
 
 BaseDerivable.prototype.react = function react(reaction, options) {
-    return Reactor.create(this, reaction, options);
+    return independentTracking(() => Reactor.create(this, reaction, options));
 };
 
 BaseDerivable.prototype.toPromise = function toPromise(options) {
-    return new Promise((resolve, reject) => this.react(resolve, { ...options, once: true, onError: reject }));
+    return new Promise((resolve, reject) => this.react(resolve, {
+        ...options,
+        once: true,
+        onError(err, done) { done(); reject(err); }
+    }));
 };
 
 /**
@@ -61,13 +65,15 @@ export const defaultOptions: ReactorOptions<any> = {
 export class Reactor<V> implements Observer {
     /**
      * A Reactor can have a controller that should always be allowed to react before the current Reactor reacts.
+     * @internal
      */
-    controller?: Reactor<any>;
+    _controller?: Reactor<any>;
 
     /**
      * When a reactor is active it observes its derivable (parent) and reacts to changes.
+     * @internal
      */
-    active = false;
+    _active = false;
 
     /**
      * Unique ID for debugging purposes.
@@ -76,111 +82,118 @@ export class Reactor<V> implements Observer {
 
     /**
      * The current recursion depth of reactions. Can reach a maximum at which point an Error will be thrown.
+     * @internal
      */
-    private reactionDepth = 0;
+    private _reactionDepth = 0;
 
     /**
      * Used for debugging. A stack that shows the location where this derivation was created.
      */
-    private readonly stack = config.debugMode ? new Error().stack : undefined;
+    readonly creationStack = prepareCreationStack(this);
 
     /**
      * The value of the parent when this reactor last reacted. Is used to determine whether it should react again or not.
+     * @internal
      */
-    private lastValue: V | typeof emptyCache | typeof unresolved = emptyCache;
+    private _lastValue: V | typeof emptyCache | typeof unresolved = emptyCache;
 
     /**
      * Create a new instance of Reactor, do not use this directly, use {@link Reactor.create} instead.
      *
-     * @param parent the derivable that should be observed
-     * @param reaction the reaction that should fire
+     * @param _parent the derivable that should be observed
+     * @param _reaction the reaction that should fire
      */
     protected constructor(
         /**
          * The derivable that is observed to determine changes.
+         * @internal
          */
-        private readonly parent: BaseDerivable<V>,
+        private readonly _parent: BaseDerivable<V>,
 
         /**
          * The error handler, is called when either the observed derivable or the reactor throws.
+         * @internal
          */
-        private readonly errorHandler: (error: any) => void,
+        private readonly _errorHandler: (error: any) => void,
 
         /**
          * The reaction that should fire when the derivable changes.
+         * @internal
          */
-        private readonly reaction: (value: V) => void,
+        private readonly _reaction: (value: V) => void,
     ) { }
 
     /**
      * Start this reactor if not already started. Will always run the reaction once with the current value of parent on start.
+     * @internal
      */
-    start() {
-        if (this.active) {
+    _start() {
+        if (this._active) {
             return;
         }
-        addObserver(this.parent, this);
-        this.active = true;
-        this.reactIfNeeded();
+        addObserver(this._parent, this);
+        this._active = true;
+        this._reactIfNeeded();
     }
 
     /**
      * React when active and needed. Does nothing when a reaction is not appropriate.
+     * @internal
      */
-    reactIfNeeded() {
-        if (!this.active) {
+    _reactIfNeeded() {
+        if (!this._active) {
             return;
         }
 
         // Our controller always has first right to react.
-        if (this.controller) {
-            this.controller.reactIfNeeded();
+        if (this._controller) {
+            this._controller._reactIfNeeded();
         }
 
         // Check active again, could have been stopped by controller now.
-        if (!this.active) {
+        if (!this._active) {
             return;
         }
 
-        const { lastValue } = this;
-        const nextValue = this.parent[getState]();
+        const { _lastValue } = this;
+        const nextValue = this._parent[internalGetState]();
         if (nextValue instanceof ErrorWrapper) {
-            this.errorHandler(nextValue.error);
-        } else if (nextValue !== unresolved && !equals(lastValue, nextValue)) {
-            this.lastValue = nextValue;
-            this.react(nextValue);
+            this._errorHandler(nextValue.error);
+        } else if (nextValue !== unresolved && !equals(_lastValue, nextValue)) {
+            this._lastValue = nextValue;
+            this._react(nextValue);
         }
     }
 
     /**
      * React once. Will call the reaction with the current value of parent and remember the current version of the parent to
      * be able to determine when to react next.
+     * @internal
      */
-    private react(value: V) {
-        this.reactionDepth++;
+    private _react(value: V) {
+        this._reactionDepth++;
         try {
-            if (this.reactionDepth > MAX_REACTION_DEPTH) {
+            if (this._reactionDepth > MAX_REACTION_DEPTH) {
                 throw new Error('Too deeply nested synchronous cyclical reactions disallowed. Use setImmediate.');
             }
-            this.reaction(value);
+            this._reaction(value);
         } catch (e) {
-            // tslint:disable-next-line:no-console - console.error is only called when debugMode is set to true
-            this.stack && console.error(e.message, this.stack);
-            this.errorHandler(e);
+            this._errorHandler(augmentStack(e, this));
         } finally {
-            this.reactionDepth--;
+            this._reactionDepth--;
         }
     }
 
     /**
      * Stop reacting on parent changes, will remove this reactor as an observer from the parent which might disconnect the parent.
+     * @internal
      */
-    stop() {
-        if (!this.active) {
+    _stop() {
+        if (!this._active) {
             return this;
         }
-        this.active = false;
-        removeObserver(this.parent, this);
+        this._active = false;
+        removeObserver(this._parent, this);
         return this;
     }
 
@@ -188,7 +201,7 @@ export class Reactor<V> implements Observer {
      * If for some reason any upstream derivable is ordered to disconnect, we have to disconnect as well, which means: stop the reactor.
      */
     [disconnect]() {
-        this.stop();
+        this._stop();
     }
 
     /**
@@ -224,11 +237,12 @@ export class Reactor<V> implements Observer {
         const reactor = new Reactor<W>(parent, errorHandler, value => {
             if (skipFirst) {
                 skipFirst = false;
+            } else if (once) {
+                stopReactors();
+                reaction(value);
+                ended && ended();
             } else {
                 reaction(value);
-                if (once) {
-                    done();
-                }
             }
         });
 
@@ -240,43 +254,47 @@ export class Reactor<V> implements Observer {
                 if (conds.until) {
                     done();
                 } else if (conds.when) {
-                    reactor.start();
-                } else if (reactor.active) {
-                    reactor.stop();
+                    reactor._start();
+                } else if (reactor._active) {
+                    reactor._stop();
                 }
             });
 
         // The controller needs to act before the reactor in order to ensure deterministic until and when behavior.
-        reactor.controller = controller;
+        reactor._controller = controller;
 
         // The starter waits until `from` to start the controller.
         const starter = from === true || from === true$
             ? undefined
             : new Reactor(toDerivable(from, parent), errorHandler, value => {
                 if (value) {
-                    (controller || reactor).start();
-                    starter!.stop();
+                    (controller || reactor)._start();
+                    starter!._stop();
                 }
             });
 
+        function stopReactors() {
+            starter && starter._stop();
+            controller && controller._stop();
+            reactor._stop();
+        }
+
         function done() {
-            starter && starter.stop();
-            controller && controller.stop();
-            reactor.stop();
+            stopReactors();
             ended && ended();
         }
 
         function errorHandler(error: any) {
-            done();
             if (resolvedOptions.onError) {
-                resolvedOptions.onError(error);
+                resolvedOptions.onError(error, done);
             } else {
+                done();
                 throw error;
             }
         }
 
         // Go!!!
-        (starter || controller || reactor).start();
+        (starter || controller || reactor)._start();
 
         return done;
     }
@@ -295,5 +313,5 @@ export function toDerivable<V>(option: ReactorOptionValue<V>, derivable: Derivab
 function combineWhenUntil<V>(parent: Derivable<V>, whenOption: ReactorOptionValue<V>, untilOption: ReactorOptionValue<V>) {
     const when$ = toDerivable(whenOption, parent);
     const until$ = toDerivable(untilOption, parent);
-    return new Derivation((when, until) => ({ when, until }), [when$, until$]);
+    return new Derivation<{ when: boolean, until: boolean }>((when, until) => ({ when, until }), [when$, until$]);
 }

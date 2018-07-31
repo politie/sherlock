@@ -1,17 +1,17 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { DerivableAtom, SettableDerivable } from '../../interfaces';
-import { getState, observers, unresolved } from '../../symbols';
+import { SettableDerivable } from '../../interfaces';
+import { internalGetState, observers, unresolved } from '../../symbols';
 import { addObserver } from '../../tracking';
 import { ErrorWrapper } from '../../utils';
 import { $, Factory } from '../base-derivable.spec';
 import { constant } from '../factories';
-import { isSettableDerivable } from '../typeguards';
+import { isDerivableAtom, isSettableDerivable } from '../typeguards';
 
 /**
  * Tests the `get()` method and `value` accessors.
  */
-export function testAccessors(factory: Factory, immutable: boolean) {
+export function testAccessors(factory: Factory, isConstant: boolean) {
     describe('#get', () => {
         it('should return the current state', () => {
             const value$ = factory(123);
@@ -23,7 +23,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
             }
         });
 
-        it(`should ${immutable ? 'not ' : ''}be recorded inside a derivation'`, () => {
+        it(`should ${isConstant ? 'not ' : ''}be recorded inside a derivation'`, () => {
             const value$ = $(factory(123));
             expect(value$[observers]).to.be.empty;
             const derived$ = $(value$.derive(value => value + 876));
@@ -33,7 +33,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
             addObserver(derived$, {} as any);
             derived$.get();
 
-            if (immutable) {
+            if (isConstant) {
                 expect(value$[observers]).to.be.empty;
             } else {
                 expect(value$[observers]).to.have.length(1);
@@ -43,15 +43,15 @@ export function testAccessors(factory: Factory, immutable: boolean) {
 
         it('should throw an Error when unresolved', () => {
             const a$ = factory<number>(unresolved);
-            expect(() => a$.get()).to.throw('Could not get value, derivable is not (yet) resolved');
+            expect(() => a$.get()).to.throw('Could not get value, derivable is unresolved');
 
             if (isSettableDerivable(a$)) {
                 a$.set(1);
                 expect(a$.get()).to.equal(1);
 
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.unset();
-                    expect(() => a$.get()).to.throw('Could not get value, derivable is not (yet) resolved');
+                    expect(() => a$.get()).to.throw('Could not get value, derivable is unresolved');
                 }
             }
         });
@@ -64,7 +64,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
                 a$.set(1);
                 expect(a$.get()).to.equal(1);
 
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.setError(new Error('whatever'));
                     expect(() => a$.get()).to.throw('whatever');
                 }
@@ -83,7 +83,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
             }
         });
 
-        it(`should ${immutable ? 'not ' : ''}be recorded inside a derivation'`, () => {
+        it(`should ${isConstant ? 'not ' : ''}be recorded inside a derivation'`, () => {
             const value$ = $(factory(123));
             expect(value$[observers]).to.be.empty;
             const derived$ = $(value$.derive(value => value + 876));
@@ -93,7 +93,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
             addObserver(derived$, {} as any);
             derived$.getOr('whatever');
 
-            if (immutable) {
+            if (isConstant) {
                 expect(value$[observers]).to.be.empty;
             } else {
                 expect(value$[observers]).to.have.length(1);
@@ -109,7 +109,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
                 a$.set(1);
                 expect(a$.getOr('fallback')).to.equal(1);
 
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.unset();
                     expect(a$.getOr('fallback')).to.equal('fallback');
                 }
@@ -127,7 +127,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
                 expect(a$.getOr(fallback)).to.equal(1);
                 expect(fallback).to.have.been.calledOnce;
 
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.unset();
                     expect(a$.getOr(fallback)).to.equal('fallback');
                     expect(fallback).to.have.been.calledTwice;
@@ -144,7 +144,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
                 a$.set(1);
                 expect(a$.getOr(fallback)).to.equal(1);
 
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.unset();
                     expect(a$.getOr(fallback)).to.equal('fallback');
                 }
@@ -159,7 +159,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
                 a$.set(1);
                 expect(a$.getOr('fallback')).to.equal(1);
 
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.setError(new Error('whatever'));
                     expect(() => a$.getOr('fallback')).to.throw('whatever');
                 }
@@ -170,7 +170,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
     describe('#value', () => {
         it('should call #getState() when getting the #value property', () => {
             const a$ = factory('a');
-            const s = spy($(a$), getState);
+            const s = spy($(a$), internalGetState);
 
             // Use the getter
             expect(a$.value).to.equal('a');
@@ -178,7 +178,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
             expect(s).to.have.been.calledOnce;
         });
 
-        it(`should ${immutable ? 'not ' : ''}be recorded inside a derivation'`, () => {
+        it(`should ${isConstant ? 'not ' : ''}be recorded inside a derivation'`, () => {
             const value$ = $(factory(123));
             expect(value$[observers]).to.be.empty;
             const derived$ = $(value$.derive(value => value + 876));
@@ -188,7 +188,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
             addObserver(derived$, {} as any);
             derived$.value;
 
-            if (immutable) {
+            if (isConstant) {
                 expect(value$[observers]).to.be.empty;
             } else {
                 expect(value$[observers]).to.have.length(1);
@@ -204,7 +204,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
                 a$.set(1);
                 expect(a$.value).to.equal(1);
 
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.unset();
                     expect(a$.value).to.be.undefined;
                 }
@@ -230,7 +230,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
                 a$.set(1);
                 expect(a$.value).to.equal(1);
 
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.setError(new Error('whatever'));
                     expect(a$.value).to.be.undefined;
                 }
@@ -245,7 +245,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
             if (isSettableDerivable(a$)) {
                 a$.set('abc');
                 expect(a$.resolved).to.be.true;
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.unset();
                     expect(a$.resolved).to.be.false;
                 }
@@ -264,7 +264,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
                 a$.set('abc');
                 expect(a$.resolved).to.be.true;
                 expect(a$.errored).to.be.false;
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.setError(0);
                     expect(a$.resolved).to.be.true;
                     expect(a$.errored).to.be.true;
@@ -283,7 +283,7 @@ export function testAccessors(factory: Factory, immutable: boolean) {
             if (isSettableDerivable(a$)) {
                 a$.set('abc');
                 expect(a$.error).to.be.undefined;
-                if (isAtom(a$)) {
+                if (isDerivableAtom(a$)) {
                     a$.setError(1);
                     expect(a$.error).to.equal(1);
                 }
@@ -292,8 +292,4 @@ export function testAccessors(factory: Factory, immutable: boolean) {
             expect(b$.error).to.be.undefined;
         });
     });
-}
-
-export function isAtom(obj: any): obj is DerivableAtom {
-    return obj && typeof (obj as DerivableAtom).unset === 'function' && typeof (obj as DerivableAtom).setError === 'function';
 }

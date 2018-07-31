@@ -20,7 +20,7 @@ export function inTransaction() {
  */
 export function processChangedAtom<V>(atom: TrackedObservable | TransactionAtom<V>, oldValue: V, oldVersion: number) {
     if (currentTransaction) {
-        markObservers(atom, currentTransaction.touchedReactors);
+        markObservers(atom, currentTransaction._touchedReactors);
         if (isTransactionAtom(atom)) {
             storeOldValueInTransaction(currentTransaction, atom, oldValue!, oldVersion!);
         }
@@ -32,25 +32,34 @@ export function processChangedAtom<V>(atom: TrackedObservable | TransactionAtom<
 }
 
 interface Transaction {
-    /** The atoms that were touched in this transaction. */
-    touchedAtoms: Array<TransactionAtom<any>>;
-    /** The reactors that were reached in this transaction. */
-    touchedReactors: TrackedReactor[];
+    /**
+     * The atoms that were touched in this transaction.
+     * @internal
+     */
+    _touchedAtoms: Array<TransactionAtom<any>>;
+    /**
+     * The reactors that were reached in this transaction.
+     * @internal
+     */
+    _touchedReactors: TrackedReactor[];
     /**
      * A mapping from atom.id to its value before this transaction. All atoms in touchedAtoms will have a corresponding
      * entry in this map.
+     * @internal
      */
-    oldValues: { [id: string]: any };
+    _oldValues: { [id: string]: any };
     /**
      * A mapping from atom.id to its version number before this transaction. All atoms in touchedAtoms will have a corresponding
      * entry in this map.
+     * @internal
      */
-    oldVersions: { [id: string]: number };
+    _oldVersions: { [id: string]: number };
     /**
      * The parent transaction, if applicable, will become active again after this transaction ends and will inherit the
      * touched atoms and reactors.
+     * @internal
      */
-    parentTransaction: Transaction | undefined;
+    _parentTransaction: Transaction | undefined;
 }
 
 export interface TransactionAtom<V> extends TrackedObservable {
@@ -69,7 +78,7 @@ function markObservers(changedAtom: TrackedObservable, reactorSink: TrackedReact
 
 function reactIfNeeded(reactors: TrackedReactor[]) {
     for (const reactor of reactors) {
-        reactor.reactIfNeeded();
+        reactor._reactIfNeeded();
     }
 }
 
@@ -163,11 +172,11 @@ export function transaction<F extends (...args: any[]) => any>(f?: F): MethodDec
 
 function beginTransaction() {
     currentTransaction = {
-        touchedAtoms: [],
-        oldValues: {},
-        oldVersions: {},
-        touchedReactors: [],
-        parentTransaction: currentTransaction,
+        _touchedAtoms: [],
+        _oldValues: {},
+        _oldVersions: {},
+        _touchedReactors: [],
+        _parentTransaction: currentTransaction,
     };
 }
 
@@ -177,25 +186,25 @@ function commitTransaction() {
     if (!ctx) {
         throw new Error();
     }
-    currentTransaction = ctx.parentTransaction;
+    currentTransaction = ctx._parentTransaction;
 
     if (currentTransaction) {
         // Hand over all info to the parent transaction
-        ctx.touchedAtoms.forEach(atom => storeOldValueInTransaction(
+        ctx._touchedAtoms.forEach(atom => storeOldValueInTransaction(
             currentTransaction!,
             atom,
-            ctx.oldValues[atom.id],
-            ctx.oldVersions[atom.id],
+            ctx._oldValues[atom.id],
+            ctx._oldVersions[atom.id],
         ));
         // Not all reactors might be reached through notifyObservers. When
         // all paths between ctx.touchedAtoms and ctx.touchedReactors have
         // derivations with in !upToDate state in them, the reactors are not
         // added to currentTransaction.touchedReactors, therefore we have to
         // do it explicitly here.
-        currentTransaction.touchedReactors.push(...ctx.touchedReactors);
+        currentTransaction._touchedReactors.push(...ctx._touchedReactors);
     } else {
         // No parent transaction, so we just committed the outermost transaction, let's react.
-        reactIfNeeded(ctx.touchedReactors);
+        reactIfNeeded(ctx._touchedReactors);
     }
 }
 
@@ -205,21 +214,21 @@ function rollbackTransaction() {
     if (!ctx) {
         throw new Error();
     }
-    currentTransaction = ctx.parentTransaction;
+    currentTransaction = ctx._parentTransaction;
 
     // Restore the state of all touched atoms that can be restored using the internalState token.
-    ctx.touchedAtoms.forEach(atom => {
-        atom[restorableState] = ctx.oldValues[atom.id];
-        atom.version = ctx.oldVersions[atom.id];
+    ctx._touchedAtoms.forEach(atom => {
+        atom[restorableState] = ctx._oldValues[atom.id];
+        atom.version = ctx._oldVersions[atom.id];
         markObservers(atom, []);
     });
 }
 
 function storeOldValueInTransaction<V>(txn: Transaction, atom: TransactionAtom<V>, oldValue: V, oldVersion: number) {
     const { id } = atom;
-    if (!(id in txn.oldValues)) {
-        txn.touchedAtoms.push(atom);
-        txn.oldValues[id] = oldValue;
-        txn.oldVersions[id] = oldVersion;
+    if (!(id in txn._oldValues)) {
+        txn._touchedAtoms.push(atom);
+        txn._oldValues[id] = oldValue;
+        txn._oldVersions[id] = oldVersion;
     }
 }

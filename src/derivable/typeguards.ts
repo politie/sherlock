@@ -1,5 +1,7 @@
-import { Derivable, SettableDerivable } from '../interfaces';
+import { Derivable, DerivableAtom, SettableDerivable } from '../interfaces';
+import { Atom } from './atom';
 import { BaseDerivable } from './base-derivable';
+import { BiMapping } from './map';
 
 /**
  * Returns true iff the provided `derivable` is a Derivable.
@@ -21,4 +23,14 @@ export function isSettableDerivable<V>(derivable: Derivable<V>): derivable is Se
 export function isSettableDerivable(obj: any): obj is SettableDerivable<any>;
 export function isSettableDerivable(derivable: any) {
     return isDerivable(derivable) && derivable.settable;
+}
+
+/**
+ * Returns true iff the provided `derivable` is a DerivableAtom.
+ *
+ * @param obj the object to test
+ */
+export function isDerivableAtom<V>(derivable: Derivable<V>): derivable is DerivableAtom<V>;
+export function isDerivableAtom(obj: any): obj is DerivableAtom<any> {
+    return obj instanceof Atom || obj instanceof BiMapping && isDerivableAtom(obj._base);
 }

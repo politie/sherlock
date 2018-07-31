@@ -9,11 +9,12 @@ import { ErrorWrapper } from '../utils';
 import { Atom } from './atom';
 import { $, testDerivable } from './base-derivable.spec';
 import { atom, derive } from './factories';
-import { testSwap } from './mixins/swap.spec';
 
 describe('derivable/atom', () => {
-    testDerivable(v => v === unresolved ? atom.unresolved() : v instanceof ErrorWrapper ? atom.error(v.error) : atom(v), false);
-    testSwap(atom);
+    testDerivable(
+        v => v === unresolved ? atom.unresolved() : v instanceof ErrorWrapper ? atom.error(v.error) : atom(v),
+        'atom', 'settable',
+    );
 
     describe('#set', () => {
         it('should change the current state and version', () => {
@@ -51,40 +52,6 @@ describe('derivable/atom', () => {
             expect(a$.resolved).to.be.false;
             a$.set('value');
             expect(a$.resolved).to.be.true;
-        });
-    });
-
-    describe('#unset', () => {
-        let a$: Atom<string>;
-        beforeEach('create the atom', () => { a$ = new Atom('a'); });
-
-        it('should be able to `unset`', () => {
-            expect(a$.get()).to.equal('a');
-            a$.unset();
-            expect(() => a$.get()).to.throw();
-        });
-
-        it('should be possible to re`set` an `unset` atom', () => {
-            a$.unset();
-            a$.set('b');
-            expect(a$.get()).to.equal('b');
-        });
-    });
-
-    describe('#setError', () => {
-        let a$: Atom<string>;
-        beforeEach('create the atom', () => { a$ = new Atom('a'); });
-
-        it('should be able to change the state to errored', () => {
-            expect(a$.get()).to.equal('a');
-            a$.setError(new Error('my error'));
-            expect(() => a$.get()).to.throw('my error');
-        });
-
-        it('should be possible to revert an errored atom to normal', () => {
-            a$.setError(new Error('my error'));
-            a$.set('a normal value');
-            expect(a$.get()).to.equal('a normal value');
         });
     });
 
@@ -203,7 +170,7 @@ describe('derivable/atom', () => {
 
         it('should propagate error status', async () => {
             const e$ = createDerivablePromise<number>((_, reject) => setTimeout(() => reject(new Error('my error')), 0));
-            const f$ = e$.derive(v => v + 1);
+            const f$ = e$.map(v => v + 1);
 
             const promise = f$.toPromise();
 

@@ -1,28 +1,12 @@
 import { expect } from 'chai';
-import { TargetedLensDescriptor } from '../interfaces';
 import { unresolved } from '../symbols';
 import { ErrorWrapper } from '../utils';
 import { Atom } from './atom';
-import { $, testDerivable } from './base-derivable.spec';
-import { atom, lens } from './factories';
-import { testSwap } from './mixins/swap.spec';
+import { testDerivable } from './base-derivable.spec';
+import { lens } from './factories';
+import { Lens } from './lens';
 
 describe('derivable/lens', () => {
-    context('(mono)', () => {
-        testDerivable(v => (new Atom(v === unresolved || v instanceof ErrorWrapper ? v : { value: v })).lens({
-            get: obj => obj.value,
-            set: value => ({ value }),
-        }), false);
-    });
-
-    context('(mono with params)', () => {
-        const propName = 'property';
-        testDerivable(v => new Atom(v === unresolved || v instanceof ErrorWrapper ? v : { [propName]: v }).lens({
-            get: (obj, prop) => obj[prop],
-            set: (newValue, obj, prop) => ({ ...obj, [prop]: newValue }),
-        }, propName), false);
-    });
-
     context('(standalone)', () => {
         testDerivable(v => {
             const a$ = new Atom(v);
@@ -38,7 +22,7 @@ describe('derivable/lens', () => {
                     b$.set(x);
                 },
             });
-        }, false);
+        }, 'settable');
     });
 
     context('(standalone with params)', () => {
@@ -56,38 +40,15 @@ describe('derivable/lens', () => {
                     obj2$.swap(obj => ({ ...obj, [prop2]: newValue }));
                 },
             }, 'prop1', 'prop2');
-        }, false);
+        }, 'settable');
     });
 
-    describe('#set', () => {
-        it('should change the current state (and version) of the parent atom', () => {
-            const a$ = $(atom('a'));
-            const lensed$ = a$.lens(identityLens<string>());
-            expect(lensed$.get()).to.equal('a');
-            expect(a$.version).to.equal(0);
-
-            lensed$.set('b');
-            expect(lensed$.get()).to.equal('b');
-            expect(a$.version).to.equal(1);
+    it('should use the Lens object as `this`', () => {
+        const lens$ = new Lens({
+            get() { expect(this).to.equal(lens$); return 1; },
+            set() { expect(this).to.equal(lens$); },
         });
-
-        it('should not update the version if the new value equals the previous value', () => {
-            const a$ = $(atom('a'));
-            const lensed$ = a$.lens(identityLens<string>());
-            expect(lensed$.get()).to.equal('a');
-            expect(a$.version).to.equal(0);
-            lensed$.set('a');
-            expect(lensed$.get()).to.equal('a');
-            expect(a$.version).to.equal(0);
-        });
+        expect(lens$.get()).to.equal(1);
+        lens$.set(2);
     });
-
-    testSwap(<V>(val: V) => atom(val).lens(identityLens<V>()));
 });
-
-export function identityLens<V>(): TargetedLensDescriptor<V, V, never> {
-    return {
-        get: v => v,
-        set: v => v,
-    };
-}

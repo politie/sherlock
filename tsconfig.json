@@ -4,7 +4,8 @@
         "module": "commonjs",
         "lib": [
             "dom",
-            "es2015"
+            "es2015",
+            "es2016.array.include"
         ],
         "declaration": true,
         "sourceMap": true,

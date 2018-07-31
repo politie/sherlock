@@ -1,4 +1,4 @@
-import { Derivable, isDerivable, isSettableDerivable, ReactorOptions, TargetedLensDescriptor, utils } from '@politie/sherlock';
+import { Derivable, isDerivable, isSettableDerivable, lens, ReactorOptions, utils } from '@politie/sherlock';
 
 /**
  * The base interface for DerivableProxies. Defines only the $-properties and $-methods. Any property accessed with a number or
@@ -250,19 +250,25 @@ export class ProxyDescriptor<V = any, T = V> {
 }
 ProxyDescriptor.prototype[IS_DERIVABLE_PROXY] = true;
 
-function createDerivable<V, T>(target: Derivable<T>, lens?: DerivableProxyLens<T, V>): Derivable<V> {
-    if (!lens) {
+function createDerivable<V, T>(target: Derivable<T>, proxyLens?: DerivableProxyLens<T, V>): Derivable<V> {
+    if (!proxyLens) {
         return target as any;
     }
-    if (!lens.set || !isSettableDerivable(target)) {
-        return target.derive(lens.get).autoCache();
+    const { get, set } = proxyLens;
+    if (!set || !isSettableDerivable(target)) {
+        return target.derive(get).autoCache();
     }
-    return target.lens(lens as TargetedLensDescriptor<T, V, never>).autoCache();
+    return lens({
+        get,
+        set(newValue, targetValue) {
+            target.set(set(newValue, targetValue));
+        }
+    }, target).autoCache();
 }
 
 export interface DerivableProxyLens<T, V> {
-    get: TargetedLensDescriptor<T, V, never>['get'];
-    set?: TargetedLensDescriptor<T, V, never>['set'];
+    get: (targetValue: T) => V;
+    set?: (newValue: V, targetValue: T | undefined) => T;
 }
 
 export type MaybePacked<T> = T | Derivable<T> | DerivableProxy<T>;

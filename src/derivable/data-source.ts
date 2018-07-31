@@ -1,8 +1,8 @@
 import { SettableDerivable, State } from '../interfaces';
-import { connect, disconnect, emptyCache, getState, observers } from '../symbols';
+import { connect, disconnect, emptyCache, internalGetState, observers } from '../symbols';
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { config, equals, ErrorWrapper } from '../utils';
+import { augmentStack, equals, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 
 export abstract class PullDataSource<V> extends BaseDerivable<V> implements SettableDerivable<V> {
@@ -22,13 +22,9 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
 
     /**
      * The last value that was calculated for this datasource. Is only used when connected.
+     * @internal
      */
     private _cachedState: State<V> | typeof emptyCache = emptyCache;
-
-    /**
-     * Used for debugging. A stack that shows the location where this datasource was created.
-     */
-    private readonly _stack = config.debugMode ? Error().stack : undefined;
 
     /**
      * The current version of the state. This number gets incremented every time the state changes when connected. The version
@@ -39,10 +35,10 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
     /**
      * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
-    [getState]() {
+    [internalGetState]() {
         // Not connected, so just calculate our value one time.
         if (!this.connected) {
-            return this.callCalculationFn();
+            return this._callCalculationFn();
         }
 
         // We are connected, so we should record our dependencies.
@@ -57,7 +53,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
      */
     set(newValue: V) {
         if (!this.acceptNewValue) {
-            throw new Error('DataSource is not settable');
+            throw augmentStack(new Error('DataSource is not settable'), this);
         }
         this.acceptNewValue(newValue);
     }
@@ -70,7 +66,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
             return;
         }
 
-        const newValue = this.callCalculationFn();
+        const newValue = this._callCalculationFn();
         if (!equals(newValue, this._cachedState)) {
             const oldState = this._cachedState;
             this._cachedState = newValue;
@@ -80,14 +76,13 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
 
     /**
      * Call the deriver function without `this` context and log debug stack traces when applicable.
+     * @internal
      */
-    private callCalculationFn() {
+    private _callCalculationFn() {
         try {
             return this.calculateCurrentValue();
         } catch (e) {
-            // tslint:disable-next-line:no-console - console.error is only called when debugMode is set to true
-            this._stack && console.error(e.message, this._stack);
-            return new ErrorWrapper(e);
+            return new ErrorWrapper(augmentStack(e, this));
         }
     }
 

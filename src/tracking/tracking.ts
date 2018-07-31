@@ -1,4 +1,5 @@
 import { autoCacheMode, connect, dependencies, dependencyVersions, disconnect, mark, observers } from '../symbols';
+import { augmentStack } from '../utils';
 
 let currentRecording: Recording | undefined;
 
@@ -17,12 +18,12 @@ export function startRecordingObservations(observer: TrackedObserver) {
     // we do not support that.
     let r = currentRecording;
     while (r) {
-        if (r.observer === observer) {
-            throw new Error('cyclic dependency between derivables detected');
+        if (r._observer === observer) {
+            throw augmentStack(new Error('cyclic dependency between derivables detected'), observer);
         }
-        r = r.previousRecording;
+        r = r._previousRecording;
     }
-    currentRecording = { observer, confirmed: 0, previousRecording: currentRecording };
+    currentRecording = { _observer: observer, _confirmed: 0, _previousRecording: currentRecording };
 }
 
 /**
@@ -36,16 +37,16 @@ export function stopRecordingObservations() {
     if (!recording) {
         throw new Error('No active recording!');
     }
-    currentRecording = recording.previousRecording;
-    const { confirmed, observer } = recording;
-    const deps = observer[dependencies];
-    const depVersions = observer[dependencyVersions];
+    currentRecording = recording._previousRecording;
+    const { _confirmed, _observer } = recording;
+    const deps = _observer[dependencies];
+    const depVersions = _observer[dependencyVersions];
 
     // Any previous dependency that was not confirmed during the recording can be removed now.
-    for (let i = confirmed, n = deps.length; i < n; i++) {
-        removeObserver(deps[i], observer);
+    for (let i = _confirmed, n = deps.length; i < n; i++) {
+        removeObserver(deps[i], _observer);
     }
-    deps.length = confirmed;
+    deps.length = _confirmed;
 
     for (const dep of deps) {
         depVersions[dep.id] = dep.version;
@@ -59,6 +60,16 @@ export function isRecordingObservations() {
     return !!currentRecording;
 }
 
+export function independentTracking<V>(fn: () => V): V {
+    const oldRecording = currentRecording;
+    currentRecording = undefined;
+    try {
+        return fn();
+    } finally {
+        currentRecording = oldRecording;
+    }
+}
+
 /**
  * Records in the current recording (if applicable) that the given `dependency` was observed.
  *
@@ -70,17 +81,17 @@ export function recordObservation(dependency: TrackedObservable) {
         return;
     }
 
-    const { observer } = currentRecording;
-    const deps = observer[dependencies];
+    const { _observer } = currentRecording;
+    const deps = _observer[dependencies];
     // Invariants:
     // - dependencies[0..currentRecording.confirmed) have been recorded (confirmed) as dependencies
     // - dependencies[currentRecording.confirmed..n) have not yet been recorded (confirmed)
-    if (deps[currentRecording.confirmed] === dependency) {
+    if (deps[currentRecording._confirmed] === dependency) {
         // This is the expected branch almost everytime we rerecord a derivation. The dependencies are often encountered in the
         // same order as before. So we found our dependency at dependencies[currentRecording.confirmed]. We can keep our invariant and
         // include our latest observation by incrementing the confirmed counter. Our observer is already registered at this
         // dependency because of last time.
-        currentRecording.confirmed++;
+        currentRecording._confirmed++;
 
     } else {
         // This branch means this is either the first recording, this dependency is new, or the dependencies are out of order
@@ -89,25 +100,25 @@ export function recordObservation(dependency: TrackedObservable) {
         if (index < 0) {
             // dependency not yet present in dependencies array. This means we have to register the observer at
             // the dependency and add the dependency to the observer (both ways).
-            addObserver(dependency, observer);
-            if (currentRecording.confirmed === deps.length) {
+            addObserver(dependency, _observer);
+            if (currentRecording._confirmed === deps.length) {
                 // We don't have to reorder dependencies, because it is empty to the right of currentRecording.confirmed.
                 deps.push(dependency);
             } else {
                 // Simple way to keep the invariant, move the current item to the end and
                 // insert the new dependency in the current position.
-                deps.push(deps[currentRecording.confirmed]);
-                deps[currentRecording.confirmed] = dependency;
+                deps.push(deps[currentRecording._confirmed]);
+                deps[currentRecording._confirmed] = dependency;
             }
             // dependencies[0..currentRecording.confirmed) are dependencies and dependencies[currentRecording.confirmed] is a dependency
-            currentRecording.confirmed++;
+            currentRecording._confirmed++;
             // dependencies[0..currentRecording.confirmed) are dependencies
 
-        } else if (index > currentRecording.confirmed) {
+        } else if (index > currentRecording._confirmed) {
             // dependency is present in dependencies, but we were not expecting it yet, swap places
-            deps[index] = deps[currentRecording.confirmed];
-            deps[currentRecording.confirmed] = dependency;
-            currentRecording.confirmed++;
+            deps[index] = deps[currentRecording._confirmed];
+            deps[currentRecording._confirmed] = dependency;
+            currentRecording._confirmed++;
         }
         // else: index >= 0 && index < currentRecording.confirmed, i.e. already seen before and already confirmed. Do nothing.
     }
@@ -135,12 +146,14 @@ export interface Observer {
 
 export interface TrackedObserver extends Observer {
     readonly id: number;
+    readonly creationStack?: string;
     readonly [dependencies]: TrackedObservable[];
     readonly [dependencyVersions]: { [id: number]: number };
 }
 
 export interface TrackedReactor {
-    reactIfNeeded(): void;
+    /** @internal */
+    _reactIfNeeded(): void;
 }
 
 /**
@@ -190,10 +203,19 @@ export function maybeDisconnectInNextTick(observable: TrackedObservable) {
 }
 
 interface Recording {
-    /** The observer that is interested in its dependencies. */
-    observer: TrackedObserver;
-    /** The slice of observer.dependencies that is confirmed (again) as an actual dependency. */
-    confirmed: number;
-    /** The recording to return to after this recording ends, if applicable. */
-    previousRecording: Recording | undefined;
+    /**
+     * The observer that is interested in its dependencies.
+     * @internal
+     */
+    _observer: TrackedObserver;
+    /**
+     * The slice of observer.dependencies that is confirmed (again) as an actual dependency.
+     * @internal
+     */
+    _confirmed: number;
+    /**
+     * The recording to return to after this recording ends, if applicable.
+     * @internal
+     */
+    _previousRecording: Recording | undefined;
 }

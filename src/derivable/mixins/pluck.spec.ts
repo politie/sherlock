@@ -1,16 +1,15 @@
 import { expect } from 'chai';
 import { fromJS, Seq } from 'immutable';
+import { DerivableAtom, SettableDerivable } from 'interfaces';
 import { Atom } from '../atom';
-import { Factory } from '../base-derivable.spec';
-import { Derivation } from '../derivation';
-import { atom } from '../factories';
-import { Lens } from '../lens';
-import { isSettableDerivable } from '../typeguards';
+import { assertSettable, Factory } from '../base-derivable.spec';
+import { atom, constant } from '../factories';
+import { isDerivableAtom, isSettableDerivable } from '../typeguards';
 
 /**
  * Tests the `pluck()` method.
  */
-export function testPluck(factory: Factory) {
+export function testPluck(factory: Factory, isSettable: boolean, isAtom: boolean) {
     describe('#pluck', () => {
         it('should pluck using a string or derivable string', () => {
             const obj$ = factory({ a: 'valueOfA', b: 'valueOfB' });
@@ -44,20 +43,26 @@ export function testPluck(factory: Factory) {
             expect(value1$.get()).to.equal('value2');
         });
 
-        context('(lensed)', () => {
+        it('should mirror the type of the input (being SettableDerivable or even DerivableAtom)', () => {
+            const value$ = factory({ a: 1 });
+            const plucked$ = value$.pluck('a');
+            expect(isSettableDerivable(plucked$), 'isSettableDerivable(plucked$)').to.equal(isSettable);
+            expect(isDerivableAtom(plucked$), 'isDerivableAtom(plucked$)').to.equal(isAtom);
+
+            const dynPlucked$ = value$.pluck(constant('a'));
+            expect(isSettableDerivable(dynPlucked$), 'isSettableDerivable(dynPlucked$)').to.equal(isSettable);
+            // Not (yet) supported:
+            expect(isDerivableAtom(dynPlucked$), 'isDerivableAtom(dynPlucked$)').to.be.false;
+        });
+
+        if (isSettable) {
             class MyClass { constructor(public key: string) { } }
-            const value$ = factory(new MyClass('value'));
+            let value$: SettableDerivable<MyClass>;
+            beforeEach('setup the base', () => { value$ = assertSettable(factory(new MyClass('value'))); });
 
-            if (isSettableDerivable(value$)) {
-                beforeEach('reset the atom', () => value$.set(new MyClass('value')));
-
-                const plucked$ = value$.pluck('key');
-
-                it('should produce an Atom if the base was also an Atom', () => {
-                    expect(plucked$).to.be.an.instanceof(Derivation);
-                    expect(plucked$).to.be.an.instanceof(Lens);
-                    expect(isSettableDerivable(plucked$)).to.be.true;
-                });
+            context('(lensed with constant key)', () => {
+                let plucked$: SettableDerivable<string>;
+                beforeEach('setup the derivation', () => { plucked$ = value$.pluck('key'); });
 
                 it('should produce a lens that can change a property (cloning the object)', () => {
                     const oldInstance = value$.get();
@@ -85,7 +90,29 @@ export function testPluck(factory: Factory) {
                     const immValue$ = factory(Seq.of(1, 2, 3)) as Atom<any>;
                     expect(() => immValue$.pluck(0).set(123)).to.throw();
                 });
-            }
-        });
+            });
+
+            context('(lensed with derivable key)', () => {
+                let key$: DerivableAtom<string>;
+                let plucked$: SettableDerivable<string>;
+                beforeEach('setup the key', () => { key$ = atom('key'); });
+                beforeEach('setup the derivation', () => { plucked$ = value$.pluck(key$); });
+
+                it('should produce a lens that can change any property based on the current value of the key', () => {
+                    const oldInstance = value$.get();
+                    expect(plucked$.get()).to.equal('value');
+                    plucked$.set('another value');
+                    expect(plucked$.get()).to.equal('another value');
+                    expect(value$.get()).to.deep.equal({ key: 'another value' });
+                    expect(value$.get()).to.not.equal(oldInstance);
+
+                    key$.set('another');
+                    expect(plucked$.get()).to.be.undefined;
+                    plucked$.set('level');
+                    expect(plucked$.get()).to.equal('level');
+                    expect(value$.get()).to.deep.equal({ key: 'another value', another: 'level' });
+                });
+            });
+        }
     });
 }

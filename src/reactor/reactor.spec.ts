@@ -403,6 +403,17 @@ describe('reactor/reactor', () => {
         shouldNotHaveReacted();
     });
 
+    it('should never react twice when `once` is `true`', () => {
+        currentReactorTest = { reactions: 0, value: undefined };
+        a$.react(v => {
+            currentReactorTest!.reactions++;
+            currentReactorTest!.value = v;
+            a$.set(v + '!');
+        }, { once: true });
+
+        shouldHaveReactedOnce('a');
+    });
+
     it('should support combining `skipFirst` and `once`, skipping 1 and taking 1', () => {
         react(a$, { skipFirst: true, once: true });
 
@@ -636,8 +647,7 @@ describe('reactor/reactor', () => {
     class TestReactor<V> extends Reactor<V> { constructor(p: BaseDerivable<V>, r: (value: V) => void) { super(p, e => { throw e; }, r); } }
 
     it('should not generate a stacktrace on instantiation', () => {
-        // tslint:disable-next-line:no-string-literal
-        expect(new TestReactor($(a$), () => 0)['stack']).to.be.undefined;
+        expect(new TestReactor($(a$), () => 0).creationStack).to.be.undefined;
     });
 
     context('in debug mode', () => {
@@ -649,18 +659,20 @@ describe('reactor/reactor', () => {
         afterEach('restore console.error', () => { consoleErrorStub.restore(); });
 
         it('should generate a stacktrace on instantiation', () => {
-            // tslint:disable-next-line:no-string-literal
-            expect(new TestReactor($(a$), () => 0)['stack']).to.be.a('string');
+            expect(new TestReactor($(a$), () => 0).creationStack).to.be.a('string');
         });
 
-        it('should log the recorded stacktrace on error', () => {
+        it('should augment the error with the recorded stacktrace', () => {
             const reactor = new TestReactor($(a$), () => { throw new Error('the Error'); });
-            // tslint:disable-next-line:no-string-literal
-            const stack = reactor['stack'];
-            expect(() => reactor.start()).to.throw('the Error');
-            expect(console.error).to.have.been.calledOnce
-                .and.to.have.been.calledWithExactly('the Error', stack);
-            reactor.stop();
+            try {
+                reactor._start();
+            } catch (e) {
+                reactor._stop();
+                expect(e.stack).to.contain('the Error');
+                expect(e.stack).to.contain(reactor.creationStack!);
+                return;
+            }
+            throw new Error('Reactor did not throw');
         });
     });
 });
@@ -797,9 +809,9 @@ describe('reactor/reactor error handling', () => {
 
     context('with an error handler', () => {
         context('when an error occurs in any derivation', () => {
-            let onError: sinon.SinonSpy;
+            let onError: sinon.SinonStub;
             beforeEach('start the reactor', () => {
-                onError = spy();
+                onError = stub();
                 react(d$, { onError });
                 shouldHaveReactedOnce('no error');
                 shouldNotHaveBeenCalled(onError);
@@ -821,7 +833,19 @@ describe('reactor/reactor error handling', () => {
                 expect(onError).to.not.have.been.called;
             });
 
-            it('should stop the reactor', () => {
+            it('should not stop the reactor', () => {
+                a$.set('whatever');
+                shouldHaveReactedOnce('whatever');
+
+                a$.set('error in derivation');
+                shouldNotHaveReacted();
+
+                a$.set('no error at all!');
+                shouldHaveReactedOnce('no error at all!');
+            });
+
+            it('should stop the reactor when the stop callback is used', () => {
+                onError.callsArg(1);
                 a$.set('whatever');
                 shouldHaveReactedOnce('whatever');
 
@@ -834,10 +858,10 @@ describe('reactor/reactor error handling', () => {
         });
 
         context('when an error occurs in any reactor', () => {
-            let onError: sinon.SinonSpy;
+            let onError: sinon.SinonStub;
             let latestValue: string;
             beforeEach('start an unstable reactor', () => {
-                onError = spy();
+                onError = stub();
                 d$.react(v => {
                     latestValue = v;
                     if (v === 'error in reactor') {
@@ -862,7 +886,19 @@ describe('reactor/reactor error handling', () => {
                 expect(onError).to.not.have.been.called;
             });
 
-            it('should stop the reactor', () => {
+            it('should not stop the reactor', () => {
+                a$.set('whatever');
+                expect(latestValue).to.equal('whatever');
+
+                a$.set('error in reactor');
+                expect(latestValue).to.equal('error in reactor');
+
+                a$.set('back to normal?');
+                expect(latestValue).to.equal('back to normal?');
+            });
+
+            it('should stop the reactor when the stop callback is used', () => {
+                onError.callsArg(1);
                 a$.set('whatever');
                 expect(latestValue).to.equal('whatever');
 
@@ -894,7 +930,7 @@ describe('reactor/reactor efficiency', () => {
         const lengthDeriver = spy((name: string) => name.length + karma$.get());
         const length$ = name$.derive(lengthDeriver);
         const isHeroDeriver = spy((length: number) => length > 8);
-        const isHero$ = length$.derive(isHeroDeriver);
+        const isHero$ = length$.map(isHeroDeriver);
         const shout$ = name$.derive(name => isHero$.get() ? name.toUpperCase() : name.toLowerCase());
 
         react(shout$);
@@ -931,8 +967,8 @@ describe('reactor/reactor efficiency', () => {
         const path2Derivation = spy((v: string) => v + ' from path 2');
         const atom1 = atom('a');
         const atom2 = atom('b');
-        const path1 = atom1.derive(path1Derivation);
-        const path2 = atom2.derive(path2Derivation);
+        const path1 = atom1.map(path1Derivation);
+        const path2 = atom2.map(path2Derivation);
 
         react(derive(() => switcher$.get() ? path1.get() : path2.get()));
 

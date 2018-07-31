@@ -1,3 +1,4 @@
+export * from './augment-stack';
 export * from './clone';
 export * from './config';
 export * from './equals';

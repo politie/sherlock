@@ -1,8 +1,8 @@
-import { DerivableAtom, SettableDerivable, State } from '../interfaces';
-import { getState, restorableState, unresolved } from '../symbols';
+import { DerivableAtom, State } from '../interfaces';
+import { internalGetState, restorableState } from '../symbols';
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { equals, ErrorWrapper } from '../utils';
+import { augmentState, equals } from '../utils';
 import { BaseDerivable } from './base-derivable';
 
 /**
@@ -10,7 +10,7 @@ import { BaseDerivable } from './base-derivable';
  * with other kinds of derivables that only store immutable (constant) or derived state. Should be constructed
  * with the initial state.
  */
-export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V>, DerivableAtom {
+export class Atom<V> extends BaseDerivable<V> implements DerivableAtom<V> {
     /**
      * Contains the current state of this atom. Note that this field is public for transaction support, should
      * not be used in application code. Use {@link Derivable#get} and {@link SettableDerivable#set} instead.
@@ -24,7 +24,7 @@ export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V>, D
      */
     constructor(state: State<V>) {
         super();
-        this[restorableState] = state;
+        this[restorableState] = augmentState(state, this);
     }
 
     /**
@@ -36,7 +36,7 @@ export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V>, D
     /**
      * Returns the current state of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
-    [getState]() {
+    [internalGetState]() {
         recordObservation(this);
         return this[restorableState];
     }
@@ -49,19 +49,8 @@ export class Atom<V> extends BaseDerivable<V> implements SettableDerivable<V>, D
     set(newState: State<V>) {
         const oldState = this[restorableState];
         if (!equals(newState, oldState)) {
-            this[restorableState] = newState;
+            this[restorableState] = augmentState(newState, this);
             processChangedAtom(this, oldState, this.version++);
         }
     }
-
-    unset() {
-        this.set(unresolved);
-    }
-
-    setError(err: any) {
-        this.set(new ErrorWrapper(err));
-    }
-
-    readonly settable!: true;
 }
-Object.defineProperty(Atom.prototype, 'settable', { value: true });
