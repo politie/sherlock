@@ -131,6 +131,29 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
                 done();
             });
 
+            it('should pass the lens as `this` to the getter and setter', () => {
+                const pd = new class extends ProxyDescriptor {
+                    $lens() {
+                        return {
+                            get(this: Derivable<any>, targetValue: string) {
+                                expect(this.connected).to.be.true;
+                                return targetValue + '!';
+                            },
+                            set(this: Derivable<any>, newValue: any, targetValue: string) {
+                                expect(this.connected).to.be.true;
+                                expect(this.value).to.equal(targetValue + '!');
+                                return newValue.slice(0, -1);
+                            }
+                        };
+                    }
+                };
+                const a$ = atom('first value');
+                const px = pd.$create(a$);
+                expect(px.$value).to.equal('first value!');
+                px.$value = 'other value!';
+                expect(a$.value).to.equal('other value');
+            });
+
             it('should allow setting a pluckable property with an ordinary value when the target is an atom', () => {
                 const pd = new class extends ProxyDescriptor {
                     $lens() {
