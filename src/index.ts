@@ -51,3 +51,7 @@ export {
     utils,
     _internal,
 };
+
+import { runGlobalStateWarning } from './utils/multiple-instances-warning';
+
+runGlobalStateWarning();
