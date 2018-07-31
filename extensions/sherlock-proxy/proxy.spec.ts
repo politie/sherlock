@@ -420,10 +420,10 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
         });
 
         describe('#$react', () => {
-            it('should provide the same signature as Derivable#derive', () => {
+            it('should provide the same signature as Derivable#react', () => {
                 const px = createForObject('a');
                 const results: string[] = [];
-                const stop = px.$react(results.push.bind(results));
+                const stop = px.$react(v => results.push(v));
                 expect(results).to.deep.equal(['a']);
                 px.$value = 'b';
                 expect(results).to.deep.equal(['a', 'b']);
