@@ -142,7 +142,7 @@ export function testAutocache(factory: (a$: Derivable<string>, deriver: (v: stri
             expect(deriver).to.have.been.calledOnce;
 
             const received: string[] = [];
-            d$.react(received.push.bind(received));
+            d$.react(v => received.push(v));
             expect(received).to.deep.equal(['value!']);
             expect(deriver).to.have.been.calledOnce;
 
@@ -155,7 +155,7 @@ export function testAutocache(factory: (a$: Derivable<string>, deriver: (v: stri
             expect(d$.get()).to.equal('value!');
 
             const received: string[] = [];
-            d$.react(received.push.bind(received));
+            d$.react(v => received.push(v));
             expect(received).to.deep.equal(['value!']);
 
             clock.tick(0);

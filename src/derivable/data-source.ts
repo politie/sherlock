@@ -1,6 +1,6 @@
 import { SettableDerivable, State } from '../interfaces';
 import { connect, disconnect, emptyCache, internalGetState, observers } from '../symbols';
-import { recordObservation } from '../tracking';
+import { independentTracking, recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
 import { augmentStack, equals, ErrorWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
@@ -66,7 +66,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
             return;
         }
 
-        const newValue = this._callCalculationFn();
+        const newValue = independentTracking(() => this._callCalculationFn());
         if (!equals(newValue, this._cachedState)) {
             const oldState = this._cachedState;
             this._cachedState = newValue;

@@ -73,6 +73,19 @@ describe('reactor/reactor', () => {
         shouldNotHaveReacted();
     });
 
+    it('should stop forever when the provided stop callback is called', () => {
+        let value = '';
+        a$.react((v, stop) => (value = v) === 'b' && stop());
+
+        expect(value).to.equal('a');
+
+        a$.set('b');
+        expect(value).to.equal('b');
+
+        a$.set('c');
+        expect(value).to.equal('b');
+    });
+
     it('should start and stop when the `when` condition becomes true and false respectively', () => {
         const when = atom(false);
         react(a$, { when });

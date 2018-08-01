@@ -9,7 +9,7 @@ export function getStateObject<V>(from: Derivable<V>): StateObject<V> {
     return toStateObject(from.getState());
 }
 
-function toStateObject<V>(state: State<V>): StateObject<V> {
+export function toStateObject<V>(state: State<V>): StateObject<V> {
     if (state === _internal.symbols.unresolved) {
         return { errored: false, resolved: false };
     }
@@ -20,20 +20,22 @@ function toStateObject<V>(state: State<V>): StateObject<V> {
     return { value: state, errored: false, resolved: true };
 }
 
+export function fromStateObject<V>(state: StateObject<V>): State<V> {
+    if (state.errored) {
+        return new _internal.ErrorWrapper(state.error);
+    }
+    if (state.resolved) {
+        return state.value;
+    }
+    return _internal.symbols.unresolved;
+}
+
 export function materialize<V>(derivable: Derivable<V>): Derivable<StateObject<V>> {
     return derivable.mapState(toStateObject);
 }
 
 export function dematerialize<V>(derivable: Derivable<StateObject<V>>): Derivable<V> {
-    return derivable.map(state => {
-        if (state.errored) {
-            return new _internal.ErrorWrapper(state.error);
-        }
-        if (state.resolved) {
-            return state.value;
-        }
-        return _internal.symbols.unresolved;
-    });
+    return derivable.map(fromStateObject);
 }
 
 export function setStateObject<V>(to: DerivableAtom<V>, state: StateObject<V>) {

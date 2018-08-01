@@ -170,7 +170,7 @@ export function testDerivable(factory: Factory, ...modes: DerivableMode[]) {
         it('should be possible to start a reactor on a cached Derivable', () => {
             const value$ = factory('value').autoCache();
             const received: string[] = [];
-            value$.react(received.push.bind(received));
+            value$.react(v => received.push(v));
             expect(received).to.deep.equal(['value']);
             if (isSettableDerivable(value$)) {
                 value$.set('another value');

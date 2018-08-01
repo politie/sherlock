@@ -14,7 +14,7 @@ declare module '../derivable/extension' {
          * @param reaction function to call on each reaction
          * @param options lifecycle options
          */
-        react(reaction: (value: V) => void, options?: Partial<ReactorOptions<V>>): () => void;
+        react(reaction: (value: V, stop: () => void) => void, options?: Partial<ReactorOptions<V>>): () => void;
 
         /**
          * Returns a promise that resolves with the first value that passes the lifecycle options. Reject on any error in an upstream
@@ -225,7 +225,7 @@ export class Reactor<V> implements Observer {
      */
     static create<W>(
         parent: BaseDerivable<W>,
-        reaction: (value: W) => void,
+        reaction: (value: W, stop: () => void) => void,
         options?: Partial<ReactorOptions<W>>,
         ended?: () => void,
     ) {
@@ -239,10 +239,10 @@ export class Reactor<V> implements Observer {
                 skipFirst = false;
             } else if (once) {
                 stopReactors();
-                reaction(value);
+                reaction(value, done);
                 ended && ended();
             } else {
-                reaction(value);
+                reaction(value, done);
             }
         });
 
@@ -300,7 +300,7 @@ export class Reactor<V> implements Observer {
     }
 }
 
-export function toDerivable<V>(option: ReactorOptionValue<V>, derivable: Derivable<V>) {
+function toDerivable<V>(option: ReactorOptionValue<V>, derivable: Derivable<V>) {
     if (option instanceof BaseDerivable) {
         return option;
     }
