@@ -1,4 +1,4 @@
-import { _internal, atom, constant } from '@politie/sherlock';
+import { _internal, atom, constant, unresolved } from '@politie/sherlock';
 import { expect } from 'chai';
 import { spy } from 'sinon';
 import { copyState, dematerialize, getStateObject, materialize, setStateObject, StateObject, syncState } from './state';
@@ -58,7 +58,7 @@ describe('sherlock-utils/materialize', () => {
             switch (v) {
                 case 0: return 42;
                 case 1: throw error;
-                default: return _internal.symbols.unresolved;
+                default: return unresolved;
             }
         });
         let reactions = 0;

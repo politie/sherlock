@@ -4,5 +4,5 @@ export * from './derivable';
 export * from './reactor';
 export * from './tracking';
 export { processChangedAtom } from './transaction';
-export { augmentStack, ErrorWrapper } from './utils';
+export { augmentStack } from './utils';
 export { symbols };

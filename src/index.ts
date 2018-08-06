@@ -34,7 +34,12 @@ export {
 
 export {
     config,
+    ErrorWrapper,
 } from './utils';
+
+export {
+    unresolved
+} from './symbols';
 
 import * as _internal from './internal';
 
