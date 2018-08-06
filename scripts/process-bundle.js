@@ -72,7 +72,7 @@ Module._resolveFilename = function (request, ...rest) {
 
 const sherlock = require('@politie/sherlock');
 const utils = require('@politie/sherlock-utils');
-require('@politie/sherlock-rxjs');
+const rxjs = require('@politie/sherlock-rxjs');
 
 const a$ = sherlock.atom({ nested: { property: 'value' } });
 
@@ -88,6 +88,6 @@ value$.set('another value');
 assert.deepStrictEqual(receivedValue, { nested: { property: 'another value' } });
 assert.deepStrictEqual(utils.getStateObject(value$), { value: 'another value', resolved: true, errored: false });
 
-assert.ok(a$.toObservable());
+assert.ok(rxjs.toObservable(a$));
 
 console.log('Bundles ok.');

@@ -1,10 +1,10 @@
 import { _internal, atom, SettableDerivable } from '@politie/sherlock';
 import { expect } from 'chai';
 import { Subject } from 'rxjs';
-import { fromObservable } from './rxjs';
+import { fromObservable, toObservable } from './rxjs';
 
 describe('rxjs/rxjs', () => {
-    describe('Derivable#toObservable', () => {
+    describe('toObservable', () => {
         let a$: SettableDerivable<string>;
 
         beforeEach('create the atom', () => { a$ = atom('a'); });
@@ -12,7 +12,7 @@ describe('rxjs/rxjs', () => {
         it('should complete the Observable when until becomes true', () => {
             let complete = false;
             let value = '';
-            a$.toObservable({ until: d$ => d$.get().length > 2 }).subscribe(v => value = v, undefined, () => complete = true);
+            toObservable(a$, { until: d$ => d$.get().length > 2 }).subscribe(v => value = v, undefined, () => complete = true);
             expect(complete).to.be.false;
             expect(value).to.equal('a');
 
@@ -28,7 +28,7 @@ describe('rxjs/rxjs', () => {
         it('should complete the Observable after one value when once is true', () => {
             let complete = false;
             const values: string[] = [];
-            a$.toObservable({ once: true }).subscribe(v => values.push(v), undefined, () => complete = true);
+            toObservable(a$, { once: true }).subscribe(v => values.push(v), undefined, () => complete = true);
             expect(complete).to.be.true;
             expect(values).to.deep.equal(['a']);
 
@@ -39,7 +39,7 @@ describe('rxjs/rxjs', () => {
         it('should skip the first value if skipFirst is true', () => {
             let complete = false;
             const values: string[] = [];
-            a$.toObservable({ skipFirst: true, once: true }).subscribe(v => values.push(v), undefined, () => complete = true);
+            toObservable(a$, { skipFirst: true, once: true }).subscribe(v => values.push(v), undefined, () => complete = true);
             expect(complete).to.be.false;
             expect(values).to.be.empty;
 
@@ -53,7 +53,7 @@ describe('rxjs/rxjs', () => {
         });
 
         it('should stop the internal reactor when the Observable is unobserved', () => {
-            const sub = a$.toObservable().subscribe();
+            const sub = toObservable(a$).subscribe();
             expect(a$[_internal.symbols.observers]).not.to.be.empty;
             sub.unsubscribe();
             expect(a$[_internal.symbols.observers]).to.be.empty;
@@ -62,7 +62,7 @@ describe('rxjs/rxjs', () => {
         it('should support multiple subscriptions to the returned Observable', () => {
             const values1: string[] = [];
             const values2: string[] = [];
-            const obs = a$.toObservable();
+            const obs = toObservable(a$);
             const sub1 = obs.subscribe(v => values1.push(v));
             const sub2 = obs.subscribe(v => values2.push(v));
 
@@ -86,7 +86,7 @@ describe('rxjs/rxjs', () => {
 
         it('should not complete on unsubscribe', () => {
             let complete = false;
-            a$.toObservable().subscribe(undefined, undefined, () => complete = true).unsubscribe();
+            toObservable(a$).subscribe(undefined, undefined, () => complete = true).unsubscribe();
             expect(complete).to.be.false;
         });
     });
