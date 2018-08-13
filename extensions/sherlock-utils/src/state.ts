@@ -1,4 +1,4 @@
-import { _internal, Derivable, DerivableAtom, ReactorOptions, State } from '@politie/sherlock';
+import { Derivable, DerivableAtom, ErrorWrapper, ReactorOptions, State, unresolved } from '@politie/sherlock';
 
 export type StateObject<V> =
     { value: V, errored: false, resolved: true } |
@@ -10,10 +10,10 @@ export function getStateObject<V>(from: Derivable<V>): StateObject<V> {
 }
 
 export function toStateObject<V>(state: State<V>): StateObject<V> {
-    if (state === _internal.symbols.unresolved) {
+    if (state === unresolved) {
         return { errored: false, resolved: false };
     }
-    if (state instanceof _internal.ErrorWrapper) {
+    if (state instanceof ErrorWrapper) {
         const { error } = state;
         return { error, errored: true, resolved: true };
     }
@@ -22,12 +22,12 @@ export function toStateObject<V>(state: State<V>): StateObject<V> {
 
 export function fromStateObject<V>(state: StateObject<V>): State<V> {
     if (state.errored) {
-        return new _internal.ErrorWrapper(state.error);
+        return new ErrorWrapper(state.error);
     }
     if (state.resolved) {
         return state.value;
     }
-    return _internal.symbols.unresolved;
+    return unresolved;
 }
 
 export function materialize<V>(derivable: Derivable<V>): Derivable<StateObject<V>> {

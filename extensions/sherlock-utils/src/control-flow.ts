@@ -1,4 +1,4 @@
-import { _internal, Derivable, derive, inTransaction, ReactorOptionValue, safeUnwrap, State, unwrap } from '@politie/sherlock';
+import { _internal, Derivable, derive, inTransaction, ReactorOptionValue, safeUnwrap, State, unresolved, unwrap } from '@politie/sherlock';
 import { fromStateObject, materialize, StateObject } from './state';
 
 export interface ControlFlowOptions<V> {
@@ -54,7 +54,7 @@ class ControlFlow<V> extends _internal.BaseDerivable<V> implements Derivable<V> 
      * The last state that was calculated for this derivable. Is only used when connected.
      * @internal
      */
-    private _currentState: State<V> = _internal.symbols.unresolved;
+    private _currentState: State<V> = unresolved;
 
     /** @internal */
     private _baseConnectionStopper?: () => void = undefined;
@@ -107,7 +107,7 @@ class ControlFlow<V> extends _internal.BaseDerivable<V> implements Derivable<V> 
 
     [_internal.symbols.disconnect]() {
         super[_internal.symbols.disconnect]();
-        this._currentState = _internal.symbols.unresolved;
+        this._currentState = unresolved;
         if (this._baseConnectionStopper) {
             this._baseConnectionStopper();
             this._baseConnectionStopper = undefined;
