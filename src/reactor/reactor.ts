@@ -5,25 +5,30 @@ import { addObserver, independentTracking, Observer, removeObserver } from '../t
 import { augmentStack, equals, ErrorWrapper, prepareCreationStack, uniqueId } from '../utils';
 
 // Adds the react and toPromise methods to Derivables.
-declare module '../derivable/extension' {
-    export interface DerivableExtension<V> {
-        /**
-         * React on changes of the this derivable. Will continue to run indefinitely until either garbage collected or limited by
-         * the provided lifecycle options. Returns a callback function that can be used to stop the reactor indefinitely.
-         *
-         * @param reaction function to call on each reaction
-         * @param options lifecycle options
-         */
-        react(reaction: (value: V, stop: () => void) => void, options?: Partial<ReactorOptions<V>>): () => void;
+export interface DerivableReactorExtension<V> {
+    /**
+     * React on changes of the this derivable. Will continue to run indefinitely until either garbage collected or limited by
+     * the provided lifecycle options. Returns a callback function that can be used to stop the reactor indefinitely.
+     *
+     * @param reaction function to call on each reaction
+     * @param options lifecycle options
+     */
+    react(reaction: (value: V, stop: () => void) => void, options?: Partial<ReactorOptions<V>>): () => void;
 
-        /**
-         * Returns a promise that resolves with the first value that passes the lifecycle options. Reject on any error in an upstream
-         * derivable.
-         *
-         * @param options lifecycle options
-         */
-        toPromise(options?: Partial<ToPromiseOptions<V>>): Promise<V>;
-    }
+    /**
+     * Returns a promise that resolves with the first value that passes the lifecycle options. Reject on any error in an upstream
+     * derivable.
+     *
+     * @param options lifecycle options
+     */
+    toPromise(options?: Partial<ToPromiseOptions<V>>): Promise<V>;
+}
+
+declare module '../interfaces' {
+    export interface Derivable<V> extends DerivableReactorExtension<V> { }
+}
+declare module '../derivable/base-derivable' {
+    export interface BaseDerivable<V> extends DerivableReactorExtension<V> { }
 }
 
 const true$ = new Constant(true);

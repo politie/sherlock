@@ -1,9 +1,7 @@
-import { _internal, atom, Derivable, DerivableAtom, State, transact } from '@politie/sherlock';
+import { atom, Derivable, DerivableAtom, ErrorWrapper, State, transact, unresolved } from '@politie/sherlock';
 import { expect } from 'chai';
 import { spy } from 'sinon';
 import { controlFlow, ControlFlowOptions } from './control-flow';
-
-const { unresolved } = _internal.symbols;
 
 describe('sherlock-utils/filterUpdates', () => {
     let a$: DerivableAtom<string>;
@@ -220,8 +218,8 @@ describe('sherlock-utils/filterUpdates', () => {
                     shouldHaveReactedOnce('b');
 
                     a$.setError('error');
-                    shouldHaveReactedOnce(new _internal.ErrorWrapper('error'));
-                    shouldNotHaveReacted(new _internal.ErrorWrapper('error'));
+                    shouldHaveReactedOnce(new ErrorWrapper('error'));
+                    shouldNotHaveReacted(new ErrorWrapper('error'));
                 });
 
                 it('should disconnect from the `from` derivable when it becomes true', () => {
@@ -297,7 +295,7 @@ describe('sherlock-utils/filterUpdates', () => {
                     shouldHaveReactedOnce('a');
 
                     a$.setError('my error');
-                    shouldHaveReactedOnce(new _internal.ErrorWrapper('my error'));
+                    shouldHaveReactedOnce(new ErrorWrapper('my error'));
 
                     a$.set('b');
                     shouldHaveReactedOnce('b');
@@ -402,7 +400,7 @@ describe('sherlock-utils/filterUpdates', () => {
                     shouldHaveReactedOnce('a');
 
                     a$.setError('my error');
-                    shouldHaveReactedOnce(new _internal.ErrorWrapper('my error'));
+                    shouldHaveReactedOnce(new ErrorWrapper('my error'));
 
                     a$.set('b');
                     shouldHaveReactedOnce('b');
@@ -527,15 +525,15 @@ describe('sherlock-utils/filterUpdates', () => {
                     a$.setError('my error');
                     includeUnresolved
                         ? shouldNotHaveReacted(unresolved)
-                        : shouldHaveReactedOnce(new _internal.ErrorWrapper('my error'));
+                        : shouldHaveReactedOnce(new ErrorWrapper('my error'));
 
                     a$.setError('another error');
-                    shouldNotHaveReacted(includeUnresolved ? unresolved : new _internal.ErrorWrapper('my error'));
+                    shouldNotHaveReacted(includeUnresolved ? unresolved : new ErrorWrapper('my error'));
 
                     a$.set('a');
-                    shouldNotHaveReacted(includeUnresolved ? unresolved : new _internal.ErrorWrapper('my error'));
+                    shouldNotHaveReacted(includeUnresolved ? unresolved : new ErrorWrapper('my error'));
                     a$.set('b');
-                    shouldNotHaveReacted(includeUnresolved ? unresolved : new _internal.ErrorWrapper('my error'));
+                    shouldNotHaveReacted(includeUnresolved ? unresolved : new ErrorWrapper('my error'));
                 });
 
                 it('should support a synchronous `once` without maintaining garbage', () => {
@@ -671,7 +669,7 @@ describe('sherlock-utils/filterUpdates', () => {
                     currentTest!.reactions++;
                     currentTest!.value = v;
                 };
-                currentStopper = f$.react(reaction, { onError: err => reaction(new _internal.ErrorWrapper(err)) });
+                currentStopper = f$.react(reaction, { onError: err => reaction(new ErrorWrapper(err)) });
                 return f$;
             }
 
