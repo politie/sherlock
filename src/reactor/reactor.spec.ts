@@ -844,6 +844,9 @@ describe('reactor/reactor error handling', () => {
                 onError.resetHistory();
                 a$.set('no error at all!');
                 expect(onError).to.not.have.been.called;
+
+                a$.set('error in derivation');
+                expect(onError).to.have.been.calledOnce;
             });
 
             it('should not stop the reactor', () => {
@@ -853,8 +856,9 @@ describe('reactor/reactor error handling', () => {
                 a$.set('error in derivation');
                 shouldNotHaveReacted();
 
-                a$.set('no error at all!');
-                shouldHaveReactedOnce('no error at all!');
+                // It should call the reaction with 'whatever' again, because the error has now resolved.
+                a$.set('whatever');
+                shouldHaveReactedOnce('whatever');
             });
 
             it('should stop the reactor when the stop callback is used', () => {
