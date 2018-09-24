@@ -100,7 +100,7 @@ export class Reactor<V> implements Observer {
      * The value of the parent when this reactor last reacted. Is used to determine whether it should react again or not.
      * @internal
      */
-    private _lastValue: V | typeof emptyCache | typeof unresolved = emptyCache;
+    private _lastValue: V | ErrorWrapper | typeof emptyCache = emptyCache;
 
     /**
      * Create a new instance of Reactor, do not use this directly, use {@link Reactor.create} instead.
@@ -162,11 +162,13 @@ export class Reactor<V> implements Observer {
 
         const { _lastValue } = this;
         const nextValue = this._parent[internalGetState]();
-        if (nextValue instanceof ErrorWrapper) {
-            this._errorHandler(nextValue.error);
-        } else if (nextValue !== unresolved && !equals(_lastValue, nextValue)) {
+        if (nextValue !== unresolved && !equals(_lastValue, nextValue)) {
             this._lastValue = nextValue;
-            this._react(nextValue);
+            if (nextValue instanceof ErrorWrapper) {
+                this._errorHandler(nextValue.error);
+            } else {
+                this._react(nextValue);
+            }
         }
     }
 
