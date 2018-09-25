@@ -128,7 +128,7 @@ describe('derivable/atom', () => {
 
         let clock: SinonFakeTimers;
         beforeEach('use fake timers', () => { clock = useFakeTimers(); });
-        afterEach('restore timers', () => { clock.restore(); });
+        afterEach('restore timers', () => { clock.runAll(); clock.restore(); });
 
         function createDerivablePromise<V>(work: ((resolve: (v: V) => void, reject: (e: any) => void) => void)): Derivable<V> {
             const dp$ = atom.unresolved<V>();
