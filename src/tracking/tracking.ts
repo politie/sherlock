@@ -198,8 +198,19 @@ export function removeObserver(observable: TrackedObservable, observer: Observer
     }
 }
 
+let evaluateInNextTick: TrackedObservable[] | undefined;
+
 export function maybeDisconnectInNextTick(observable: TrackedObservable) {
-    setTimeout(() => observable.connected && observable[observers].length === 0 && observable[disconnect](), 0);
+    if (evaluateInNextTick) {
+        evaluateInNextTick.push(observable);
+    } else {
+        evaluateInNextTick = [observable];
+        setTimeout(() => {
+            const evaluateNow = evaluateInNextTick!;
+            evaluateInNextTick = undefined;
+            evaluateNow.forEach(obs => obs.connected && obs[observers].length === 0 && obs[disconnect]());
+        }, 0);
+    }
 }
 
 interface Recording {

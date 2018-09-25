@@ -92,7 +92,7 @@ export function testAutocache(factory: (a$: Derivable<string>, deriver: (v: stri
     describe('#autoCache', () => {
         let clock: SinonFakeTimers;
         beforeEach('use fake timers', () => { clock = useFakeTimers(); });
-        afterEach('restore timers', () => { clock.restore(); });
+        afterEach('restore timers', () => { clock.runAll(); clock.restore(); });
 
         let a$: SettableDerivable<string>;
         beforeEach('create the atom', () => { a$ = atom('value'); });
@@ -183,6 +183,25 @@ export function testAutocache(factory: (a$: Derivable<string>, deriver: (v: stri
             // Only after the tick, the cache may be released.
             expect(d$.get()).to.equal('value!');
             expect(deriver).to.have.been.calledTwice;
+        });
+
+        it('should not set multiple timeouts simultaneously', () => {
+            const alt$ = factory(atom('abc'), s => s).autoCache();
+
+            const setTimeout = spy(clock, 'setTimeout');
+            expect(setTimeout).to.not.have.been.called;
+            d$.get();
+            expect(setTimeout).to.have.been.calledOnce;
+            alt$.get();
+            expect(setTimeout).to.have.been.calledOnce;
+
+            clock.tick(0);
+            alt$.get();
+            expect(setTimeout).to.have.been.calledTwice;
+            d$.get();
+            expect(setTimeout).to.have.been.calledTwice;
+
+            setTimeout.restore();
         });
     });
 }

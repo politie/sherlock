@@ -95,7 +95,7 @@ describe('derivable/data-source', () => {
 
     let clock: SinonFakeTimers;
     beforeEach('use fake timers', () => { clock = useFakeTimers(); });
-    afterEach('restore timers', () => { clock.restore(); });
+    afterEach('restore timers', () => { clock.runAll(); clock.restore(); });
 
     describe('#autoCache', () => {
         let ds$: SimpleDataSource<string>;
