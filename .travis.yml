@@ -3,14 +3,7 @@ node_js:
 - "10" # current dev version; first in list will be used by greenkeeper-lock
 - "8" # LTS support until december 2019
 - "6" # LTS support until april 2019
-env:
-  global:
-    secure: lESWMonOOXYkvkGmfFSbCFEsClr7SlJbiU4rL/yfp0NCIcs6xc7virjiEyRXD1Yzuk6Ib2lZsihUoiUa7C6Omsd84D9vERJoSuEFkMifaHHsc3z2Sa4MD9UyAnumTX04cN1V23NyIRBOUOchzOuGZx9shhNckqjdDZpgDQmuzsZCZhmpvijLF6owoydah3f9ar0f5/oK1rKw2nFKFEAoOX10j7kFszsqTlZp22hH22hFXai0zr2T2baCQnmC/AYVHyc7ncgdsrP7hkLh5SQZM8PayiUviKRfVZXwMPlZYfi+VsTzIRYjSRpfgl+b6E4NmedPZNiRJ+cyUlsNz6tbfYP+ZRJtzFlhuLTBUzXUcgKrV/mhx0gUQYDHgtozOCvJwf/B6j1voVeXMPr/tgV2zNZf+IoHadxqKX+kLSKCJjmnTe1s8Kx2ogsdbnJgLJcpjJ94QKENdGGd/n4atdHxqcCm/6gZCk2RmgVJvYKYXx4dyUlPgmul55Iq15cICPC8ZGpBJyhQl8qnRFMScZKxaGh8zkXEFX1mMzgFzJm6RnTmnWiUnEEQCEsVvIpDBj3l7F6inCU0qRaiWbkJYbAh9FF8QaIN3uZ330H8d6gDZuh4XTBjP2iy6e6vqlCg2c4E2X+a7zXpndqKne8Vtb5JGDPA0+Pf17Q1H3xcocwCGXk=
-before_install: npm i -g greenkeeper-lockfile@1
-install: npm install
-before_script: greenkeeper-lockfile-update
 script: npm run ci:travis
-after_script: greenkeeper-lockfile-upload
 cache:
   directories:
   - "~/.npm"
