@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { spy } from 'sinon';
 import { controlFlow, ControlFlowOptions } from './control-flow';
 
-describe('sherlock-utils/filterUpdates', () => {
+describe('sherlock-utils/controlFlow', () => {
     let a$: DerivableAtom<string>;
 
     beforeEach('create the base atom', () => { a$ = atom.unresolved(); });
