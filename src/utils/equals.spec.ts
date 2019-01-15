@@ -21,7 +21,7 @@ describe('util/equals', () => {
     });
 
     it('should check equality on immutable objects', () => {
-        const seq = Seq.of(1, 2, 3);
+        const seq = Seq.Indexed.of(1, 2, 3);
         const set = ISet.of(1, 2, 3);
         expect(equals(seq, set)).to.be.false;
         expect(equals(seq.toSetSeq(), set)).to.be.true;

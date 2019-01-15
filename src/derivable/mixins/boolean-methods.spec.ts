@@ -36,7 +36,7 @@ export function testBooleanFuncs(factory: Factory) {
 
             it('should use the utils.equals function', () => {
                 const a$ = factory(List.of(1, 2, 3));
-                const b$ = factory(Seq.of(1, 2, 3));
+                const b$ = factory(Seq.Indexed.of(1, 2, 3));
                 expect(a$.is(b$).get()).to.be.true;
             });
         });

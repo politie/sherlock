@@ -63,13 +63,14 @@ export class BiMapping<B, V> extends Mapping<B, V> implements SettableDerivable<
     constructor(
         base: BaseDerivable<B> & SettableDerivable<B>,
         pureGet: (this: Mapping<B, V>, baseValue: State<B>) => State<V>,
-        private readonly _pureSetter: (this: BiMapping<B, V>, newValue: V) => B,
+        private readonly _pureSetter: (this: BiMapping<B, V>, newValue: State<V>) => State<B>,
     ) {
         super(base, pureGet);
     }
 
     set(newValue: V) {
-        this._base.set(this._pureSetter(newValue));
+        // Cast to B here instead of broadening the interface of set method. Should in practice always support State<B>.
+        this._base.set(this._pureSetter(newValue) as B);
     }
 }
 
@@ -84,7 +85,7 @@ export function mapMethod<B, V>(this: BaseDerivable<B>, get: (b: B) => State<V>,
 
 export function mapStateMethod<B, V>(this: BaseDerivable<B>, get: (state: State<B>) => State<V>, set?: (v: V, b: State<B>) => B): Derivable<V> {
     return set && isSettable(this)
-        ? new BiMapping(this, get, function (v) { return set.call(this, v, this._base.getState()); })
+        ? new BiMapping(this, get, function (v) { return set.call(this, v as V, this._base.getState()); })
         : new Mapping(this, get);
 }
 
