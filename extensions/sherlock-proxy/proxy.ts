@@ -176,7 +176,7 @@ export class ProxyDescriptor<V = any, T = V> {
      *
      * @param prop the property to pluck of the wrapped derivable
      */
-    $pluck(prop: string | number): DerivableProxy<V> | undefined {
+    $pluck(prop: string | number): DerivableProxy<V> {
         const pd = this.$proxyDescriptor;
         return pd.$create(pd.$derivable.pluck(prop), extendExpression(pd.$expression, prop), extendPath(pd.$path, prop));
     }
@@ -217,7 +217,7 @@ export class ProxyDescriptor<V = any, T = V> {
 
     $derive() {
         const target = this.$proxyDescriptor.$derivable;
-        return target.derive.apply(target, arguments);
+        return target.derive.apply(target, arguments as any);
     }
 
     $react(reaction: (value: V) => void, options?: Partial<ReactorOptions<any>>): () => void {
@@ -286,13 +286,13 @@ const proxyHandler: ProxyHandler<ProxyDescriptor> = {
             return target;
         }
         if (isPluckableProperty(target, prop)) {
-            return target.$pluck.call(receiver, prop);
+            return target.$pluck.call(receiver, prop as string | number);
         }
         return Reflect.get(target, prop, receiver);
     },
     set(target, prop, newValue, receiver) {
         if (isPluckableProperty(target, prop)) {
-            const plucked = target.$pluck.call(receiver, prop);
+            const plucked = target.$pluck.call(receiver, prop as string | number) as ProxyDescriptor;
             if (newValue && isDerivableProxy(newValue)) {
                 plucked.$targetValue = (newValue as any).$targetValue;
             } else {

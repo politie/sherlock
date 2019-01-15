@@ -254,7 +254,7 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
             const value$ = atom(fromJS({ a: [1, 2, 3] }));
             const px = new ProxyDescriptor<any>().$create(value$) as ProxyType<{ a: number[] }>;
             expect(px.a[0].$value).to.equal(1);
-            expect(px.a.$value).to.equal(Seq.of(1, 2, 3));
+            expect(px.a.$value).to.equal(Seq.Indexed.of(1, 2, 3));
 
             px.a[3].$value = 4;
             expect(value$.get()).to.equal(fromJS({ a: [1, 2, 3, 4] }));

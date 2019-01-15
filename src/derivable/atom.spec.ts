@@ -37,13 +37,13 @@ describe('derivable/atom', () => {
 
             // Using the utils.equals function
             const imm$ = $(atom(Seq.Indexed.of(1, 2, 3)));
-            expect(imm$.get()).to.equal(Seq.of(1, 2, 3));
+            expect(imm$.get()).to.equal(Seq.Indexed.of(1, 2, 3));
             expect(imm$.version).to.equal(0);
-            imm$.set(Seq.of(1, 2).concat(3).toIndexedSeq());
-            expect(imm$.get()).to.equal(Seq.of(1, 2, 3));
+            imm$.set(Seq.Indexed.of(1, 2).concat(3).toIndexedSeq());
+            expect(imm$.get()).to.equal(Seq.Indexed.of(1, 2, 3));
             expect(imm$.version).to.equal(0);
-            imm$.set(Seq.of(1, 2));
-            expect(imm$.get()).to.equal(Seq.of(1, 2));
+            imm$.set(Seq.Indexed.of(1, 2));
+            expect(imm$.get()).to.equal(Seq.Indexed.of(1, 2));
             expect(imm$.version).to.equal(1);
         });
 

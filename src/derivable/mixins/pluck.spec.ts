@@ -38,7 +38,7 @@ export function testPluck(factory: Factory, isSettable: boolean, isAtom: boolean
         it('should pluck immutable values', () => {
             const value$ = factory(fromJS({ a: ['value1', 'value2'] }));
             const a$ = value$.pluck('a');
-            expect(a$.get()).to.equal(Seq.of('value1', 'value2'));
+            expect(a$.get()).to.equal(Seq.Indexed.of('value1', 'value2'));
             const value1$ = a$.pluck(1);
             expect(value1$.get()).to.equal('value2');
         });
@@ -87,7 +87,7 @@ export function testPluck(factory: Factory, isSettable: boolean, isAtom: boolean
                 });
 
                 it('should not allow readonly immutable values to be changed', () => {
-                    const immValue$ = factory(Seq.of(1, 2, 3)) as Atom<any>;
+                    const immValue$ = factory(Seq.Indexed.of(1, 2, 3)) as Atom<any>;
                     expect(() => immValue$.pluck(0).set(123)).to.throw();
                 });
             });
