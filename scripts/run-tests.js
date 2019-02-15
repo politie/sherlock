@@ -13,7 +13,7 @@ if (process.argv.indexOf('watch') >= 0) {
     return;
 }
 
-const nyc = 'nyc --check-coverage --lines 98 --functions 98 --branches 98 --statements 98 --reporter lcov --reporter text-summary --include "dist/**/*.js" --exclude "**/*.spec.js" ';
+const nyc = 'nyc --check-coverage --lines 100 --functions 100 --branches -6 --statements 100 --reporter lcov --reporter text-summary --include "dist/**/*.js" --exclude "**/*.spec.js" ';
 const mocha = 'mocha -r scripts/tsconfig-paths-test.js --forbid-only "dist/**/*.spec.js"';
 // Exclude the sherlock-proxy extension in environments where Proxy is not available
 const command = typeof Proxy === 'undefined'
