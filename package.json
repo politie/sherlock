@@ -30,7 +30,9 @@
         "lint": "tslint -p tsconfig.json --format codeFrame",
         "copy": "node scripts/copy-boilerplate.js",
         "ci:travis": "npm run build && cat coverage/lcov.info | node_modules/.bin/coveralls",
-        "ci:circle": "npm run build"
+        "ci:circle": "npm run build",
+        "tutorial": "nodemon --watch tutorial --ext ts --exec npm run tutorial:run",
+        "tutorial:run": "mocha tutorial/**/*.ts -r ts-node/register -r tsconfig-paths/register --reporter landing"
     },
     "repository": {
         "type": "git",
