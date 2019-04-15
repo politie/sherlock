@@ -7,8 +7,8 @@ import { template } from './template';
 
 describe('sherlock-utils/derivableCache', () => {
     it('should support constants as output of the derivable factory', () => {
-        const derivableFactory = spy(constant);
-        const identityCache = derivableCache<number, number>({ derivableFactory });
+        const derivableFactory = spy((v: number) => constant(v));
+        const identityCache = derivableCache({ derivableFactory });
         derive(() => identityCache(1).get() + identityCache(2).get()).react(() => 0);
         expect(derivableFactory).to.have.been.calledTwice;
         identityCache(1).get();
@@ -257,8 +257,8 @@ describe('sherlock-utils/derivableCache', () => {
 
     context('(with delayedEviction on)', () => {
         it('should keep the cached entry after disconnection until end of tick', done => {
-            const derivableFactory = spy(constant);
-            const cache = derivableCache<string, string>({ derivableFactory, delayedEviction: true });
+            const derivableFactory = spy((v: string) => constant(v));
+            const cache = derivableCache({ derivableFactory, delayedEviction: true });
 
             cache('abc').get();
             cache('abc').get();
