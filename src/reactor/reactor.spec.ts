@@ -242,9 +242,9 @@ describe('reactor/reactor', () => {
         let until: SettableDerivable<boolean>;
 
         beforeEach('create the atoms', () => {
-            from = atom(false);
-            when = atom(false);
-            until = atom(false);
+            from = atom(false as boolean);
+            when = atom(false as boolean);
+            until = atom(false as boolean);
         });
 
         it('should support all 3 options', () => {
