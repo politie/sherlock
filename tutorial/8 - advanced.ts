@@ -56,38 +56,68 @@ describe.skip('advanced', () => {
     });
 
     /**
-     * We have seen `.get()` and `.set()` for `Derivable`s.
-     * But there is another way to get and set a `Derivable`. This is through the `.value` property.
-     *
-     * This property is meant for two things.
-     * - It helps when a settable property is expected instead of a methods
-     * - It converts `unresolved` to `undefined`, so getting a property before it's resolved won't throw
-     *
-     * *Note that if used inside a derivation, this will also stop the propagation of `unresolved` of this `Derivable`*
+     * As an alternative to `.get()` and `.set()`, there is also the `.value` accessor.
      */
-    it('`.value`', () => {
-        const myAtom$ = atom.unresolved<string>();
+    describe('.value', () => {
+        /**
+         * `.value` can be used as an alternative to `.get()` and `.set()`.
+         * This helps when a property is expected instead of two methods.
+         */
+        it('as a getter/setter', () => {
+            const myAtom$ = atom('foo');
 
-        expect(myAtom$.value).to.be.undefined;
+            /**
+             * **Your Turn**
+             * Use the `.value` accessor to get the current value.
+             */
+            expect(__YOUR_TURN__).to.equal('foo');
+
+            /**
+             * **Your Turn**
+             * Now use the `.value` accessor to set a 'new value'.
+             */
+            myAtom$.value = __YOUR_TURN__;
+
+            expect(myAtom$.get()).to.equal('new value');
+        });
 
         /**
-         * **Your Turn**
-         * Use `.value` to set a new value. And in the following expectation
+         * If a `Derivable` is `unresolved`, `.get()` will normally throw.
+         * `.value` will return `undefined` instead.
          */
-        expect(__YOUR_TURN__).to.equal('a new value');
+        it('will not throw when `unresolved`', () => {
+            const myAtom$ = atom.unresolved<string>();
+
+            /**
+             * **Your Turn**
+             */
+            expect(myAtom$.value).to.equal(__YOUR_TURN__);
+        });
 
         /**
-         * **Your Turn**
-         * Any get on an `unresolved` `Derivable` will throw. We know that now.
-         * And deriving with an `unresolved` `Derivable` will result in an `unresolved` `Derivable`.
-         * But does the same happen if you derive using `.value`?
+         * As a result, if `.value` is used inside a derivation, it will also replace `unresolved` with `undefined`.
+         * So `unresolved` will not automatically propagate when using `.value`.
          */
-        expect(() => derive(() => myAtom$.get()).get()).to.throw(__YOUR_TURN__);
-        expect(() => derive(() => myAtom$.value).get()).to.throw(__YOUR_TURN__);
+        it('will stop propagation of `unresolved` in `.derive()`', () => {
+            const myAtom$ = atom('foo');
 
-        /**
-         * *Note: you may also want to look at `.getOr()` and `.fallbackTo()` for similar functionality*
-         */
+            const usingGet$ = derive(() => myAtom$.get());
+            const usingVal$ = derive(() => myAtom$.value);
+
+            expect(usingGet$.get()).to.equal('foo');
+            expect(usingVal$.get()).to.equal('foo');
+
+            /**
+             * **Your Turn**
+             * We just created two `Derivable`s that are almost exactly the same.
+             * But what happens when their source becomes `unresolved`?
+             */
+            expect(usingGet$.resolved).to.equal(__YOUR_TURN__);
+            expect(usingVal$.resolved).to.equal(__YOUR_TURN__);
+            myAtom$.unset();
+            expect(usingGet$.resolved).to.equal(__YOUR_TURN__);
+            expect(usingVal$.resolved).to.equal(__YOUR_TURN__);
+        });
     });
 
     /**
@@ -134,20 +164,20 @@ describe.skip('advanced', () => {
              * And check the `reactSpy`, is it what you would expect?
              */
             myRepeat$.value = 3;
-            expect(reactSpy).to.have.callCount(__YOUR_TURN__)
-                .and.calledWith(__YOUR_TURN__);
+            expect(reactSpy).to.have.callCount(__YOUR_TURN__);
+            expect(reactSpy.lastCall).to.be.calledWith(__YOUR_TURN__);
 
             /**
              * **Your Turn**
              * And now that we have changed `myString$`? And when `myRepeat$` changed again?
              */
             myString$.value = 'ha';
-            expect(reactSpy).to.have.callCount(__YOUR_TURN__)
-                .and.calledWith(__YOUR_TURN__);
+            expect(reactSpy).to.have.callCount(__YOUR_TURN__);
+            expect(reactSpy.lastCall).to.be.calledWith(__YOUR_TURN__);
 
             myRepeat$.value = 2;
-            expect(reactSpy).to.have.callCount(__YOUR_TURN__)
-                .and.calledWith(__YOUR_TURN__);
+            expect(reactSpy).to.have.callCount(__YOUR_TURN__);
+            expect(reactSpy.lastCall).to.be.calledWith(__YOUR_TURN__);
 
             /**
              * As you can see, a change in `myString$` will not trigger an update.

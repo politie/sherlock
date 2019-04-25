@@ -30,7 +30,7 @@ describe.skip('inner workings', () => {
             .react(reacted);
 
         // The first time should not surprise anyone, the derivation was called and returned the right result
-        expect(reacted).to.have.been.calledOnceWithExactly(1);
+        expect(reacted).to.have.been.calledOnceWith(1);
 
         // `switch$` is still set to true (number)
         string$.set('two');
@@ -40,6 +40,7 @@ describe.skip('inner workings', () => {
          * What do you expect?
          */
         expect(reacted).to.have.callCount(__YOUR_TURN__);
+        expect(reacted.lastCall).to.be.calledWith(__YOUR_TURN__);
 
         // `switch$` is still set to true (number)
         number$.set(2);
@@ -49,6 +50,7 @@ describe.skip('inner workings', () => {
          * What do you expect?
          */
         expect(reacted).to.have.callCount(__YOUR_TURN__);
+        expect(reacted.lastCall).to.be.calledWith(__YOUR_TURN__);
 
         // Now let's reset the spy, so callCount should be 0 again.
         reacted.resetHistory();
@@ -62,6 +64,7 @@ describe.skip('inner workings', () => {
          * What do you expect now?
          */
         expect(reacted).to.have.callCount(__YOUR_TURN__);
+        expect(reacted.lastCall).to.be.calledWith(__YOUR_TURN__);
     });
 
     /**
@@ -276,7 +279,7 @@ describe.skip('inner workings', () => {
             .react(reacted);
 
         // The first time should not surprise anyone, the derivation was called and returned the right result
-        expect(reacted).to.have.been.calledOnceWithExactly(1);
+        expect(reacted).to.have.been.calledOnceWith(1);
 
         // `switch$` is still set to true (number)
         string$.set('two');

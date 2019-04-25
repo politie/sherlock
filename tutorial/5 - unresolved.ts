@@ -82,7 +82,7 @@ describe.skip('unresolved', () => {
          */
 
         expect(myAtom$.resolved).to.be.true;
-        expect(hasReacted).to.have.been.calledOnceWithExactly(`woohoow, I was called`);
+        expect(hasReacted).to.have.been.calledOnceWith(`woohoow, I was called`);
     });
 
     /**

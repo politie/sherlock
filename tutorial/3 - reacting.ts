@@ -2,6 +2,12 @@ import { expect } from 'chai';
 import { atom } from '../src';
 
 /**
+ * **Your Turn**
+ * If you see this variable, you should do something about it. :-)
+ */
+export const __YOUR_TURN__ = {} as any;
+
+/**
  * In the intro we have seen a basic usage of the `.react()` method.
  * Let's dive a bit deeper into the details of this method.
  */
@@ -55,29 +61,61 @@ describe.skip('reacting', () => {
 
     /**
      * A reactor will go on forever. This is often not what you want, and almost always a memory leak.
-     *
      * So it is important to stop a reactor at some point. The `.react()` method has different ways of dealing with this.
-     * The easiest is the 'stopper' function, every `.react()` call will return a `function` that will stop the reaction.
      */
-    it('stopping a reaction', () => {
-        const myAtom$ = atom('initial value');
-        // A trivial `expect` to silence TypeScript's noUnusedLocals
-        expect(myAtom$.get()).to.equal('initial value');
+    describe('stopping a reaction', () => {
+        /**
+         * The easiest is the 'stopper' function, every `.react()` call will return a `function` that will stop the reaction.
+         */
+        it('with the stopper function', () => {
+            const myAtom$ = atom('initial value');
+            // A trivial `expect` to silence TypeScript's noUnusedLocals
+            expect(myAtom$.get()).to.equal('initial value');
+
+            /**
+             * **Your Turn**
+             * catch the returned `stopper` in a variable
+             */
+            myAtom$.react(reactor);
+
+            expectReact(1, 'initial value');
+
+            /**
+             * **Your Turn**
+             * Call the `stopper`.
+             */
+
+            myAtom$.set('new value');
+
+            // And the reaction stopped.
+            expectReact(1, 'initial value');
+        });
 
         /**
-         * **Your Turn**
-         * time to react to `myAtom$` with the `reactor()` function defined above
-         * remember to catch the returned `stopper` in a variable
+         * Everytime the reaction is called, it also gets the stopper `function` as a second parameter.
          */
+        it('with the stopper callback', () => {
+            const myAtom$ = atom('initial value');
+            // A trivial `expect` to silence TypeScript's noUnusedLocals
+            expect(myAtom$.get()).to.equal('initial value');
 
-        expectReact(1, 'initial value');
+            /**
+             * **Your Turn**
+             * In the reaction below, use the stopper callback to stop the reaction
+             */
+            myAtom$.react((val, __YOUR_TURN__) => {
+                reactor(val);
+                __YOUR_TURN__;
+            });
 
-        // Call the stopper.
+            expectReact(1, 'initial value');
 
-        myAtom$.set('new value');
+            myAtom$.set('new value');
 
-        // And the reaction stopped.
-        expectReact(1, 'initial value');
+            // And the reaction stopped.
+            expectReact(1, 'initial value');
+        });
+
     });
 
     /**
@@ -124,7 +162,7 @@ describe.skip('reacting', () => {
              * **Your Turn**
              * Time to use `until$` directly in `until`. This does not need any `function` wrapper.
              */
-            myAtom$.react(reactor, { /** your turn */ });
+            myAtom$.react(reactor, __YOUR_TURN__);
 
             expectReact(3, 'new value');
             // As before, it should still react to 'normal' changes.
@@ -140,7 +178,7 @@ describe.skip('reacting', () => {
              * Another often used method is returning the parent `Derivable` directly in the function. (as in `d => d`)
              * Try it!
              */
-            myAtom$.react(reactor, { /** your turn */ });
+            myAtom$.react(reactor, __YOUR_TURN__);
             expectReact(5, '');
 
             myAtom$.set('last value');
@@ -165,7 +203,7 @@ describe.skip('reacting', () => {
              *
              * *Hint: remember the `.is()` method?*
              */
-            sherlock$.react(reactor, { /** your turn */ });
+            sherlock$.react(reactor, __YOUR_TURN__);
 
             expectReact(0);
             ['Elementary,', 'my', 'dear', 'Watson'].forEach(txt => sherlock$.set(txt));
@@ -186,7 +224,7 @@ describe.skip('reacting', () => {
              * Now, let's react to all even numbers.
              * Except 4, we don't want to make it too easy now.
              */
-            count$.react(reactor, { /** your turn */ });
+            count$.react(reactor, __YOUR_TURN__);
 
             expectReact(1, 0);
 
@@ -201,10 +239,28 @@ describe.skip('reacting', () => {
         });
 
         /**
+         * Normally the reactor will immediately fire with the current value.
+         * If you want the reactor to fire normally, just not the first time, there is also a `boolean` option: `skipFirst`.
+         */
+        it('reacting with `skipFirst`', () => {
+            const done$ = atom(false);
+
+            /**
+             * **Your Turn**
+             * Say you want to react when `done$` is true. But not right away..
+             */
+            done$.react(reactor, __YOUR_TURN__);
+            expectReact(0);
+
+            done$.set(true);
+            expectReact(1, true);
+        });
+
+        /**
          * With `once` you can stop the reactor after it has emitted exactly one value. This is a `boolean` option.
          *
-         * Without any other `options`, this is just a strange way of typing `.get()`. But when combined with `when` or `from`,
-         * it can be very useful.
+         * Without any other `options`, this is just a strange way of typing `.get()`.
+         * But when combined with `when`, `from` or `skipFirst`, it can be very useful.
          */
         it('reacting `once`', () => {
             const finished$ = atom(false);
@@ -212,8 +268,10 @@ describe.skip('reacting', () => {
             /**
              * **Your Turn**
              * Say you want to react when `finished$` is true. It can not finish twice.
+             *
+             * *Hint: you will need to combine `once` with another option*
              */
-            finished$.react(reactor, { /** your turn */ });
+            finished$.react(reactor, __YOUR_TURN__);
             expectReact(0);
 
             // When finished it should react once.
@@ -226,38 +284,19 @@ describe.skip('reacting', () => {
             expectReact(1, true);
         });
 
-        /**
-         * Normally the reactor will immediately fire with the current value.
-         * If you want the reactor to fire normally, just not the first time, there is also a `boolean` option: `skipFirst`.
-         */
-        it('reacting with `skipFirst`', () => {
-            const done$ = atom(false);
-
-            /**
-             * **Your Turn**
-             * Say you want to react when `done$` is true. But not right away..
-             */
-            done$.react(reactor, { /** your turn */ });
-            expectReact(0);
-
-            done$.set(true);
-            expectReact(1, true);
-        });
-
     });
 
     describe('challenge', () => {
         it('onDisconnect', () => {
             const connected$ = atom(false);
 
-            connected$.react(reactor, {
-                /**
-                 * **Your Turn**
-                 * We want our reactor to trigger once, when the user disconnects (eg for cleanup).
-                 * `connected$` indicates the current connection status.
-                 * This should be possible with three simple ReactorOptions
-                 */
-            });
+            /**
+             * **Your Turn**
+             * We want our reactor to trigger once, when the user disconnects (eg for cleanup).
+             * `connected$` indicates the current connection status.
+             * This should be possible with three simple ReactorOptions
+             */
+            connected$.react(reactor, __YOUR_TURN__);
 
             // It starts as 'not connected'
             expectReact(0);
