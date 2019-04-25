@@ -240,5 +240,36 @@ describe.skip('reacting', () => {
             done$.set(true);
             expectReact(1, true);
         });
+
+    });
+
+    describe('challenge', () => {
+        it('onDisconnect', () => {
+            const connected$ = atom(false);
+
+            connected$.react(reactor, {
+                /**
+                 * **Your Turn**
+                 * We want our reactor to trigger once, when the user disconnects (eg for cleanup).
+                 * `connected$` indicates the current connection status.
+                 * This should be possible with three simple ReactorOptions
+                 */
+            });
+
+            // It starts as 'not connected'
+            expectReact(0);
+
+            // At this point, the user connects, no reaction should occur yet.
+            connected$.set(true);
+            expectReact(0);
+
+            // When the user disconnects, the reaction should fire once
+            connected$.set(false);
+            expectReact(1, false);
+
+            // It should not react again after this
+            expect(connected$.connected).to.be.false;
+        });
+
     });
 });
