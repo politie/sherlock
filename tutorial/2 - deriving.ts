@@ -25,7 +25,7 @@ describe.skip('deriving', () => {
          * As you might have guessed, we want to repeat the text a couple of times.
          * (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/repeat should do fine)
          */
-        const lyric$ = text$.derive(txt => txt); // We can combine txt with `repeat.get()` here
+        const lyric$ = text$.derive(txt => txt); // We can combine txt with `repeat$.get()` here.
 
         expect(lyric$.get()).to.equal(`It won't be long`);
 
@@ -35,7 +35,7 @@ describe.skip('deriving', () => {
     });
 
     /**
-     * Now that we have used `.get()` in a `.derive()`. You may wonder, can we skip the original `Derivable` and just call the `function` `derive()`?
+     * Now that we have used `.get()` in a `.derive()`. You may wonder, can we skip the original `Derivable` and just call the function `derive()`?
      * Of course you can!
      *
      * And you can use any `Derivable` you want, even if they all have the same `Atom` as a parent.
@@ -48,30 +48,30 @@ describe.skip('deriving', () => {
          * Let's try creating a `Derivable` [FizzBuzz](https://en.wikipedia.org/wiki/Fizz_buzz)
          * `fizzBuzz$` should combine `fizz$`, `buzz$` and `myCounter$` to produce the correct output.
          *
-         * Multiple `Derivable`s can be combined to create a new one. To do this, just use `.get()` on (other) derivables in the `.derive()` step.
+         * Multiple `Derivable`s can be combined to create a new one. To do this, just use `.get()` on (other) `Derivable`s in the `.derive()` step.
          * This can be done both when `derive()` is used standalone or as a method on another `Derivable`.
          */
-        const fizz$: Derivable<string> = myCounter$.derive(() => 'Fizz'); /** Should return `Fizz` when `myCounter$` is a multiple of 3 */
-        const buzz$: Derivable<string> = myCounter$.derive(() => 'Buzz'); /** Should return `Buzz` when `myCounter$` is a multiple of 5 */
-        const fizzBuzz$: Derivable<string | number> = derive(() => fizz$.get() + buzz$.get()); /** This one will need some work as well :-) */
+        const fizz$: Derivable<string> = myCounter$.derive(() => 'Fizz'); // Should return 'Fizz' when `myCounter$` is a multiple of 3.
+        const buzz$: Derivable<string> = myCounter$.derive(() => 'Buzz'); // Should return 'Buzz' when `myCounter$` is a multiple of 5.
+        const fizzBuzz$: Derivable<string | number> = derive(() => fizz$.get() + buzz$.get()); // This one will need some work as well. :-)
 
         for (let count = 1; count <= 100; count++) {
-            // Set the value to the `Atom`
+            // Set the value of the `Atom`,
             myCounter$.set(count);
 
-            // And check if the output changed accordingly
+            // and check if the output changed accordingly.
             checkFizzBuzz(count, fizzBuzz$.get());
         }
     });
 
     function checkFizzBuzz(count: number, out: string | number) {
-        if (count % 3 + count % 5 === 0) {  // If `count` is a multiple of 3 AND 5, output 'FizzBuzz'
+        if (count % 3 + count % 5 === 0) {  // If `count` is a multiple of 3 AND 5, output 'FizzBuzz'.
             expect(out).to.equal('FizzBuzz');
-        } else if (count % 3 === 0) {       // If `count` is a multiple of 3, output 'Fizz'
+        } else if (count % 3 === 0) {       // If `count` is a multiple of 3, output 'Fizz'.
             expect(out).to.equal('Fizz');
-        } else if (count % 5 === 0) {       // If `count` is a multiple of 5, output 'Buzz'
+        } else if (count % 5 === 0) {       // If `count` is a multiple of 5, output 'Buzz'.
             expect(out).to.equal('Buzz');
-        } else {                            // Otherwise just output the `count` itself
+        } else {                            // Otherwise just output the `count` itself.
             expect(out).to.equal(count);
         }
     }
@@ -90,28 +90,28 @@ describe.skip('deriving', () => {
         const tweet$ = atom('First tweet');
 
         tweet$.derive(log).react(txt => {
-            // Normally we would do something with the tweet here..
+            // Normally we would do something with the tweet here.
             return txt;
         });
 
-        // The first tweet should have automatically been added to the `pastTweets` array
+        // The first tweet should have automatically been added to the `pastTweets` array.
         expect(pastTweets).to.have.length(1);
         expect(pastTweets[0]).to.contain('Barack');
         expect(pastTweets[0]).to.contain('First tweet');
 
-        // Let's add a famous quote by Mr Barack
+        // Let's add a famous quote by Mr Barack:
         tweet$.set('We need to reject any politics that targets people because of race or religion.');
-        // And as expected this is automatically added to the log
+        // As expected this is automatically added to the log.
         expect(pastTweets).to.have.length(2);
         expect(pastTweets[1]).to.contain('Barack');
         expect(pastTweets[1]).to.contain('reject');
 
-        // But what if the user changes
+        // But what if the user changes?
         currentUser$.set('Donald');
 
         /**
          * **Your Turn**
-         * Time to set your own expectations..
+         * Time to set your own expectations.
          */
         expect(pastTweets).to.have.length(2); // Is there a new tweet?
         expect(pastTweets[2]).to.contain(''); // Who sent it? Donald? Or Barack?
@@ -134,7 +134,7 @@ describe.skip('deriving', () => {
      * The first three will take a `Derivable` or regular value as parameter.
      * `.not()` does not need any input.
      *
-     * `.is()` will resolve equality as in the same way as `@politie/sherlock` would do internally.
+     * `.is()` will resolve equality in the same way as `@politie/sherlock` would do internally.
      * More on the equality check in the 'inner workings' part. But know that the first check is
      * [Object.is()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is)
      */
@@ -146,18 +146,18 @@ describe.skip('deriving', () => {
          * The FizzBuzz example above can be rewritten using the convenience methods.
          * This is not how you would normally write it, but it looks like a fun excercise.
          *
-         * `fizz$` and `buzz$` can be completed with only `.is(...)`, `.and(...)` and `or(...)`;
+         * `fizz$` and `buzz$` can be completed with only `.is(...)`, `.and(...)` and `.or(...)`;
          * Make sure the output of those `Derivable`s is either 'Fizz'/'Buzz' or ''.
          */
         const fizz$ = myCounter$.derive(count => count % 3);
         const buzz$ = myCounter$.derive(count => count % 5);
-        const fizzBuzz$ = derive(() => fizz$.get() + buzz$.get()); /** `.or(...)` */
+        const fizzBuzz$ = derive(() => fizz$.get() + buzz$.get()); // `.or(...)`
 
         for (let count = 1; count <= 100; count++) {
-            // Set the value to the `Atom`
+            // Set the value of the `Atom`,
             myCounter$.set(count);
 
-            // And check if the output changed accordingly
+            // and check if the output changed accordingly.
             checkFizzBuzz(count, fizzBuzz$.get());
         }
     });

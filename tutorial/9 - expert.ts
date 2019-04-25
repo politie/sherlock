@@ -8,7 +8,7 @@ import { atom } from '../src';
  */
 export const __YOUR_TURN__ = {} as any;
 
-describe('expert', () => {
+describe.skip('expert', () => {
     describe('`.autoCache()`', () => {
         /**
          * If a `.get()` is called on a `Derivable` all derivations will be executed.

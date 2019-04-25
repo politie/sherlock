@@ -15,10 +15,10 @@ export const __YOUR_TURN__ = {} as any;
 /**
  * Welcome to the `@politie/sherlock` tutorial.
  *
- * It is set up as a collection of specs. With the goal of getting all the specs to pass.
+ * It is set up as a collection of specs, with the goal of getting all the specs to pass.
  * The `expect()`s and basic setup are there, you just need to get it to work.
  *
- * All specs except the first one are set to `.skip` remove this to start that part of the tutorial.
+ * All specs except the first one are set to `.skip`. Remove this to start on that part of the tutorial.
  *
  * Start the tutorial by running: `npm run tutorial`.
  *
@@ -38,7 +38,7 @@ describe.skip('intro', () => {
          */
         bool = __YOUR_TURN__;
 
-        // We use expectations like this, to verify the result
+        // We use expectations like this to verify the result.
         expect(bool, `
 --- Welcome to the tutorial! ---
 
@@ -48,17 +48,17 @@ Please look in \`./tutorial/1 - intro.ts\` to see what to do next..
 });
 
 /**
- * Let's start with the Derivable basics.
+ * Let's start with the `Derivable` basics.
  */
 describe.skip('the basics', () => {
     /**
      * The `Atom` is the basic building block of `@politie/sherlock`.
-     * It holds a value which can be `get()` and `set()`.
+     * It holds a value which you can `get()` and `set()`.
      */
     it('the `Atom`', () => {
         // An `Atom` can be created with the `atom()` function. The parameter of this function is used as the initial value of the `Atom`.
         const myValue$ = atom(1);
-        // Variables containing Atoms or any other Derivable are usually postfix with a `$` to indicate this. Hence `myValue$`.
+        // Variables containing `Atom`s or any other `Derivable` are usually postfixed with a `$` to indicate this. Hence `myValue$`.
 
         // The `.get()` method can be used to get the current value of the `Atom`.
         expect(myValue$.get()).to.equal(1);
@@ -85,15 +85,15 @@ describe.skip('the basics', () => {
         /**
          * **Your Turn**
          * We want to create a new `Derivable` that outputs the inverse of the original `Atom`.
-         * Use `myValue$.derive(val => ...)` to create the `myInverse$` variable
+         * Use `myValue$.derive(val => ...)` to create the `myInverse$` variable.
          */
         const myInverse$ = myValue$; // .derive(...)
 
         expect(myInverse$.get()).to.equal(-1);
 
-        // So if we set `myValue$` to -2
+        // So if we set `myValue$` to -2:
         myValue$.set(-2);
-        // `myInverse$` will change accordingly
+        // `myInverse$` will change accordingly.
         expect(myInverse$.get()).to.equal(2);
     });
 
@@ -102,22 +102,22 @@ describe.skip('the basics', () => {
      * You can also listen to the changes.
      *
      * This is done with the `.react()` method.
-     * This method is given a function that is executed everytime the value of the `Derivable` changes.
+     * This method is given a `function` that is executed every time the value of the `Derivable` changes.
      */
     it('reacting to `Derivable`s', () => {
         const myCounter$ = atom(0);
 
-        const reacted = 0;
+        let reacted = 0;
         /**
          * **Your Turn**
-         * Now React on `myCounter$`. In every react increase the `reacted` variable by one.
+         * Now react to `myCounter$`. In every `react()`, increase the `reacted` variable by one.
          */
 
-        expect(reacted).to.equal(1); // React will react immediately (more on that later)
+        expect(reacted).to.equal(1); // `react()` will react immediately, more on that later.
 
-        // And then we set the atom a couple of times to make the `Derivable` react..
+        // And then we set the `Atom` a couple of times to make the `Derivable` react.
         for (let i = 0; i <= 100; i++) {
-            // Set the value to the `Atom`
+            // Set the value of the `Atom`.
             myCounter$.set(i);
         }
         expect(reacted).to.equal(101);
