@@ -3,6 +3,12 @@ import { spy } from 'sinon';
 import { atom, Derivable, DerivableAtom } from '../src';
 
 /**
+ * **Your Turn**
+ * If you see this variable, you should do something about it. :-)
+ */
+export const __YOUR_TURN__ = {} as any;
+
+/**
  * Sometimes your data isn't available yet. For example if it is still being fetched from the server.
  * At that point you probably still want your `Derivable` to exist, to start deriving and reacting when the data becomes available.
  *
@@ -18,7 +24,7 @@ describe.skip('unresolved', () => {
         // Note that you will need to indicate the type of this atom, since it can't be inferred by TypeScript this way.
         const myAtom$ = atom.unresolved<number>();
 
-        expect(myAtom$.resolved).to.be.false;
+        expect(myAtom$.resolved).to.equal(__YOUR_TURN__);
 
         /**
          * **Your Turn**
@@ -37,7 +43,7 @@ describe.skip('unresolved', () => {
          * **Your Turn**
          * Time to create an `unresolved` Atom..
          */
-        let myAtom$!: DerivableAtom<string>;
+        const myAtom$: DerivableAtom<string> = __YOUR_TURN__;
 
         expect(myAtom$.resolved).to.be.false;
         expect(() => myAtom$.get()).to.throw('Could not get value, derivable is unresolved');
@@ -48,6 +54,8 @@ describe.skip('unresolved', () => {
          * **Your Turn**
          * What do you expect?
          */
+        expect(myAtom$.resolved).to.equal(__YOUR_TURN__);
+        expect(() => myAtom$.get()).to; // .throw()/.not.to.throw()?
     });
 
     /**
@@ -65,7 +73,8 @@ describe.skip('unresolved', () => {
          * **Your Turn**
          * What do you expect?
          */
-        expect(hasReacted).to.have.been; // Was it called? And with what?
+        expect(hasReacted).to.have.callCount(__YOUR_TURN__)
+            .and.calledWith(__YOUR_TURN__);
 
         /**
          * **Your Turn**
@@ -113,13 +122,13 @@ describe.skip('unresolved', () => {
          * **Your Turn**
          * Combine the two `Atom`s into one `Derivable`
          */
-        let myDerivable$!: Derivable<string>;
+        const myDerivable$: Derivable<string> = __YOUR_TURN__;
 
         /**
          * **Your Turn**
          * Is `myDerivable$` expected to be `resolved`?
          */
-        expect(myDerivable$.resolved).to.be; // true/false?
+        expect(myDerivable$.resolved).to.equal(__YOUR_TURN__);
 
         // Now let's set one of the two source `Atom`s
         myString$.set('some');
@@ -129,10 +138,10 @@ describe.skip('unresolved', () => {
          * What do you expect to see in `myDerivable$`.
          * And what if we set `myOtherString$`?
          */
-        expect(myDerivable$.resolved).to.be; // true/false?
+        expect(myDerivable$.resolved).to.equal(__YOUR_TURN__);
         myOtherString$.set('data');
-        expect(myDerivable$.resolved).to.be; // true/false?
-        expect(myDerivable$.get()).to.equal; // (...)
+        expect(myDerivable$.resolved).to.equal(__YOUR_TURN__);
+        expect(myDerivable$.get()).to.equal(__YOUR_TURN__);
 
         /**
          * **Your Turn**
@@ -140,6 +149,6 @@ describe.skip('unresolved', () => {
          * What do you expect `myDerivable$` to be?
          */
         myString$.unset();
-        expect(myDerivable$.resolved).to.be; // true/false?
+        expect(myDerivable$.resolved).to.equal(__YOUR_TURN__);
     });
 });

@@ -87,7 +87,7 @@ describe.skip('the basics', () => {
          * We want to create a new `Derivable` that outputs the inverse of the original `Atom`.
          * Use `myValue$.derive(val => ...)` to create the `myInverse$` variable.
          */
-        const myInverse$ = myValue$; // .derive(...)
+        const myInverse$ = myValue$.derive(__YOUR_TURN__);
 
         expect(myInverse$.get()).to.equal(-1);
 

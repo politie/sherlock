@@ -50,7 +50,7 @@ describe.skip('reacting', () => {
 
         // Now set a 'new value' to `myAtom$`.
 
-        expectReact(1, 'new value');
+        expectReact(2, 'new value');
     });
 
     /**

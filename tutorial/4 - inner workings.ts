@@ -4,6 +4,12 @@ import { spy } from 'sinon';
 import { atom } from '../src';
 
 /**
+ * **Your Turn**
+ * If you see this variable, you should do something about it. :-)
+ */
+export const __YOUR_TURN__ = {} as any;
+
+/**
  * Time to dive a bit deeper into the inner workings of `@politie/sherlock`.
  */
 describe.skip('inner workings', () => {
@@ -33,7 +39,7 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * What do you expect?
          */
-        expect(reacted).to.have.been;
+        expect(reacted).to.have.callCount(__YOUR_TURN__);
 
         // `switch$` is still set to true (number)
         number$.set(2);
@@ -42,8 +48,7 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * What do you expect?
          */
-        expect(reacted).to.have.been;
-
+        expect(reacted).to.have.callCount(__YOUR_TURN__);
 
         // Now let's reset the spy, so callCount should be 0 again.
         reacted.resetHistory();
@@ -56,7 +61,7 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * What do you expect now?
          */
-        expect(reacted).to.have.been;
+        expect(reacted).to.have.callCount(__YOUR_TURN__);
     });
 
     /**
@@ -76,15 +81,15 @@ describe.skip('inner workings', () => {
          *
          * *Hint: you can use sinonChai's `.to.have.been.called`/`.to.have.been.calledOnce`/`to.have.callCount(...)`/etc..*
          */
-        expect(hasDerived).to.have; // Well, what do you expect?
+        expect(hasDerived).to.have.callCount(__YOUR_TURN__); // Well, what do you expect?
 
         myDerivation$.get();
 
-        expect(hasDerived).to.have; // And after a `.get()`?
+        expect(hasDerived).to.have.callCount(__YOUR_TURN__); // And after a `.get()`?
 
         myDerivation$.get();
 
-        expect(hasDerived).to.have; // And after the second `.get()`? Is there an extra call?
+        expect(hasDerived).to.have.callCount(__YOUR_TURN__); // And after the second `.get()`? Is there an extra call?
 
         /**
          * The state of any `Derivable` can change at any moment.
@@ -115,27 +120,27 @@ describe.skip('inner workings', () => {
          * Ok, it's your turn to complete the expectations.
          * *Hint: you can use `.calledOnce`/`.calledTwice` etc or `.callCount()`*
          */
-        expect(hasDerived).to.have.been; // Called how many times?
+        expect(hasDerived).to.have.callCount(__YOUR_TURN__);
 
         myDerivation$.get();
 
-        expect(hasDerived).to.have.been; // Called how many times?
+        expect(hasDerived).to.have.callCount(__YOUR_TURN__);
 
         myAtom$.set(false);
 
-        expect(hasDerived).to.have.been; // Called how many times?
+        expect(hasDerived).to.have.callCount(__YOUR_TURN__);
 
         myDerivation$.get();
 
-        expect(hasDerived).to.have.been; // Called how many times?
+        expect(hasDerived).to.have.callCount(__YOUR_TURN__);
 
         stopper();
 
-        expect(hasDerived).to.have.been; // Called how many times?
+        expect(hasDerived).to.have.callCount(__YOUR_TURN__);
 
         myDerivation$.get();
 
-        expect(hasDerived).to.have.been; // Called how many times?
+        expect(hasDerived).to.have.callCount(__YOUR_TURN__);
 
         /**
          * Since the `.react()` already listens to the value(changes) there is no need to recalculate whenever a `.get()` is called.
@@ -174,23 +179,23 @@ describe.skip('inner workings', () => {
          */
         myAtom$.set(1); // Note that this is the same value as it was initialized with
 
-        expect(first).to.have.been;
-        expect(second).to.have.been;
+        expect(first).to.have.callCount(__YOUR_TURN__);
+        expect(second).to.have.callCount(__YOUR_TURN__);
 
         myAtom$.set(2);
 
-        expect(first).to.have.been;
-        expect(second).to.have.been;
+        expect(first).to.have.callCount(__YOUR_TURN__);
+        expect(second).to.have.callCount(__YOUR_TURN__);
 
         myAtom$.set(3);
 
-        expect(first).to.have.been;
-        expect(second).to.have.been;
+        expect(first).to.have.callCount(__YOUR_TURN__);
+        expect(second).to.have.callCount(__YOUR_TURN__);
 
         myAtom$.set(4);
 
-        expect(first).to.have.been;
-        expect(second).to.have.been;
+        expect(first).to.have.callCount(__YOUR_TURN__);
+        expect(second).to.have.callCount(__YOUR_TURN__);
 
         /**
          * Can you explain the behavior above?
@@ -200,7 +205,6 @@ describe.skip('inner workings', () => {
          * So these changes can and need to be cached and deduplicated.
          */
     });
-
 
     /**
      * So if the new value of a `Derivable` is equal to the old, it won't propagate a new event.
@@ -221,7 +225,7 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * The `Atom` is set with exactly the same object as before. Will the `.react()` fire?
          */
-        expect(hasReacted).to.have.been;
+        expect(hasReacted).to.have.callCount(__YOUR_TURN__);
 
         /**
          * But what if you use an object, that can be easily compared through a library like `ImmutableJS`
@@ -237,7 +241,7 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * Do you think the `.react()` fired with this new value?
          */
-        expect(hasReacted).to.have.been;
+        expect(hasReacted).to.have.callCount(__YOUR_TURN__);
 
         atom$.set(Seq.Indexed.of(1, 2));
 
@@ -245,7 +249,7 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * And now?
          */
-        expect(hasReacted).to.have.been;
+        expect(hasReacted).to.have.callCount(__YOUR_TURN__);
 
         /**
          * In `@politie/sherlock` equality is a bit complex.
@@ -281,7 +285,7 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * What do you expect?
          */
-        expect(reacted).to.have.been;
+        expect(reacted).to.have.callCount(__YOUR_TURN__);
 
         // `switch$` is still set to true (number)
         number$.set(2);
@@ -290,8 +294,7 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * What do you expect?
          */
-        expect(reacted).to.have.been;
-
+        expect(reacted).to.have.callCount(__YOUR_TURN__);
 
         // Now let's reset the spy, so callCount should be 0 again.
         reacted.resetHistory();
@@ -304,6 +307,6 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * What do you expect now?
          */
-        expect(reacted).to.have.been;
+        expect(reacted).to.have.callCount(__YOUR_TURN__);
     });
 });

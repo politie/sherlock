@@ -2,6 +2,12 @@ import { expect } from 'chai';
 import { atom, Derivable, derive } from '../src';
 
 /**
+ * **Your Turn**
+ * If you see this variable, you should do something about it. :-)
+ */
+export const __YOUR_TURN__ = {} as any;
+
+/**
  * Any `Derivable` (including `Atom`s) can be used (and/or combined) to create a derived state.
  * This derived state is in turn a `Derivable`.
  *
@@ -51,9 +57,9 @@ describe.skip('deriving', () => {
          * Multiple `Derivable`s can be combined to create a new one. To do this, just use `.get()` on (other) `Derivable`s in the `.derive()` step.
          * This can be done both when `derive()` is used standalone or as a method on another `Derivable`.
          */
-        const fizz$: Derivable<string> = myCounter$.derive(() => 'Fizz'); // Should return 'Fizz' when `myCounter$` is a multiple of 3.
-        const buzz$: Derivable<string> = myCounter$.derive(() => 'Buzz'); // Should return 'Buzz' when `myCounter$` is a multiple of 5.
-        const fizzBuzz$: Derivable<string | number> = derive(() => fizz$.get() + buzz$.get()); // This one will need some work as well. :-)
+        const fizz$: Derivable<string> = myCounter$.derive(__YOUR_TURN__); // Should return 'Fizz' when `myCounter$` is a multiple of 3 and '' otherwise.
+        const buzz$: Derivable<string> = myCounter$.derive(__YOUR_TURN__); // Should return 'Buzz' when `myCounter$` is a multiple of 5 and '' otherwise.
+        const fizzBuzz$: Derivable<string | number> = derive(__YOUR_TURN__);
 
         for (let count = 1; count <= 100; count++) {
             // Set the value of the `Atom`,
@@ -114,8 +120,8 @@ describe.skip('deriving', () => {
          * Time to set your own expectations.
          */
         expect(pastTweets).to.have.length(2); // Is there a new tweet?
-        expect(pastTweets[2]).to.contain(''); // Who sent it? Donald? Or Barack?
-        expect(pastTweets[2]).to.contain(''); // What did he tweet?
+        expect(pastTweets[2]).to.contain(__YOUR_TURN__); // Who sent it? Donald? Or Barack?
+        expect(pastTweets[2]).to.contain(__YOUR_TURN__); // What did he tweet?
 
         /**
          * As you can see, this is something to look out for.
@@ -149,9 +155,9 @@ describe.skip('deriving', () => {
          * `fizz$` and `buzz$` can be completed with only `.is(...)`, `.and(...)` and `.or(...)`;
          * Make sure the output of those `Derivable`s is either 'Fizz'/'Buzz' or ''.
          */
-        const fizz$ = myCounter$.derive(count => count % 3);
-        const buzz$ = myCounter$.derive(count => count % 5);
-        const fizzBuzz$ = derive(() => fizz$.get() + buzz$.get()); // `.or(...)`
+        const fizz$ = myCounter$.derive(count => count % 3).is(__YOUR_TURN__).and(__YOUR_TURN__).or(__YOUR_TURN__);
+        const buzz$ = myCounter$.derive(count => count % 5).is(__YOUR_TURN__).and(__YOUR_TURN__).or(__YOUR_TURN__);
+        const fizzBuzz$ = derive(() => fizz$.get() + buzz$.get()).or(__YOUR_TURN__);
 
         for (let count = 1; count <= 100; count++) {
             // Set the value of the `Atom`,

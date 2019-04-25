@@ -4,6 +4,12 @@ import { pairwise, scan, struct } from '../extensions/sherlock-utils';
 // import { fromObservable, toObservable } from '../extensions/sherlock-rxjs';
 import { atom } from '../src';
 
+/**
+ * **Your Turn**
+ * If you see this variable, you should do something about it. :-)
+ */
+export const __YOUR_TURN__ = {} as any;
+
 describe('conversion', () => {
     /**
      * `@politie/sherlock` has the ability to produce and use Promises
@@ -36,8 +42,9 @@ describe('conversion', () => {
 
             /**
              * **Your Turn**
-             * Now, use `pairwise()`, to subtract the previous value from the current and call `reactSpy()` with this value.
+             * Now, use `pairwise()`, to subtract the previous value from the current
              */
+            myCounter$.derive(__YOUR_TURN__).react(reactSpy);
 
             expect(reactSpy).to.have.been.calledOnceWith(1);
 
@@ -65,9 +72,9 @@ describe('conversion', () => {
 
             /**
              * **Your Turn**
-             * Now, use `scan()`, to add all the emitted values together and call `reactSpy()` with this value.
+             * Now, use `scan()`, to add all the emitted values together
              */
-
+            myCounter$.derive(__YOUR_TURN__).react(reactSpy);
 
             expect(reactSpy).to.have.been.calledOnceWith(1);
 
@@ -80,6 +87,10 @@ describe('conversion', () => {
 
             expect(reactSpy).to.have.been.calledThrice
                 .and.calledWith(49);
+
+            /**
+             * *BONUS: Try using `scan()` (or `pairwise()`) directly in the `.react()` method.*
+             */
         });
 
         /**
@@ -102,8 +113,14 @@ describe('conversion', () => {
 
             const myOneAtom$ = struct(allMyAtoms);
 
-            expect(myOneAtom$.get()).to.have.property('string', 'my string');
-            expect(myOneAtom$.get()).to.have.property('regularProp', 'prop');
+            expect(myOneAtom$.get()).to.deep.equal({
+                regularProp: 'prop',
+                string: 'my string',
+                number: 1,
+                sub: {
+                    string: 'my substring',
+                },
+            });
 
             allMyAtoms.regularProp = 'new value';
             allMyAtoms.sub.string.set('my new substring');
@@ -112,7 +129,14 @@ describe('conversion', () => {
              * **Your Turn**
              * Now have a look at the properties of `myOneAtom$`. Is this what you expect?
              */
-            expect(myOneAtom$.get()).to.have;
+            expect(myOneAtom$.get()).to.deep.equal({
+                regularProp: __YOUR_TURN__,
+                string: __YOUR_TURN__,
+                number: __YOUR_TURN__,
+                sub: {
+                    string: __YOUR_TURN__,
+                },
+            });
         });
     });
 });

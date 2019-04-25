@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { Map as ImmutableMap } from 'immutable';
 import { spy } from 'sinon';
-import { atom, constant, Derivable, SettableDerivable, derive } from '../src';
+import { atom, constant, Derivable, derive, SettableDerivable } from '../src';
 
 /**
  * **Your Turn**
@@ -28,8 +28,8 @@ describe.skip('advanced', () => {
          * **Your Turn**
          * What do you expect this `Derivable` to do on `.set()`, `.get()` etc?
          */
-        expect(c.get()).to;
-        expect(() => c.set('new value')).to;
+        expect(() => c.get()).to; // .throw()/.not.to.throw()?
+        expect(() => c.set('new value')).to; // .throw()/.not.to.throw()?
     });
 
     /**
@@ -76,7 +76,6 @@ describe.skip('advanced', () => {
          */
         expect(__YOUR_TURN__).to.equal('a new value');
 
-
         /**
          * **Your Turn**
          * Any get on an `unresolved` `Derivable` will throw. We know that now.
@@ -85,7 +84,6 @@ describe.skip('advanced', () => {
          */
         expect(() => derive(() => myAtom$.get()).get()).to.throw(__YOUR_TURN__);
         expect(() => derive(() => myAtom$.value).get()).to.throw(__YOUR_TURN__);
-
 
         /**
          * *Note: you may also want to look at `.getOr()` and `.fallbackTo()` for similar functionality*
@@ -109,7 +107,7 @@ describe.skip('advanced', () => {
              * **Your Turn**
              * Use the `.map()` method to create the expected output below
              */
-            let mappedAtom$!: Derivable<string>;
+            const mappedAtom$: Derivable<string> = __YOUR_TURN__;
 
             mappedAtom$.react(reactSpy);
 
@@ -136,17 +134,20 @@ describe.skip('advanced', () => {
              * And check the `reactSpy`, is it what you would expect?
              */
             myRepeat$.value = 3;
-            expect(reactSpy).to.have.been; // Was it called? And with what?
+            expect(reactSpy).to.have.callCount(__YOUR_TURN__)
+                .and.calledWith(__YOUR_TURN__);
 
             /**
              * **Your Turn**
              * And now that we have changed `myString$`? And when `myRepeat$` changed again?
              */
             myString$.value = 'ha';
-            expect(reactSpy).to.have.been; // Was it called? And with what?
+            expect(reactSpy).to.have.callCount(__YOUR_TURN__)
+                .and.calledWith(__YOUR_TURN__);
 
             myRepeat$.value = 2;
-            expect(reactSpy).to.have.been; // Was it called? And with what?
+            expect(reactSpy).to.have.callCount(__YOUR_TURN__)
+                .and.calledWith(__YOUR_TURN__);
 
             /**
              * As you can see, a change in `myString$` will not trigger an update.
@@ -169,7 +170,7 @@ describe.skip('advanced', () => {
                 // This first function is called when getting
                 n => -n,
                 // The second is called when setting, you may want to fix this one though
-                n => n,
+                __YOUR_TURN__,
             );
 
             expect(myInverse$.get()).to.equal(-1);
@@ -179,8 +180,8 @@ describe.skip('advanced', () => {
             /**
              * **Your Turn**
              */
-            expect(myAtom$.get()).to.equal; // What is the value of the `Atom`?
-            expect(myInverse$.get()).to.equal(-2);
+            expect(myAtom$.get()).to.equal(__YOUR_TURN__);
+            expect(myInverse$.get()).to.equal(__YOUR_TURN__);
         });
     });
 
@@ -270,7 +271,7 @@ describe.skip('advanced', () => {
              * So what if we set `firstProp$`? Does this propagate to the source `Derivable`?
              */
             firstProp$.set(__YOUR_TURN__);
-            expect(reactSpy).to.have.callCount(__YOUR_TURN__)
+            expect(reactSpy).to.have.callCount(__YOUR_TURN__);
             expect(myMap$.get()).to.equal(__YOUR_TURN__);
         });
     });
