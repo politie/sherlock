@@ -128,8 +128,8 @@ describe.skip('advanced', () => {
      * - It can be made to be settable
      */
     describe('`.map()`', () => {
-        const reactSpy = spy();
-        beforeEach('reset the spy', () => reactSpy.resetHistory());
+        const mapReactSpy = spy();
+        beforeEach('reset the spy', () => mapReactSpy.resetHistory());
 
         it('triggers when the source changes', () => {
             const myAtom$ = atom(1);
@@ -139,45 +139,54 @@ describe.skip('advanced', () => {
              */
             const mappedAtom$: Derivable<string> = __YOUR_TURN__;
 
-            mappedAtom$.react(reactSpy);
+            mappedAtom$.react(mapReactSpy);
 
-            expect(reactSpy).to.have.been.calledOnceWith('1');
+            expect(mapReactSpy).to.have.been.calledOnceWith('1');
 
             myAtom$.set(3);
 
-            expect(reactSpy).to.have.been.calledTwice
+            expect(mapReactSpy).to.have.been.calledTwice
                 .and.calledWith('333');
         });
 
-        it('does trigger when any other `Derivable` changes', () => {
+        it('does not trigger when any other `Derivable` changes', () => {
             const myRepeat$ = atom(1);
             const myString$ = atom('ho');
+            const deriveReactSpy = spy();
 
             // Note that the `.map` uses both `myRepeat$` and `myString$`
-            myRepeat$.map(r => myString$.get().repeat(r)).react(reactSpy);
+            myRepeat$.map(r => myString$.get().repeat(r)).react(mapReactSpy);
+            myRepeat$.derive(r => myString$.get().repeat(r)).react(deriveReactSpy);
 
-            expect(reactSpy).to.have.been.calledOnceWith('ho');
+            expect(mapReactSpy).to.have.been.calledOnceWith('ho');
+            expect(deriveReactSpy).to.have.been.calledOnceWith('ho');
 
+            myRepeat$.value = 3;
             /**
              * **Your Turn**
-             * Now let's change `myRepeat$`.
-             * And check the `reactSpy`, is it what you would expect?
+             * We changed`myRepeat$` to equal 3.
+             * Do you expect both reactors to have fired? And with what?
              */
-            myRepeat$.value = 3;
-            expect(reactSpy).to.have.callCount(__YOUR_TURN__);
-            expect(reactSpy.lastCall).to.be.calledWith(__YOUR_TURN__);
+            expect(deriveReactSpy).to.have.callCount(__YOUR_TURN__);
+            expect(deriveReactSpy.lastCall).to.be.calledWith(__YOUR_TURN__);
+            expect(mapReactSpy).to.have.callCount(__YOUR_TURN__);
+            expect(mapReactSpy.lastCall).to.be.calledWith(__YOUR_TURN__);
 
+            myString$.value = 'ha';
             /**
              * **Your Turn**
              * And now that we have changed `myString$`? And when `myRepeat$` changed again?
              */
-            myString$.value = 'ha';
-            expect(reactSpy).to.have.callCount(__YOUR_TURN__);
-            expect(reactSpy.lastCall).to.be.calledWith(__YOUR_TURN__);
+            expect(deriveReactSpy).to.have.callCount(__YOUR_TURN__);
+            expect(deriveReactSpy.lastCall).to.be.calledWith(__YOUR_TURN__);
+            expect(mapReactSpy).to.have.callCount(__YOUR_TURN__);
+            expect(mapReactSpy.lastCall).to.be.calledWith(__YOUR_TURN__);
 
             myRepeat$.value = 2;
-            expect(reactSpy).to.have.callCount(__YOUR_TURN__);
-            expect(reactSpy.lastCall).to.be.calledWith(__YOUR_TURN__);
+            expect(deriveReactSpy).to.have.callCount(__YOUR_TURN__);
+            expect(deriveReactSpy.lastCall).to.be.calledWith(__YOUR_TURN__);
+            expect(mapReactSpy).to.have.callCount(__YOUR_TURN__);
+            expect(mapReactSpy.lastCall).to.be.calledWith(__YOUR_TURN__);
 
             /**
              * As you can see, a change in `myString$` will not trigger an update.
@@ -187,8 +196,7 @@ describe.skip('advanced', () => {
 
         /**
          * Since `.map()` is a relatively simple mapping of input value to output value.
-         * It can often also be reversed. In that case you can use that reverse mapping to create a `SettableDerivable`.
-         *
+         * It can often be reversed. In that case you can use that reverse mapping to create a `SettableDerivable`.
          */
         it('can be settable', () => {
             const myAtom$ = atom(1);
