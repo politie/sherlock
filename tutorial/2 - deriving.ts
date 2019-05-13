@@ -61,6 +61,9 @@ describe.skip('deriving', () => {
         const buzz$: Derivable<string> = myCounter$.derive(__YOUR_TURN__); // Should return 'Buzz' when `myCounter$` is a multiple of 5 and '' otherwise.
         const fizzBuzz$: Derivable<string | number> = derive(__YOUR_TURN__);
 
+        expect(fizz$.get()).to.equal(1);
+        expect(buzz$.get()).to.equal(1);
+        expect(fizzBuzz$.get()).to.equal(1);
         for (let count = 1; count <= 100; count++) {
             // Set the value of the `Atom`,
             myCounter$.set(count);
@@ -155,8 +158,8 @@ describe.skip('deriving', () => {
          * `fizz$` and `buzz$` can be completed with only `.is(...)`, `.and(...)` and `.or(...)`;
          * Make sure the output of those `Derivable`s is either 'Fizz'/'Buzz' or ''.
          */
-        const fizz$ = myCounter$.derive(count => count % 3).is(__YOUR_TURN__).and(__YOUR_TURN__).or(__YOUR_TURN__);
-        const buzz$ = myCounter$.derive(count => count % 5).is(__YOUR_TURN__).and(__YOUR_TURN__).or(__YOUR_TURN__);
+        const fizz$ = myCounter$.derive(count => count % 3).is(__YOUR_TURN__).and(__YOUR_TURN__).or(__YOUR_TURN__) as Derivable<string>;
+        const buzz$ = myCounter$.derive(count => count % 5).is(__YOUR_TURN__).and(__YOUR_TURN__).or(__YOUR_TURN__) as Derivable<string>;
         const fizzBuzz$ = derive(() => fizz$.get() + buzz$.get()).or(__YOUR_TURN__);
 
         for (let count = 1; count <= 100; count++) {

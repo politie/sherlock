@@ -103,9 +103,9 @@ describe.skip('reacting', () => {
              * **Your Turn**
              * In the reaction below, use the stopper callback to stop the reaction
              */
-            myAtom$.react((val, __YOUR_TURN__) => {
+            myAtom$.react((val, __YOUR_TURN___) => {
                 reactor(val);
-                __YOUR_TURN__;
+                __YOUR_TURN___;
             });
 
             expectReact(1, 'initial value');
@@ -125,64 +125,79 @@ describe.skip('reacting', () => {
         /**
          * Another way to make a reactor stop at a certain point, is by specifying an `until` in the `options`.
          * `until` can be given either a `Derivable` or a `function`.
-         * If a `Derivable` is given, the reaction will stop once that `Derivable` returns `true`/truthy.
          * If a `function` is given, this `function` will be given the `Derivable` that is the source of the reaction as a parameter.
          * This `function` will track all `.get()`s, so can use any `Derivable`. It can return a `boolean` or a `Derivable<boolean>`.
-         * *Note: the reactor options `when` and `from` can also be set to a `Derivable`/`function` as described above.*
+         * *Note: the reactor options `when` and `from` can also be set to a `Derivable`/`function` as described here.*
          *
          * The reactor will stop directly when `until` becomes true.
          * If that happens at exactly the same time as the `Derivable` getting a new value, it will not react again.
          */
-        it('reacting `until`', () => {
-            const until$ = atom(false);
-            const myAtom$ = atom('initial value');
-            expectReact(0);
+        describe('reacting `until`', () => {
+            const boolean$ = atom(false);
+            const string$ = atom('Value');
+            beforeEach('reset', () => {
+                boolean$.set(false);
+                string$.set('Value');
+            });
 
             /**
-             * We can do some fancy stuff in the `until`.
-             * In this case we stop if `until$` is true and `myAtom$` is filled.
+             * If a `Derivable` is given, the reaction will stop once that `Derivable` becomes `true`/truthy.
              */
-            myAtom$.react(reactor, { until: a => a && until$.get() });
+            it('an external `Derivable`', () => {
+                /**
+                 * **Your Turn**
+                 * Try giving `boolean$` as `until` option.
+                 */
+                string$.react(reactor, __YOUR_TURN__);
+                expectReact(1, 'Value');     // It should react directly as usual.
 
-            expectReact(1, 'initial value'); // As usual, it should react immediately.
+                string$.set('New value');
+                expectReact(2, 'New value'); // It should keep reacting as usual.
 
-            myAtom$.set('');
-            expectReact(2, ''); // It should keep reacting as usual.
+                boolean$.set(true);          // We set `boolean$` to true, to stop the reaction
+                expectReact(2, 'New value'); // The reactor has immediately stopped, so it still reacted only twice.
 
-            until$.set(true);   // We set `until$` to true, but since `myAtom$` is falsy, it will not stop.
-            expectReact(2, ''); // There is no new value, though.
-
-            myAtom$.set('new value');   // Now we set `myAtom$`, which will set the `until` condition to true.
-            expectReact(2, '');         // The reactor has immediately stopped, so it still reacted only twice.
-
-            until$.set(false);          // Even when `until$` is set to false again,
-            expectReact(2, '');         // the reactor won't start up again.
+                boolean$.set(false);            // Even when `boolean$` is set to `false` again
+                string$.set('Another value');   // And a new value is introduced
+                expectReact(2, 'New value');    // The reactor won't start up again, so it still reacted only twice.
+            });
 
             /**
-             * **Your Turn**
-             * Time to use `until$` directly in `until`. This does not need any `function` wrapper.
+             * A function can also be given as `until` this function will be executed in a derivation.
+             * This way any `Derivable` can be used in the calculation.
              */
-            myAtom$.react(reactor, __YOUR_TURN__);
+            it('a function', () => {
+                /**
+                 * **Your Turn**
+                 * Since the reactor options expect a boolean, you will sometimes need to calculate the option.
+                 * Try giving a `function` as `until` option, use `!string$.get()` to return `true` when the `string` is empty.
+                 */
+                string$.react(reactor, __YOUR_TURN__);
+                string$.set('New value');
+                string$.set('Newer Value');
+                expectReact(3, 'Newer Value'); // It should react as usual.
 
-            expectReact(3, 'new value');
-            // As before, it should still react to 'normal' changes.
-            myAtom$.set('even newer value');
-            expectReact(4, 'even newer value');
-
-            until$.set(true);
-            myAtom$.set('');
-            expectReact(4, 'even newer value');  // The reactor should have stopped.
+                string$.set('');               // We set `string$` to an empty string, to stop the reaction
+                expectReact(3, 'Newer Value'); // The reactor was immediately stopped, so even the empty string was never given to the reactor
+            });
 
             /**
-             * **Your Turn**
-             * Another often used method is returning the parent `Derivable` directly in the function. (as in `d => d`)
-             * Try it!
+             * Since the example above, where the `until` is based on the parent `Derivable` occurs very frequently.
+             * This `Derivable` is given as a parameter to the `until` function.
              */
-            myAtom$.react(reactor, __YOUR_TURN__);
-            expectReact(5, '');
+            it('the parent `Derivable`', () => {
+                /**
+                 * **Your Turn**
+                 * Try using the first parameter of the `until` function to do the same as above.
+                 */
+                string$.react(reactor, __YOUR_TURN__);
+                string$.set('New value');
+                string$.set('Newer Value');
+                expectReact(3, 'Newer Value'); // It should react as usual.
 
-            myAtom$.set('last value');
-            expectReact(5, '');     // Setting a truthy value should have immediately stopped the reaction.
+                string$.set('');               // We set `string$` to an empty string, to stop the reaction
+                expectReact(3, 'Newer Value'); // The reactor was immediately stopped, so even the empty string was never given to the reactor
+            });
         });
 
         /**
