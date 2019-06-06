@@ -61,8 +61,8 @@ describe.skip('deriving', () => {
         const buzz$: Derivable<string> = myCounter$.derive(__YOUR_TURN__); // Should return 'Buzz' when `myCounter$` is a multiple of 5 and '' otherwise.
         const fizzBuzz$: Derivable<string | number> = derive(__YOUR_TURN__);
 
-        expect(fizz$.get()).to.equal(1);
-        expect(buzz$.get()).to.equal(1);
+        expect(fizz$.get()).to.equal('');
+        expect(buzz$.get()).to.equal('');
         expect(fizzBuzz$.get()).to.equal(1);
         for (let count = 1; count <= 100; count++) {
             // Set the value of the `Atom`,
