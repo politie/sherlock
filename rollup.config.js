@@ -4,7 +4,7 @@ import sourcemaps from 'rollup-plugin-sourcemaps';
 
 const libs = ['sherlock', 'sherlock-proxy', 'sherlock-rxjs', 'sherlock-utils'];
 
-const oldVersion = process.version.startsWith('v6');
+const oldVersion = process.version.startsWith('v8');
 
 export default [].concat.apply([], libs.map(lib => {
     const pkg = require(`./dist/${lib}/package.json`);
