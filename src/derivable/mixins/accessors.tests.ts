@@ -168,7 +168,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
     describe('#value', () => {
         it('should call #getState() when getting the #value property', () => {
             const a$ = factory('a');
-            const s = jest.spyOn($(a$), internalGetState);
+            const s = jest.spyOn($(a$), internalGetState as any);
 
             // Use the getter
             expect(a$.value).toBe('a');

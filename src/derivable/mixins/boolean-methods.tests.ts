@@ -52,7 +52,7 @@ export function testBooleanFuncs(factory: Factory) {
             });
 
             it('should not observe the right operand when the left operand is truthy', () => {
-                const s = jest.spyOn($(bool$), internalGetState);
+                const s = jest.spyOn($(bool$), internalGetState as any);
                 trueOrBool$.get();
                 expect(s).not.toHaveBeenCalled();
                 falseOrBool$.get();
@@ -74,7 +74,7 @@ export function testBooleanFuncs(factory: Factory) {
             });
 
             it('should not observe the right operand when the left operand is falsey', () => {
-                const s = jest.spyOn($(bool$), internalGetState);
+                const s = jest.spyOn($(bool$), internalGetState as any);
                 falseAndBool$.get();
                 expect(s).not.toHaveBeenCalled();
                 trueAndBool$.get();

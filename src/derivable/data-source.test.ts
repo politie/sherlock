@@ -254,8 +254,8 @@ describe('derivable/data-source', () => {
 
         beforeEach(() => {
             jest.spyOn(timer$, 'calculateCurrentValue');
-            jest.spyOn(timer$, connect);
-            jest.spyOn(timer$, disconnect);
+            jest.spyOn(timer$, connect as any);
+            jest.spyOn(timer$, disconnect as any);
         });
 
         it('should throw when trying to set an unsettable datasource', () => {
