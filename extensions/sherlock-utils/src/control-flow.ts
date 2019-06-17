@@ -130,8 +130,14 @@ function prepareOptions<V>(base: Derivable<V>, opts?: ControlFlowOptions<V>, ): 
     const result: PreparedOptions<V> = {};
     if (opts) {
         for (const key of Object.keys(opts) as Array<keyof typeof opts>) {
-            const opt = opts[key];
-            result[key] = typeof opt === 'function' ? derive(() => unwrap(opt(base))) : opt;
+            switch (key) {
+                case 'from': case 'until': case 'when':
+                    const opt = opts[key];
+                    result[key] = typeof opt === 'function' ? derive(() => unwrap(opt(base))) : opt;
+                    break;
+                default:
+                    result[key] = opts[key];
+            }
         }
     }
     return result;
