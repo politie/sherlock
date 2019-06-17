@@ -9,7 +9,7 @@ import { atom, DerivableAtom, derive } from '../src';
  */
 export const __YOUR_TURN__ = {} as any;
 
-describe.skip('expert', () => {
+describe('expert', () => {
     describe('`.autoCache()`', () => {
         /**
          * If a `.get()` is called on a `Derivable` all derivations will be executed.
@@ -102,7 +102,7 @@ describe.skip('expert', () => {
      *
      * *Note that a `Derivable` without an input is (hopefully) created only once, so it does not have this problem*
      */
-    describe('`derivableCache`', () => {
+    describe.only('`derivableCache`', () => {
         type Stocks = 'GOOGL' | 'MSFT' | 'APPL';
         let stockPrice$: SinonStub<[Stocks], DerivableAtom<number>>;
         beforeEach(() => stockPrice$ = stub<[Stocks], DerivableAtom<number>>().callsFake(() => atom.unresolved()));
@@ -117,7 +117,7 @@ describe.skip('expert', () => {
          */
         it('multiple setups', () => {
             // To not make things difficult with `unresolved` for this example, imagine we get a response synchronously
-            stockPrice$.returns(atom(1079.10));
+            stockPrice$.returns(atom(1079.11));
 
             const html$ = derive(() => `
                 <h1>Alphabet Price ($${stockPrice$('GOOGL').get().toFixed(2)})</h1>
@@ -167,8 +167,8 @@ describe.skip('expert', () => {
                 // Check if it is the right `Derivable`
                 expect(googlPrice$.connected).to.be.true;
 
-                // Then we increase the price
-                googlPrice$.swap(p => p + 1);
+                // Then we set the price
+                googlPrice$.set(1079.11);
 
                 /**
                  * **Your Turn**
@@ -238,15 +238,15 @@ describe.skip('expert', () => {
                 // Check if it is the right `Derivable`
                 expect(googlPrice$.connected).to.be.true;
 
-                // Then we increase the price, as before
-                googlPrice$.swap(p => p + 1);
+                // Then we set the price, as before
+                googlPrice$.set(1079.11);
 
                 /**
                  * **Your Turn**
                  * So the value was increased. What do you think happened now?
                  */
                 expect(reactSpy).to.have.callCount(__YOUR_TURN__);
-                expect(reactSpy).to.have.been.calledWith(__YOUR_TURN__);
+                expect(reactSpy).to.have.been.calledWith([__YOUR_TURN__]);
 
                 /**
                  * So that worked, now let's try and add another company to the list
@@ -261,7 +261,7 @@ describe.skip('expert', () => {
                  * We had a price for 'GOOGL', but not for 'APPL'...
                  */
                 expect(reactSpy).to.have.callCount(__YOUR_TURN__);
-                expect(reactSpy).to.have.been.calledWith(__YOUR_TURN__);
+                expect(reactSpy).to.have.been.calledWith([__YOUR_TURN__, __YOUR_TURN__]);
             });
         });
         /**
@@ -276,6 +276,9 @@ describe.skip('expert', () => {
             const priceCache$ = derivableCache({
                 derivableFactory: (company: Stocks) => stockPrice$(company),
             });
+            /**
+             * *Note that from this point forward we use `priceCache$` where we used to use `stockPrice$` directly*
+             */
 
             it('should fix everything :-)', () => {
                 // First setup an `Atom` with the company we are currently interested in
@@ -284,8 +287,8 @@ describe.skip('expert', () => {
                 const html$ = companies$
                     .derive(companies =>
                         companies.map(company => `
-                            <h1>Alphabet Price ($${priceCache$(company).value || ' unknown'})</h1>
-                            <p>Some important text that uses the current price ($${priceCache$(company).value || ' unknown'}) as well</p>`
+                            <h1>Alphabet Price ($ ${priceCache$(company).value || 'unknown'})</h1>
+                            <p>Some important text that uses the current price ($ ${priceCache$(company).value || 'unknown'}) as well</p>`
                         )
                     );
 
@@ -293,8 +296,10 @@ describe.skip('expert', () => {
 
                 expect(html$.connected).to.be.true;
                 expect(reactSpy).to.have.been.calledOnce;
+                // Convenience function to return the first argument of the last call to the reactor
+                function lastEmittedHTMLs() { return reactSpy.lastCall.args[0]; }
                 // The last call, should have the array of HTML's as first argument
-                expect(reactSpy.lastCall.args[0]).to.contain('$ unknown');
+                expect(lastEmittedHTMLs()[0]).to.contain('$ unknown');
 
                 /**
                  * **Your Turn**
@@ -316,7 +321,7 @@ describe.skip('expert', () => {
                 expect(stockPrice$).to.have.callCount(__YOUR_TURN__);
                 // Ok, but did it update the HTML?
                 expect(reactSpy).to.have.callCount(__YOUR_TURN__);
-                expect(reactSpy.lastCall[0]).to.contain(__YOUR_TURN__);
+                expect(lastEmittedHTMLs()[0]).to.contain(__YOUR_TURN__);
 
                 // Last chance, what if we add a company
                 companies$.swap(current => [...current, 'APPL']);
@@ -329,9 +334,9 @@ describe.skip('expert', () => {
                 expect(stockPrice$).to.have.callCount(__YOUR_TURN__);
                 expect(reactSpy).to.have.callCount(__YOUR_TURN__);
                 // The first should be 'GOOGL'
-                expect(reactSpy.lastCall[0]).to.contain(__YOUR_TURN__);
+                expect(lastEmittedHTMLs()[0]).to.contain(__YOUR_TURN__);
                 // The first should be 'APPL'
-                expect(reactSpy.lastCall[1]).to.contain(__YOUR_TURN__);
+                expect(lastEmittedHTMLs()[1]).to.contain(__YOUR_TURN__);
             });
         });
     });
