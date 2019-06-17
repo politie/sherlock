@@ -9,7 +9,7 @@ import { atom, DerivableAtom, derive } from '../src';
  */
 export const __YOUR_TURN__ = {} as any;
 
-describe('expert', () => {
+describe.skip('expert', () => {
     describe('`.autoCache()`', () => {
         /**
          * If a `.get()` is called on a `Derivable` all derivations will be executed.
@@ -102,7 +102,7 @@ describe('expert', () => {
      *
      * *Note that a `Derivable` without an input is (hopefully) created only once, so it does not have this problem*
      */
-    describe.only('`derivableCache`', () => {
+    describe('`derivableCache`', () => {
         type Stocks = 'GOOGL' | 'MSFT' | 'APPL';
         let stockPrice$: SinonStub<[Stocks], DerivableAtom<number>>;
         beforeEach(() => stockPrice$ = stub<[Stocks], DerivableAtom<number>>().callsFake(() => atom.unresolved()));
