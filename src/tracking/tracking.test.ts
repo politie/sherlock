@@ -46,7 +46,7 @@ describe('tracking/tracking', () => {
         describe('after one recording', () => {
             beforeEach(() => {
                 startRecordingObservations(observer);
-                observables.forEach(recordObservation);
+                observables.forEach(obs => recordObservation(obs, false));
                 stopRecordingObservations();
             });
 
@@ -59,10 +59,10 @@ describe('tracking/tracking', () => {
             describe('and a second recording', () => {
                 beforeEach(() => {
                     startRecordingObservations(observer);
-                    recordObservation(observables[1]);
-                    recordObservation(observables[0]);
+                    recordObservation(observables[1], false);
+                    recordObservation(observables[0], false);
                     // Observables should be recorded only once in the dependencies array...
-                    recordObservation(observables[1]);
+                    recordObservation(observables[1], false);
                     stopRecordingObservations();
                 });
 
@@ -96,8 +96,8 @@ describe('tracking/tracking', () => {
             startRecordingObservations(observer);
 
             startRecordingObservations(secondObserver);
-            recordObservation(observables[1]);
-            recordObservation(observables[2]);
+            recordObservation(observables[1], false);
+            recordObservation(observables[2], false);
             stopRecordingObservations();
 
             expect(observer[dependencies]).toHaveLength(0);
@@ -106,8 +106,8 @@ describe('tracking/tracking', () => {
             expect(observables[1][observers]).toEqual([secondObserver]);
             expect(observables[2][observers]).toEqual([secondObserver]);
 
-            recordObservation(observables[0]);
-            recordObservation(observables[1]);
+            recordObservation(observables[0], false);
+            recordObservation(observables[1], false);
 
             stopRecordingObservations();
 

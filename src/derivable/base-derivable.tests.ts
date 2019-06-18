@@ -16,7 +16,7 @@ import { isDerivableAtom, isSettableDerivable } from './typeguards';
 
 export type Factory = <V>(state: State<V>) => Derivable<V>;
 
-export type DerivableMode = 'constant' | 'no-error-augmentation' | 'settable' | 'atom';
+export type DerivableMode = 'final' | 'no-error-augmentation' | 'settable' | 'atom';
 
 export function assertSettable<V>(a$: Derivable<V>): SettableDerivable<V> {
     if (!isSettableDerivable(a$)) {
@@ -34,7 +34,7 @@ export function assertDerivableAtom<V>(a$: Derivable<V>): DerivableAtom<V> {
 
 export function testDerivable(factory: Factory, ...modes: DerivableMode[]) {
     const isAtom = modes.includes('atom');
-    const isConstant = modes.includes('constant');
+    const isConstant = modes.includes('final');
     const isSettable = modes.includes('settable');
     const noErrorAugmentation = modes.includes('no-error-augmentation');
 

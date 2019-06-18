@@ -6,8 +6,8 @@ import { deriveMethod } from './derivation';
 import { Lens } from './lens';
 import { BiMapping, mapMethod, mapStateMethod } from './map';
 import {
-    andMethod, connected$Getter, erroredGetter, errorGetter, fallbackToMethod, getMethod, getOrMethod, isMethod, notMethod,
-    orMethod, pluckMethod, resolvedGetter, setErrorMethod, settablePluckMethod, swapMethod, unsetMethod, valueGetter, valueSetter,
+    andMethod, connected$Getter, erroredGetter, errorGetter, fallbackToMethod, finalGetter, getMethod, getOrMethod, isMethod,
+    notMethod, orMethod, pluckMethod, resolvedGetter, setErrorMethod, settablePluckMethod, swapMethod, unsetMethod, valueGetter, valueSetter,
 } from './mixins';
 
 declare module './base-derivable' {
@@ -18,6 +18,7 @@ declare module './base-derivable' {
         readonly value: Derivable<V>['value'];
         readonly resolved: Derivable<V>['resolved'];
         readonly settable: Derivable<V>['settable'];
+        readonly final: Derivable<V>['final'];
 
         readonly errored: Derivable<V>['errored'];
         readonly error: Derivable<V>['error'];
@@ -44,6 +45,7 @@ Object.defineProperties(BaseDerivable.prototype, {
     value: { get: valueGetter },
     resolved: { get: resolvedGetter },
     settable: { value: false },
+    final: { get: finalGetter },
 
     errored: { get: erroredGetter },
     error: { get: errorGetter },
@@ -73,7 +75,6 @@ declare module './atom' {
 
         readonly swap: SettableDerivable<V>['swap'];
         readonly pluck: SettableDerivable<V>['pluck'];
-        readonly settable: true;
     }
 }
 
@@ -113,7 +114,6 @@ declare module './map' {
 
         readonly swap: SettableDerivable<V>['swap'];
         readonly pluck: SettableDerivable<V>['pluck'];
-        readonly settable: true;
     }
 }
 
@@ -125,6 +125,8 @@ declare module './map' {
 [Atom, BiMapping].forEach(c => Object.defineProperties(c.prototype, {
     unset: { value: unsetMethod },
     setError: { value: setErrorMethod },
-    settable: { value: true },
 }));
-Object.defineProperties(Lens.prototype, { settable: { value: true } });
+Object.defineProperties(Lens.prototype, {
+    settable: { value: true },
+    final: { value: false },
+});

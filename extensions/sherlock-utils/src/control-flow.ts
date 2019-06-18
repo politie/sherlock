@@ -1,4 +1,4 @@
-import { _internal, Derivable, derive, inTransaction, ReactorOptionValue, safeUnwrap, State, unresolved, unwrap } from '@politie/sherlock';
+import { _internal, Derivable, derive, inTransaction, safeUnwrap, State, TakeOptionValue, unresolved, unwrap } from '@politie/sherlock';
 import { fromStateObject, materialize, StateObject } from './state';
 
 export interface ControlFlowOptions<V> {
@@ -6,19 +6,19 @@ export interface ControlFlowOptions<V> {
      * Indicates when the derivable should become active. The output derivable gets its first value when `from` becomes true. After that `from` is
      * not observed anymore.
      */
-    from?: ReactorOptionValue<V>;
+    from?: TakeOptionValue<V>;
 
     /**
      * Indicates when the derivable should stop updating. The updates are stopped indefinitely when `until` becomes false.
      */
-    until?: ReactorOptionValue<V>;
+    until?: TakeOptionValue<V>;
 
     /**
      * Indicates when the derivable should update, starts and stops the updates whenever the value changes. The first time
      * `when` becomes true, `skipFirst` is respected if applicable. After that the derivable will update each time `when` becomes
      * true and the parent derivable has a value that differs from the current value of the output derivable.
      */
-    when?: ReactorOptionValue<V>;
+    when?: TakeOptionValue<V>;
 
     /**
      * When `true` the derivable will update only once, after which it will stop updating indefinitely.
@@ -66,7 +66,7 @@ class ControlFlow<V> extends _internal.BaseDerivable<V> implements Derivable<V> 
     version = 0;
 
     [_internal.symbols.internalGetState]() {
-        _internal.recordObservation(this);
+        _internal.recordObservation(this, false);
         if (this.connected && !inTransaction() || !shouldBeLive(this.opts)) {
             return this._currentState;
         }

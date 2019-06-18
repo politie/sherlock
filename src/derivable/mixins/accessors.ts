@@ -1,6 +1,6 @@
 import { Derivable, Fallback, SettableDerivable } from '../../interfaces';
 import { unresolved } from '../../symbols';
-import { augmentStack, ErrorWrapper } from '../../utils';
+import { augmentStack, ErrorWrapper, FinalWrapper } from '../../utils';
 import { Atom } from '../atom';
 import { BaseDerivable } from '../base-derivable';
 import { derivationStackDepth } from '../derivation';
@@ -51,4 +51,8 @@ export function errorGetter(this: BaseDerivable<any>): any {
 
 export function connected$Getter(this: BaseDerivable<any>): Derivable<boolean> {
     return this._connected$ || (this._connected$ = new Atom(this.connected));
+}
+
+export function finalGetter(this: BaseDerivable<any>): boolean {
+    return this.getMaybeFinalState() instanceof FinalWrapper;
 }

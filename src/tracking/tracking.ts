@@ -23,7 +23,7 @@ export function startRecordingObservations(observer: TrackedObserver) {
         }
         r = r._previousRecording;
     }
-    currentRecording = { _observer: observer, _confirmed: 0, _previousRecording: currentRecording };
+    currentRecording = { _observer: observer, _confirmed: 0, _previousRecording: currentRecording, _disconnectAfterwards: [] };
 }
 
 /**
@@ -38,7 +38,7 @@ export function stopRecordingObservations() {
         throw new Error('No active recording!');
     }
     currentRecording = recording._previousRecording;
-    const { _confirmed, _observer } = recording;
+    const { _confirmed, _observer, _disconnectAfterwards: _disconnectNow } = recording;
     const deps = _observer[dependencies];
     const depVersions = _observer[dependencyVersions];
 
@@ -51,6 +51,10 @@ export function stopRecordingObservations() {
     for (const dep of deps) {
         depVersions[dep.id] = dep.version;
     }
+
+    for (const obs of _disconnectNow) {
+        obs[disconnect]();
+    }
 }
 
 /**
@@ -58,6 +62,10 @@ export function stopRecordingObservations() {
  */
 export function isRecordingObservations() {
     return !!currentRecording;
+}
+
+export function foundNoDependencies() {
+    return !!currentRecording && currentRecording._confirmed === 0;
 }
 
 export function independentTracking<V>(fn: () => V): V {
@@ -75,9 +83,14 @@ export function independentTracking<V>(fn: () => V): V {
  *
  * @param dependency the observable that is being observed
  */
-export function recordObservation(dependency: TrackedObservable) {
+export function recordObservation(dependency: TrackedObservable, finalValue: boolean) {
     if (!currentRecording) {
         // Not currently recording observations, nevermind...
+        return;
+    }
+
+    if (finalValue) {
+        currentRecording._disconnectAfterwards.push(dependency);
         return;
     }
 
@@ -229,4 +242,8 @@ interface Recording {
      * @internal
      */
     _previousRecording: Recording | undefined;
+    /**
+     * Observables that should be disconnected after the recording.
+     */
+    _disconnectAfterwards: TrackedObservable[];
 }

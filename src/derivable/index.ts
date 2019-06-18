@@ -2,7 +2,6 @@ import './apply-mixins';
 
 export * from './atom';
 export * from './base-derivable';
-export * from './constant';
 export * from './data-source';
 export * from './derivation';
 export * from './factories';

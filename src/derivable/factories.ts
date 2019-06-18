@@ -1,12 +1,14 @@
 import { Derivable, DerivableAtom, LensDescriptor, SettableDerivable, State } from '../interfaces';
 import { unresolved as unresolvedSymbol } from '../symbols';
-import { ErrorWrapper } from '../utils';
+import { ErrorWrapper, FinalWrapper } from '../utils';
 import { Atom } from './atom';
-import { Constant } from './constant';
 import { Derivation } from './derivation';
 import { Lens } from './lens';
 
 // tslint:disable:no-namespace
+// tslint:disable:no-shadowed-variable
+
+const finalUnresolved = FinalWrapper.wrap(unresolvedSymbol);
 
 /**
  * Construct a new atom with the provided initial value.
@@ -22,6 +24,17 @@ export namespace atom {
     }
     export function error<V>(err: any): DerivableAtom<V> {
         return new Atom<V>(new ErrorWrapper(err));
+    }
+    export function final<V>(value: V): Derivable<V> {
+        return new Atom<V>(FinalWrapper.wrap(value));
+    }
+    export namespace final {
+        export function unresolved<V>(): Derivable<V> {
+            return new Atom<V>(finalUnresolved);
+        }
+        export function error<V>(err: any): Derivable<V> {
+            return new Atom<V>(FinalWrapper.wrap(new ErrorWrapper(err)));
+        }
     }
 }
 
@@ -39,19 +52,19 @@ export function derive<R, P>(f: (...ps: P[]) => State<R>, ...ps: Array<P | Deriv
 }
 
 /**
- * Creates a new Constant with the give value.
+ * Creates a new constant with the given value.
  *
  * @param value the immutable value of this Constant
  */
 export function constant<V>(value: V): Derivable<V> {
-    return new Constant(value);
+    return atom.final(value);
 }
 export namespace constant {
     export function unresolved<V>(): Derivable<V> {
-        return new Constant<V>(unresolvedSymbol);
+        return atom.final.unresolved();
     }
     export function error<V>(err: any): Derivable<V> {
-        return new Constant<V>(new ErrorWrapper(err));
+        return atom.final.error(err);
     }
 }
 

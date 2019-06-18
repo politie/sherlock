@@ -1,14 +1,13 @@
 import { Derivable, SettableDerivable } from '../interfaces';
-import { config, ErrorWrapper } from '../utils';
+import { config, ErrorWrapper, FinalWrapper } from '../utils';
 import { Atom } from './atom';
 import { testDerivable } from './base-derivable.tests';
-import { Constant } from './constant';
 import { Derivation } from './derivation';
 import { atom, derive } from './factories';
 
 describe('derivable/derive', () => {
     describe('(standalone)', () => {
-        testDerivable(v => derive(() => { if (v instanceof ErrorWrapper) { throw v.error; } return v; }));
+        testDerivable(v => derive(() => { if (v instanceof ErrorWrapper) { throw v.error; } return v; }), 'final');
     });
 
     describe('(based on atom)', () => {
@@ -16,7 +15,7 @@ describe('derivable/derive', () => {
     });
 
     describe('(based on constant)', () => {
-        testDerivable(v => new Constant(v).derive(d => d));
+        testDerivable(v => new Atom(FinalWrapper.wrap(v)).derive(d => d), 'final');
     });
 
     testAutocache((a$, deriver) => a$.derive(deriver));

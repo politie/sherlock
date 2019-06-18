@@ -1,8 +1,8 @@
-import { SettableDerivable, State } from '../interfaces';
+import { MaybeFinalState, SettableDerivable, State } from '../interfaces';
 import { connect, disconnect, emptyCache, internalGetState, observers } from '../symbols';
 import { independentTracking, recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { augmentStack, equals, ErrorWrapper } from '../utils';
+import { augmentStack, equals, ErrorWrapper, FinalWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 
 export abstract class PullDataSource<V> extends BaseDerivable<V> implements SettableDerivable<V> {
@@ -11,7 +11,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
      * `get()` is called when not connected. When connected, it will be called once and then only whenever `checkForChanges()`
      * was called.
      */
-    protected abstract calculateCurrentValue(): State<V>;
+    protected abstract calculateCurrentValue(): MaybeFinalState<V>;
 
     /**
      * When implemented this datasource will become settable and any value that is presented to `set()` will
@@ -24,7 +24,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
      * The last value that was calculated for this datasource. Is only used when connected.
      * @internal
      */
-    private _cachedState: State<V> | typeof emptyCache = emptyCache;
+    private _cachedState: MaybeFinalState<V> | typeof emptyCache = emptyCache;
 
     /**
      * The current version of the state. This number gets incremented every time the state changes when connected. The version
@@ -32,18 +32,26 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
      */
     version = 0;
 
+    protected get _final() {
+        return this._cachedState instanceof FinalWrapper;
+    }
+
     /**
      * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
     [internalGetState]() {
+        if (this._final) {
+            return this._cachedState as FinalWrapper<State<V>>;
+        }
+
         // Not connected, so just calculate our value one time.
         if (!this.connected) {
             return this._callCalculationFn();
         }
 
         // We are connected, so we should record our dependencies.
-        recordObservation(this);
-        return this._cachedState as State<V>;
+        recordObservation(this, this._final);
+        return this._cachedState as MaybeFinalState<V>;
     }
 
     /**
@@ -91,13 +99,14 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
      * until disconnected.
      */
     [connect]() {
+        if (this._final) { return; }
         super[connect]();
         this.checkForChanges();
     }
 
     [disconnect]() {
         super[disconnect]();
-        this._cachedState = emptyCache;
+        this._final || (this._cachedState = emptyCache);
         // Disconnect all observers. When an observer disconnects it removes itself from this array.
         const obs = this[observers];
         for (let i = obs.length - 1; i >= 0; i--) {

@@ -1,7 +1,7 @@
-import { Derivable, SettableDerivable, State } from '../interfaces';
+import { Derivable, MaybeFinalState, SettableDerivable } from '../interfaces';
 import { autoCacheMode, connect, disconnect, internalGetState, observers } from '../symbols';
 import { independentTracking, isRecordingObservations, maybeDisconnectInNextTick, TrackedObservable, TrackedObserver } from '../tracking';
-import { prepareCreationStack, uniqueId } from '../utils';
+import { FinalWrapper, prepareCreationStack, uniqueId } from '../utils';
 
 /**
  * The base class for all Derivables. Derivables must extend from this, to be 'tracked' and to classify as a Derivable.
@@ -39,7 +39,7 @@ export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V
         return this;
     }
 
-    getState() {
+    getMaybeFinalState() {
         // Should we connect now?
         if (!this.connected) {
             if (this[autoCacheMode]) {
@@ -57,7 +57,11 @@ export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V
         return this[internalGetState]();
     }
 
-    abstract [internalGetState](): State<V>;
+    getState() {
+        return FinalWrapper.unwrap(this.getMaybeFinalState());
+    }
+
+    abstract [internalGetState](): MaybeFinalState<V>;
 
     /**
      * The current version of the state. This number gets incremented every time the state changes. Setting the state to

@@ -1,8 +1,8 @@
-import { DerivableAtom, State } from '../interfaces';
-import { internalGetState, restorableState } from '../symbols';
+import { DerivableAtom, MaybeFinalState } from '../interfaces';
+import { connect, internalGetState, restorableState } from '../symbols';
 import { recordObservation } from '../tracking';
 import { processChangedAtom } from '../transaction';
-import { augmentState, equals } from '../utils';
+import { augmentStack, augmentState, equals, FinalWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 
 /**
@@ -15,14 +15,14 @@ export class Atom<V> extends BaseDerivable<V> implements DerivableAtom<V> {
      * Contains the current state of this atom. Note that this field is public for transaction support, should
      * not be used in application code. Use {@link Derivable#get} and {@link SettableDerivable#set} instead.
      */
-    [restorableState]: State<V>;
+    [restorableState]: MaybeFinalState<V>;
 
     /**
      * Construct a new atom with the provided initial state.
      *
      * @param state the initial state
      */
-    constructor(state: State<V>) {
+    constructor(state: MaybeFinalState<V>) {
         super();
         this[restorableState] = augmentState(state, this);
     }
@@ -33,11 +33,19 @@ export class Atom<V> extends BaseDerivable<V> implements DerivableAtom<V> {
      */
     version = 0;
 
+    get settable() {
+        return !(this._final);
+    }
+
+    private get _final() {
+        return this[restorableState] instanceof FinalWrapper;
+    }
+
     /**
      * Returns the current state of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
     [internalGetState]() {
-        recordObservation(this);
+        recordObservation(this, this._final);
         return this[restorableState];
     }
 
@@ -46,11 +54,16 @@ export class Atom<V> extends BaseDerivable<V> implements DerivableAtom<V> {
      *
      * @param newState the new state
      */
-    set(newState: State<V>) {
+    set(newState: MaybeFinalState<V>) {
         const oldState = this[restorableState];
         if (!equals(newState, oldState)) {
+            if (this._final) { throw augmentStack(new Error('cannot set a final atom'), this); }
             this[restorableState] = augmentState(newState, this);
             processChangedAtom(this, oldState, this.version++);
         }
+    }
+
+    [connect]() {
+        this._final || super[connect]();
     }
 }

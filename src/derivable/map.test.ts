@@ -1,8 +1,7 @@
 import { unresolved } from '../symbols';
-import { config, ErrorWrapper } from '../utils';
+import { config, ErrorWrapper, FinalWrapper } from '../utils';
 import { Atom } from './atom';
 import { $, testDerivable } from './base-derivable.tests';
-import { Constant } from './constant';
 import { testAutocache } from './derivation.test';
 import { atom, constant, lens } from './factories';
 import { isDerivableAtom } from './typeguards';
@@ -25,11 +24,11 @@ describe('derivable/map', () => {
     });
 
     describe('(based on constant)', () => {
-        testDerivable(v => new Constant(v).map(d => d));
+        testDerivable(v => new Atom(FinalWrapper.wrap(v)).map(d => d), 'final');
     });
 
     describe('(bi-mapping)', () => {
-        testDerivable(v => (new Atom(v === unresolved || v instanceof ErrorWrapper ? v : { value: v })).map(
+        testDerivable(v => (new Atom<{ value: typeof v }>(v === unresolved || v instanceof ErrorWrapper ? v : { value: v })).map(
             obj => obj.value,
             value => ({ value }),
         ), 'atom', 'settable');
@@ -90,7 +89,7 @@ describe('derivable/map', () => {
     });
 
     describe('(bi-state-mapping)', () => {
-        testDerivable(v => (new Atom(v === unresolved || v instanceof ErrorWrapper ? v : { value: v })).mapState(
+        testDerivable(v => (new Atom<{ value: typeof v }>(v === unresolved || v instanceof ErrorWrapper ? v : { value: v })).mapState(
             obj => obj === unresolved || obj instanceof ErrorWrapper ? obj : obj.value,
             value => value === unresolved || value instanceof ErrorWrapper ? value : ({ value }),
         ), 'atom', 'settable');

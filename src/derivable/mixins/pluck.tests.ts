@@ -49,7 +49,7 @@ export function testPluck(factory: Factory, isSettable: boolean, isAtom: boolean
             expect(isDerivableAtom(plucked$)).toBe(isAtom);
 
             const dynPlucked$ = value$.pluck(constant('a'));
-            expect(isSettableDerivable(dynPlucked$)).toBe(isSettable);
+            expect(isSettableDerivable(dynPlucked$)).toBe(isSettable || value$ instanceof Atom);
             // Not (yet) supported:
             expect(isDerivableAtom(dynPlucked$)).toBe(false);
         });

@@ -17,7 +17,7 @@ export {
     Fallback,
     LensDescriptor,
     ReactorOptions,
-    ReactorOptionValue,
+    TakeOptionValue,
     SettableDerivable,
     State,
     ToPromiseOptions,
@@ -35,6 +35,7 @@ export {
 export {
     config,
     ErrorWrapper,
+    FinalWrapper,
 } from './utils';
 
 export {

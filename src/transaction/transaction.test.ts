@@ -96,13 +96,13 @@ export function basicTransactionsTests(atomFactory: <V>(v: V) => SettableDerivab
 
     it('should not react when an atom is reset to its previous value', () => {
         const a$ = atomFactory('a');
-        let reactions = 0;
-        a$.react(() => reactions++, { skipFirst: true });
+        const reactor = jest.fn();
+        a$.react(reactor, { skipFirst: true });
         txn(() => {
             a$.set('b');
             a$.set('a');
         });
-        expect(reactions).toBe(0);
+        expect(reactor).not.toHaveBeenCalled();
     });
 
     it('should also react on atoms that were only changed inside a nested transaction', () => {

@@ -32,5 +32,5 @@ export function isSettableDerivable(derivable: any) {
  */
 export function isDerivableAtom<V>(derivable: Derivable<V>): derivable is DerivableAtom<V>;
 export function isDerivableAtom(obj: any): obj is DerivableAtom<any> {
-    return obj instanceof Atom || obj instanceof BiMapping && isDerivableAtom(obj._base);
+    return obj instanceof Atom && obj.settable || obj instanceof BiMapping && isDerivableAtom(obj._base);
 }
