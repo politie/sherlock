@@ -9,7 +9,7 @@ export interface ControlFlowOptions<V> {
     from?: ReactorOptionValue<V>;
 
     /**
-     * Indicates when the derivable should stop updating. The updates are stopped indefinitely when `until` becomes false.
+     * Indicates when the derivable should stop updating. The updates are stopped indefinitely when `until` becomes true.
      */
     until?: ReactorOptionValue<V>;
 
