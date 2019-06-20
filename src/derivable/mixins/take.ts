@@ -4,12 +4,12 @@ import { equals, ErrorWrapper, FinalWrapper } from '../../utils';
 import { Atom } from '../atom';
 import { BaseDerivable } from '../base-derivable';
 import { Derivation } from '../derivation';
-import { atom } from '../factories';
 import { unwrap } from '../unwrap';
 
 const true$ = new Atom(FinalWrapper.wrap(true));
 const false$ = new Atom(FinalWrapper.wrap(false));
 const skipped = Symbol('skipped');
+const finalSkipped = FinalWrapper.wrap(skipped);
 
 export function takeMethod<V>(this: Derivable<V>, { from, when, until, once, skipFirst }: Partial<TakeOptions<V>>): Derivable<V> {
     // From is true by default, once it becomes true, it will stay true.
@@ -19,13 +19,13 @@ export function takeMethod<V>(this: Derivable<V>, { from, when, until, once, ski
     // Until is false by default, once it becomes true, it will stay true.
     const until$ = toMaybeDerivable(until, this, false, true);
     // SkipFirst is false by default, once it becomes false again, it will stay false.
-    const skipFirstState$ = skipFirst ? atom.unresolved<MaybeFinalState<V> | typeof skipped>() : undefined;
+    const skipFirstState$ = skipFirst ? new Atom<MaybeFinalState<V> | typeof skipped>(unresolved) : undefined;
 
     if (!from$ && !when$ && !until$ && !once && !skipFirstState$) {
         return this;
     }
 
-    const previousState$ = (until$ || when$) && atom.unresolved<V>();
+    const previousState$ = (until$ || when$) && new Atom<V>(unresolved);
     function resultingState(value: MaybeFinalState<V>) {
         previousState$ && previousState$.set(value);
         return value;
@@ -36,24 +36,21 @@ export function takeMethod<V>(this: Derivable<V>, { from, when, until, once, ski
             return resultingState(unresolved);
         }
         if (until$ && until$.get()) {
-            return resultingState(FinalWrapper.wrap(previousState$!.getMaybeFinalState()));
+            return resultingState(FinalWrapper.wrap(previousState$!._value));
         }
         if (when$ && !when$.value) {
-            return previousState$!.getMaybeFinalState();
+            return previousState$!._value;
         }
         const state = this.getMaybeFinalState();
-        if (skipFirstState$) {
-            const skipFirstState = skipFirstState$.getMaybeFinalState();
-            if (skipFirstState !== skipped) {
-                if (!isValue(state)) {
-                    return resultingState(state);
-                }
-                if (skipFirstState === unresolved && isValue(state) || equals(state, skipFirstState)) {
-                    skipFirstState$.set(state);
-                    return resultingState(unresolved);
-                }
-                skipFirstState$.setFinal(skipped);
+        if (skipFirstState$ && (!finalSkipped.equals(skipFirstState$._value))) {
+            if (!isValue(state)) {
+                return resultingState(state);
             }
+            if (skipFirstState$._value === unresolved && isValue(state) || equals(state, skipFirstState$._value)) {
+                skipFirstState$.set(state);
+                return resultingState(unresolved);
+            }
+            skipFirstState$.set(finalSkipped);
         }
         return resultingState(once && isValue(state) ? FinalWrapper.wrap(state) : state);
     });

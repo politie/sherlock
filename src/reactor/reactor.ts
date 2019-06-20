@@ -116,13 +116,10 @@ export class Reactor<V> implements Observer {
     ) { }
 
     /**
-     * Start this reactor if not already started. Will always run the reaction once with the current value of parent on start.
+     * Start this reactor. Will always run the reaction once with the current value of parent on start.
      * @internal
      */
     _start() {
-        if (this._active) {
-            return;
-        }
         addObserver(this._parent, this);
         this._active = true;
         this._reactIfNeeded();
