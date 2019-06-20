@@ -1,4 +1,3 @@
-export * from './src/control-flow';
 export * from './src/derivable-cache';
 export * from './src/from-promise';
 export * from './src/lift';

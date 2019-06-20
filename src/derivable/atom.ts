@@ -1,7 +1,7 @@
-import { DerivableAtom, MaybeFinalState } from '../interfaces';
-import { connect, internalGetState, restorableState } from '../symbols';
-import { recordObservation } from '../tracking';
-import { processChangedAtom } from '../transaction';
+import { DerivableAtom, MaybeFinalState, State } from '../interfaces';
+import { finalize, internalGetState, rollback } from '../symbols';
+import { markFinal, recordObservation } from '../tracking';
+import { markObservers, processChangedState, registerForRollback } from '../transaction';
 import { augmentStack, augmentState, equals, FinalWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 
@@ -15,7 +15,7 @@ export class Atom<V> extends BaseDerivable<V> implements DerivableAtom<V> {
      * Contains the current state of this atom. Note that this field is public for transaction support, should
      * not be used in application code. Use {@link Derivable#get} and {@link SettableDerivable#set} instead.
      */
-    [restorableState]: MaybeFinalState<V>;
+    _value: MaybeFinalState<V>;
 
     /**
      * Construct a new atom with the provided initial state.
@@ -24,7 +24,10 @@ export class Atom<V> extends BaseDerivable<V> implements DerivableAtom<V> {
      */
     constructor(state: MaybeFinalState<V>) {
         super();
-        this[restorableState] = augmentState(state, this);
+        this._value = augmentState(state, this);
+        if (this._isFinal()) {
+            this[finalize]();
+        }
     }
 
     /**
@@ -34,19 +37,19 @@ export class Atom<V> extends BaseDerivable<V> implements DerivableAtom<V> {
     version = 0;
 
     get settable() {
-        return !(this._final);
+        return !this._isFinal();
     }
 
-    private get _final() {
-        return this[restorableState] instanceof FinalWrapper;
+    private _isFinal(): this is { _value: FinalWrapper<State<V>> } {
+        return this._value instanceof FinalWrapper;
     }
 
     /**
      * Returns the current state of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
     [internalGetState]() {
-        recordObservation(this, this._final);
-        return this[restorableState];
+        recordObservation(this, this._isFinal());
+        return this._value;
     }
 
     /**
@@ -55,15 +58,24 @@ export class Atom<V> extends BaseDerivable<V> implements DerivableAtom<V> {
      * @param newState the new state
      */
     set(newState: MaybeFinalState<V>) {
-        const oldState = this[restorableState];
+        const oldState = this._value;
         if (!equals(newState, oldState)) {
-            if (this._final) { throw augmentStack(new Error('cannot set a final atom'), this); }
-            this[restorableState] = augmentState(newState, this);
-            processChangedAtom(this, oldState, this.version++);
+            if (this._isFinal()) {
+                throw augmentStack(new Error('cannot set a final atom'), this);
+            }
+
+            this._value = augmentState(newState, this);
+            registerForRollback(this, oldState, this.version++);
+            processChangedState(this);
+            if (this._isFinal()) {
+                markFinal(this);
+            }
         }
     }
 
-    [connect]() {
-        this._final || super[connect]();
+    [rollback](oldValue: V, oldVersion: number) {
+        this._value = oldValue;
+        this.version = oldVersion;
+        markObservers(this, []);
     }
 }

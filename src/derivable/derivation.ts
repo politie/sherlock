@@ -1,8 +1,10 @@
 import { Derivable, MaybeFinalState, State } from '../interfaces';
-import { connect, dependencies, dependencyVersions, disconnect, emptyCache, internalGetState, mark, observers, unresolved } from '../symbols';
+import { dependencies, dependencyVersions, disconnect, emptyCache, finalize, internalGetState, mark, rollback, unresolved } from '../symbols';
 import {
-    foundNoDependencies, recordObservation, removeObserver, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedReactor,
+    allDependenciesAreFinal, markFinal, recordObservation, removeObserver, startRecordingObservations, stopRecordingObservations,
+    TrackedObservable, TrackedReactor,
 } from '../tracking';
+import { markObservers, registerForRollback } from '../transaction';
 import { augmentStack, equals, ErrorWrapper, FinalWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 import { unwrap } from './unwrap';
@@ -20,7 +22,7 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
      * The last value that was calculated for this derivation. Is only used when connected.
      * @internal
      */
-    private _cachedState: MaybeFinalState<V> | typeof emptyCache = emptyCache;
+    protected _cachedState: MaybeFinalState<V> | typeof emptyCache = emptyCache;
 
     /** @internal */
     private _version = 0;
@@ -34,7 +36,7 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
         return this._version;
     }
 
-    protected get _final() {
+    protected _isFinal(): this is { _cachedState: FinalWrapper<State<V>> } {
         return this._cachedState instanceof FinalWrapper;
     }
 
@@ -42,18 +44,24 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
      * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
     [internalGetState]() {
-        if (this._final) {
-            return this._cachedState as FinalWrapper<State<V>>;
+        if (this.connected) {
+            this._updateIfNeeded();
+            recordObservation(this, this._isFinal());
+            return this._cachedState as MaybeFinalState<V>;
         }
 
-        // Not connected, so just calculate our value one time.
-        if (!this.connected) {
-            return this._callDeriver();
+        if (this._isFinal()) {
+            return this._cachedState;
         }
 
-        this._updateIfNeeded();
-        recordObservation(this, this._final);
-        return this._cachedState as State<V>;
+        // Not connected and not final, so just calculate our value one time.
+        const value = this._callDeriver();
+        if (value instanceof FinalWrapper) {
+            this._cachedState = value;
+            registerForRollback(this, undefined, this._version++);
+            markFinal(this);
+        }
+        return value;
     }
 
     /**
@@ -62,15 +70,14 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
      * @internal
      */
     private _updateIfNeeded() {
-        if (!this.connected || this._isUpToDate || this._final) {
-            return;
-        }
-        // Update the isUpToDate boolean only when it is false and we know all our dependencies (c.q. the cache is not empty).
-        if (this._cachedState !== emptyCache) {
-            this._isUpToDate = this._compareVersions();
-        }
-        if (!this._isUpToDate) {
-            this._update();
+        if (this.connected && !this._isUpToDate) {
+            // Update the isUpToDate boolean only when it is false and we know all our dependencies (c.q. the cache is not empty).
+            if (this._cachedState !== emptyCache) {
+                this._isUpToDate = this._isFinal() || this._compareVersions();
+            }
+            if (!this._isUpToDate) {
+                this._update();
+            }
         }
     }
 
@@ -80,11 +87,12 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
      */
     protected _update() {
         const newValue = this._callDeriver();
-        this._isUpToDate = true;
         if (!equals(newValue, this._cachedState)) {
             this._cachedState = newValue;
-            this._version++;
+            registerForRollback(this, undefined, this._version++);
+            this._isFinal() && markFinal(this);
         }
+        this._isUpToDate = true;
     }
 
     /** @internal */
@@ -102,14 +110,16 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
         // believe the're up-to-date when any of their dependencies is not up-to-date.
         if (this._isUpToDate) {
             this._isUpToDate = false;
-            for (const observer of this[observers]) {
-                observer[mark](reactorSink);
-            }
+            markObservers(this, reactorSink);
         }
     }
 
-    [connect]() {
-        this._final || super[connect]();
+    [rollback](_: undefined, oldVersion: number) {
+        // Allways restore to emptyCache to make sure the deriver is fired after a rollback. Otherwise we might miss some
+        // dependencies and we would not update in all situations.
+        this._cachedState = emptyCache;
+        this._version = oldVersion;
+        this[mark]([]);
     }
 
     /**
@@ -118,7 +128,14 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
     [disconnect]() {
         super[disconnect]();
         this._isUpToDate = false;
-        this._final || (this._cachedState = emptyCache);
+        this.finalized || (this._cachedState = emptyCache);
+    }
+
+    [finalize]() {
+        if (!this._isFinal()) {
+            return;
+        }
+        super[finalize]();
     }
 }
 
@@ -183,7 +200,7 @@ export class Derivation<V> extends BaseDerivation<V> implements Derivable<V> {
         ++derivationStackDepth;
         try {
             const value = this._args ? this._deriver(...this._args.map(unwrap)) : this._deriver();
-            return foundNoDependencies() ? FinalWrapper.wrap(value) : value;
+            return allDependenciesAreFinal() ? FinalWrapper.wrap(value) : value;
         } catch (e) {
             if (e === unresolved) {
                 return unresolved;
@@ -203,11 +220,20 @@ export class Derivation<V> extends BaseDerivation<V> implements Derivable<V> {
      * Force disconnect.
      */
     [disconnect]() {
-        super[disconnect]();
         for (const dep of this[dependencies]) {
             removeObserver(dep, this);
         }
         this[dependencies].length = 0;
+        super[disconnect]();
+    }
+
+    [finalize]() {
+        super[finalize]();
+        if (this.finalized) {
+            // Allow Garbage Collection once we reach final state.
+            (this as any)._deriver = undefined;
+            (this as any)._args = undefined;
+        }
     }
 }
 

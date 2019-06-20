@@ -1,7 +1,7 @@
 import { State } from '../interfaces';
-import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from '../reactor/reactor.test';
+import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from '../reactor/testutils.tests';
 import { connect, dependencies, disconnect, unresolved } from '../symbols';
-import { basicTransactionsTests } from '../transaction/transaction.test';
+import { basicTransactionsTests } from '../transaction/transaction.tests';
 import { config, ErrorWrapper } from '../utils';
 import { testDerivable } from './base-derivable.tests';
 import { PullDataSource } from './data-source';
@@ -22,18 +22,20 @@ describe('derivable/data-source', () => {
     }
 
     describe('(simple)', () => {
-        testDerivable(v => new SimpleDataSource(v), 'settable', 'no-error-augmentation');
+        testDerivable(v => new SimpleDataSource(v), 'settable', 'no-error-augmentation', 'no-rollback-support');
     });
     describe('(derived)', () => {
         testDerivable(
             v => new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v }).derive(obj => obj.value),
-            'no-error-augmentation'
+            'no-error-augmentation',
+            'no-rollback-support'
         );
     });
     describe('(mapped)', () => {
         testDerivable(
             v => new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v }).map(obj => obj.value),
-            'no-error-augmentation'
+            'no-error-augmentation',
+            'no-rollback-support'
         );
     });
     describe('(bi-mapped)', () => {
@@ -42,7 +44,7 @@ describe('derivable/data-source', () => {
                 .map<V>(
                     obj => obj.value,
                     value => ({ value }),
-                ), 'settable', 'no-error-augmentation');
+                ), 'settable', 'no-error-augmentation', 'no-rollback-support');
     });
 
     describe('(in transactions)', () => {

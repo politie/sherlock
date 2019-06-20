@@ -12,11 +12,12 @@ import { testFallbackTo } from './mixins/fallback-to.tests';
 import { testPluck } from './mixins/pluck.tests';
 import { testDerivableAtomSetters } from './mixins/setters.tests';
 import { testSwap } from './mixins/swap.tests';
+import { testTake } from './mixins/take.tests';
 import { isDerivableAtom, isSettableDerivable } from './typeguards';
 
 export type Factory = <V>(state: State<V>) => Derivable<V>;
 
-export type DerivableMode = 'final' | 'no-error-augmentation' | 'settable' | 'atom';
+export type DerivableMode = 'final' | 'no-error-augmentation' | 'settable' | 'atom' | 'no-rollback-support';
 
 export function assertSettable<V>(a$: Derivable<V>): SettableDerivable<V> {
     if (!isSettableDerivable(a$)) {
@@ -37,11 +38,13 @@ export function testDerivable(factory: Factory, ...modes: DerivableMode[]) {
     const isConstant = modes.includes('final');
     const isSettable = modes.includes('settable');
     const noErrorAugmentation = modes.includes('no-error-augmentation');
+    const noRollbackSupport = modes.includes('no-rollback-support');
 
     testAccessors(factory, isConstant);
     testFallbackTo(factory);
     testBooleanFuncs(factory);
     testPluck(factory, isSettable, isAtom);
+    testTake(factory, isSettable, noRollbackSupport);
 
     if (isSettable) {
         testSwap(factory);

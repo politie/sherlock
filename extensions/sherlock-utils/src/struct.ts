@@ -13,7 +13,7 @@ import { Derivable, derive, isDerivable, utils } from '@politie/sherlock';
  * @param obj the object to deepunwrap into a derivable
  */
 export function struct<V>(obj: Derivable<V>): Derivable<V>;
-export function struct<I extends { [key: string]: Derivable<V> }, V>(obj: I): Derivable<{ [P in keyof I]: V }>;
+export function struct<I extends Record<string, Derivable<V>>, V>(obj: I): Derivable<{ [P in keyof I]: V }>;
 export function struct<I extends Array<Derivable<V>>, V>(obj: I): Derivable<V[]>;
 export function struct<I extends any[]>(obj: I): Derivable<any[]>;
 export function struct<I extends object | any[]>(obj: I): Derivable<{ [P in keyof I]: any }>;

@@ -1,5 +1,5 @@
 import { Derivable, MaybeFinalState, SettableDerivable, State } from '../interfaces';
-import { connect, disconnect, unresolved } from '../symbols';
+import { connect, disconnect, finalize, unresolved } from '../symbols';
 import { addObserver, independentTracking, removeObserver } from '../tracking';
 import { augmentStack, ErrorWrapper, FinalWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
@@ -21,8 +21,8 @@ export class Mapping<B, V> extends BaseDerivation<V> implements Derivable<V> {
      * @internal
      */
     protected _update() {
-        super._update();
         this._baseVersion = this._base.version;
+        super._update();
     }
 
     /**
@@ -48,17 +48,25 @@ export class Mapping<B, V> extends BaseDerivation<V> implements Derivable<V> {
     }
 
     [connect]() {
-        if (this._final) { return; }
         super[connect]();
-        addObserver(this._base, this);
+        this.connected && addObserver(this._base, this);
     }
 
     /**
      * Force disconnect.
      */
     [disconnect]() {
-        super[disconnect]();
         removeObserver(this._base, this);
+        super[disconnect]();
+    }
+
+    [finalize]() {
+        super[finalize]();
+        if (this.finalized) {
+            // Allow Garbage Collection once we reach final state.
+            (this as any)._base = undefined;
+            (this as any)._pureGetter = undefined;
+        }
     }
 }
 
@@ -81,6 +89,14 @@ export class BiMapping<B, V> extends Mapping<B, V> implements SettableDerivable<
 
     get settable() {
         return this._base.settable;
+    }
+
+    [finalize]() {
+        super[finalize]();
+        if (this.finalized) {
+            // Allow Garbage Collection once we reach final state.
+            (this as any)._pureSetter = undefined;
+        }
     }
 }
 

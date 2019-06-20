@@ -37,7 +37,6 @@ export function derivableCache<K, V>(opts: DerivableCacheOptions<K, V>): Derivab
             // Therefore introduce a non-final atom (`atom(0)`) in the derivation:
             const derivable = isSettableDerivable(newDerivable)
                 ? lens({ get: () => newDerivable.get(), set: v => newDerivable.set(v) }, atom(0))
-                // : derive(() => newDerivable.get(), atom(0));
                 : atom(0).derive(() => newDerivable.get());
 
             if (delayedEviction) {

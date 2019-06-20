@@ -152,7 +152,7 @@ describe('derivable/map', () => {
 
     it('should not call the deriver when the cached value is known to be up to date because of a reactor', () => {
         const deriver = jest.fn(() => 123);
-        const d$ = constant(0).map(deriver);
+        const d$ = atom(0).map(deriver);
         d$.get();
         expect(deriver).toHaveBeenCalledTimes(1);
         d$.react(() => 0);

@@ -1,4 +1,4 @@
-import { autoCacheMode, connect, dependencies, dependencyVersions, disconnect, mark, observers } from '../symbols';
+import { autoCacheMode, connect, dependencies, dependencyVersions, disconnect, finalize, mark, observers } from '../symbols';
 import {
     isRecordingObservations, Observer, recordObservation, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedObserver
 } from './tracking';
@@ -30,6 +30,8 @@ describe('tracking/tracking', () => {
                 [connect]: jest.fn(),
                 [disconnect]: jest.fn(),
                 [mark]: jest.fn(),
+                finalized: false,
+                [finalize]: jest.fn(),
             }));
         });
 

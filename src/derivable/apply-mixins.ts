@@ -6,8 +6,8 @@ import { deriveMethod } from './derivation';
 import { Lens } from './lens';
 import { BiMapping, mapMethod, mapStateMethod } from './map';
 import {
-    andMethod, connected$Getter, erroredGetter, errorGetter, fallbackToMethod, finalGetter, getMethod, getOrMethod, isMethod,
-    notMethod, orMethod, pluckMethod, resolvedGetter, setErrorMethod, settablePluckMethod, swapMethod, unsetMethod, valueGetter, valueSetter,
+    andMethod, connected$Getter, erroredGetter, errorGetter, fallbackToMethod, finalGetter, getMethod, getOrMethod, isMethod, notMethod, orMethod,
+    pluckMethod, resolvedGetter, setErrorMethod, setFinalMethod, settablePluckMethod, swapMethod, takeMethod, unsetMethod, valueGetter, valueSetter,
 } from './mixins';
 
 declare module './base-derivable' {
@@ -30,6 +30,8 @@ declare module './base-derivable' {
         readonly mapState: Derivable<V>['mapState'];
         readonly pluck: Derivable<V>['pluck'];
         readonly fallbackTo: Derivable<V>['fallbackTo'];
+
+        readonly take: Derivable<V>['take'];
 
         readonly and: Derivable<V>['and'];
         readonly or: Derivable<V>['or'];
@@ -58,6 +60,8 @@ Object.defineProperties(BaseDerivable.prototype, {
     pluck: { value: pluckMethod },
     fallbackTo: { value: fallbackToMethod },
 
+    take: { value: takeMethod },
+
     and: { value: andMethod },
     or: { value: orMethod },
     not: { value: notMethod },
@@ -70,6 +74,7 @@ declare module './atom' {
 
         readonly unset: DerivableAtom<V>['unset'];
         readonly setError: DerivableAtom<V>['setError'];
+        readonly setFinal: DerivableAtom<V>['setFinal'];
         readonly map: DerivableAtom<V>['map'];
         readonly mapState: DerivableAtom<V>['mapState'];
 
@@ -109,6 +114,7 @@ declare module './map' {
 
         readonly unset: DerivableAtom<V>['unset'];
         readonly setError: DerivableAtom<V>['setError'];
+        readonly setFinal: DerivableAtom<V>['setFinal'];
         readonly map: DerivableAtom<V>['map'];
         readonly mapState: DerivableAtom<V>['mapState'];
 
@@ -125,6 +131,7 @@ declare module './map' {
 [Atom, BiMapping].forEach(c => Object.defineProperties(c.prototype, {
     unset: { value: unsetMethod },
     setError: { value: setErrorMethod },
+    setFinal: { value: setFinalMethod },
 }));
 Object.defineProperties(Lens.prototype, {
     settable: { value: true },

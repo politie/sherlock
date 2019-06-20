@@ -1,6 +1,6 @@
-import { Atom, BaseDerivable, Derivation, unwrap } from '../derivable';
-import { Derivable, ReactorOptions, State, TakeOptionValue, ToPromiseOptions } from '../interfaces';
-import { disconnect, emptyCache, internalGetState, mark, restorableState, unresolved } from '../symbols';
+import { BaseDerivable } from '../derivable';
+import { ReactorOptions, State, ToPromiseOptions } from '../interfaces';
+import { disconnect, emptyCache, internalGetState, mark, unresolved } from '../symbols';
 import { addObserver, independentTracking, Observer, removeObserver } from '../tracking';
 import { augmentStack, equals, ErrorWrapper, FinalWrapper, prepareCreationStack, uniqueId } from '../utils';
 
@@ -31,10 +31,6 @@ declare module '../derivable/base-derivable' {
     export interface BaseDerivable<V> extends DerivableReactorExtension<V> { }
 }
 
-const true$ = new Atom(FinalWrapper.wrap(true));
-const false$ = new Atom(FinalWrapper.wrap(false));
-const finalUnresolved = FinalWrapper.wrap(unresolved);
-
 BaseDerivable.prototype.react = function react(reaction, options) {
     return independentTracking(() => Reactor.create(this, reaction, options));
 };
@@ -52,15 +48,6 @@ BaseDerivable.prototype.toPromise = function toPromise(options) {
  * exceeded" and provide better error messages.
  */
 const MAX_REACTION_DEPTH = 100;
-
-export const defaultOptions: ReactorOptions<any> = {
-    from: true$,
-    until: false$,
-    when: true$,
-    once: false,
-    skipFirst: false,
-    onError: undefined,
-};
 
 /**
  * A Reactor is an observer of a derivable that automatically performs some reaction whenever the derivable changes. Will not
@@ -235,53 +222,7 @@ export class Reactor<V> implements Observer {
         options?: Partial<ReactorOptions<W>>,
         ended?: () => void,
     ) {
-        const resolvedOptions = { ...defaultOptions, ...options };
-        const { from, until, when, once } = resolvedOptions;
-        let { skipFirst } = resolvedOptions;
-
-        let from$ = toMaybeDerivable(from, parent, true);
-        if (from$) {
-            from$ = from$.map<boolean>(v => v && FinalWrapper.wrap(v));
-        }
-        const until$ = toMaybeDerivable(until, parent, false);
-        const when$ = toMaybeDerivable(when, parent, true);
-
-        // controlledDerivable is the `parent` derivable with optional control-flow options applied.
-        let controlledDerivable: BaseDerivable<W>;
-        if (from$ || until$ || when$ || once || skipFirst) {
-            // Listen to from, when and until conditions, starting and stopping the reaction when
-            // needed, and stopping the reaction indefinitely when until becomes true.
-            let fromWasTrue = false;
-            let firstValue: State<W> = unresolved;
-            controlledDerivable = new Derivation<W>(() => {
-                if (!fromWasTrue) {
-                    if (from$ && !from$.get()) {
-                        return unresolved;
-                    }
-                    fromWasTrue = true;
-                }
-                if (until$ && until$.get()) {
-                    return finalUnresolved;
-                }
-                if (when$ && !when$.get()) {
-                    return unresolved;
-                }
-                const value = parent.get();
-                if (skipFirst) {
-                    if (firstValue === unresolved || equals(value, firstValue)) {
-                        firstValue = value;
-                        return unresolved;
-                    }
-                    firstValue = unresolved;
-                    skipFirst = false;
-                }
-                return once ? FinalWrapper.wrap(value) : value;
-            });
-        } else {
-            // No control-flow options are given, simply use the provided derivable.
-            controlledDerivable = parent;
-        }
-
+        const controlledDerivable = options ? parent.take(options) as BaseDerivable<W> : parent;
         const reactor = new Reactor<W>(controlledDerivable, errorHandler, reaction, ended);
 
         function done() {
@@ -289,8 +230,8 @@ export class Reactor<V> implements Observer {
         }
 
         function errorHandler(error: any) {
-            if (resolvedOptions.onError) {
-                resolvedOptions.onError(error, done);
+            if (options && options.onError) {
+                options.onError(error, done);
             } else {
                 done();
                 throw error;
@@ -302,18 +243,4 @@ export class Reactor<V> implements Observer {
 
         return done;
     }
-}
-
-function toMaybeDerivable<V>(option: TakeOptionValue<V>, derivable: Derivable<V>, defaultValue: boolean): Derivable<boolean> | undefined {
-    if (option === defaultValue ||
-        option instanceof Atom && option[restorableState] instanceof FinalWrapper && option[restorableState].value === defaultValue) {
-        return undefined;
-    }
-    if (option instanceof BaseDerivable) {
-        return option;
-    }
-    if (typeof option === 'function') {
-        return new Derivation(() => unwrap(option(derivable)));
-    }
-    return option ? true$ : false$;
 }

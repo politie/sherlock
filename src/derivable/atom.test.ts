@@ -1,18 +1,24 @@
 import { Seq } from 'immutable';
 import { Derivable } from '../interfaces';
-import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from '../reactor/reactor.test';
-import { restorableState, unresolved } from '../symbols';
-import { txn } from '../transaction/transaction.test';
+import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from '../reactor/testutils.tests';
+import { unresolved } from '../symbols';
+import { txn } from '../transaction/transaction.tests';
 import { ErrorWrapper } from '../utils';
 import { Atom } from './atom';
 import { $, testDerivable } from './base-derivable.tests';
-import { atom, derive } from './factories';
+import { atom, constant, derive } from './factories';
 
 describe('derivable/atom', () => {
-    testDerivable(
-        v => v === unresolved ? atom.unresolved() : v instanceof ErrorWrapper ? atom.error(v.error) : atom(v),
-        'atom', 'settable',
-    );
+    describe('(write enabled)', () => {
+        testDerivable(
+            v => v === unresolved ? atom.unresolved() : v instanceof ErrorWrapper ? atom.error(v.error) : atom(v),
+            'atom', 'settable',
+        );
+    });
+
+    describe('(read only)', () => {
+        testDerivable(v => v === unresolved ? constant.unresolved() : v instanceof ErrorWrapper ? constant.error(v.error) : constant(v), 'final');
+    });
 
     describe('#set', () => {
         it('should change the current state and version', () => {
@@ -56,23 +62,23 @@ describe('derivable/atom', () => {
     describe('in transactions', () => {
         it('should be restored on abort', () => {
             const a$ = new Atom('a');
-            expect(a$[restorableState]).toBe('a');
+            expect(a$._value).toBe('a');
             expect(a$.version).toBe(0);
             txn(abortOuter => {
                 a$.set('b');
-                expect(a$[restorableState]).toBe('b');
+                expect(a$._value).toBe('b');
                 expect(a$.version).toBe(1);
                 txn(abortInner => {
                     a$.set('c');
-                    expect(a$[restorableState]).toBe('c');
+                    expect(a$._value).toBe('c');
                     expect(a$.version).toBe(2);
                     abortInner();
                 });
-                expect(a$[restorableState]).toBe('b');
+                expect(a$._value).toBe('b');
                 expect(a$.version).toBe(1);
                 abortOuter();
             });
-            expect(a$[restorableState]).toBe('a');
+            expect(a$._value).toBe('a');
             expect(a$.version).toBe(0);
         });
 
@@ -87,19 +93,19 @@ describe('derivable/atom', () => {
                     b$.set('set in both');
                     c$.set('set in inner');
                 });
-                expect(a$[restorableState]).toBe('set in outer');
+                expect(a$._value).toBe('set in outer');
                 expect(a$.version).toBe(1);
-                expect(b$[restorableState]).toBe('set in both');
+                expect(b$._value).toBe('set in both');
                 expect(b$.version).toBe(2);
-                expect(c$[restorableState]).toBe('set in inner');
+                expect(c$._value).toBe('set in inner');
                 expect(c$.version).toBe(1);
                 abort();
             });
-            expect(a$[restorableState]).toBe('a');
+            expect(a$._value).toBe('a');
             expect(a$.version).toBe(0);
-            expect(b$[restorableState]).toBe('a');
+            expect(b$._value).toBe('a');
             expect(b$.version).toBe(0);
-            expect(c$[restorableState]).toBe('a');
+            expect(c$._value).toBe('a');
             expect(c$.version).toBe(0);
         });
 
@@ -116,9 +122,9 @@ describe('derivable/atom', () => {
                     c$.set('set in inner');
                 });
             });
-            expect(a$[restorableState]).toBe('set in outer');
-            expect(b$[restorableState]).toBe('set in both');
-            expect(c$[restorableState]).toBe('set in inner');
+            expect(a$._value).toBe('set in outer');
+            expect(b$._value).toBe('set in both');
+            expect(c$._value).toBe('set in inner');
         });
     });
 

@@ -26,6 +26,8 @@ export interface Derivable<V> {
      */
     getState(): State<V>;
 
+    getMaybeFinalState(): MaybeFinalState<V>;
+
     /**
      * Returns a derivable that falls back to the given `fallback` when the current derivable is unresolved.
      *
@@ -72,6 +74,8 @@ export interface Derivable<V> {
 
     map<R>(f: (v: V) => MaybeFinalState<R>): Derivable<R>;
     mapState<R>(f: (v: State<V>) => MaybeFinalState<R>): Derivable<R>;
+
+    take(options: Partial<TakeOptions<V>>): Derivable<V>;
 
     /**
      * Creates a derivable that has the same state, but update propagation can be pauzed based on the given `options`.
@@ -183,9 +187,10 @@ export interface SettableDerivable<V> extends Derivable<V> {
 }
 
 export interface DerivableAtom<V> extends SettableDerivable<V> {
-    set(newState: State<V>): void;
+    set(newState: MaybeFinalState<V>): void;
     unset(): void;
     setError(err: any): void;
+    setFinal(state: State<V>): void;
     map<R>(get: (baseValue: V) => MaybeFinalState<R>): Derivable<R>;
     map<R>(get: (baseValue: V) => MaybeFinalState<R>, set: (newValue: R, oldBaseValue?: V) => V): DerivableAtom<R>;
     mapState<R>(get: (baseState: State<V>) => MaybeFinalState<R>): Derivable<R>;
@@ -214,7 +219,7 @@ export interface TakeOptions<V> {
     from: TakeOptionValue<V>;
 
     /**
-     * Indicates when updates should not be propagated anymore. Updates will be stopped indefinitely when `until` becomes false.
+     * Indicates when updates should not be propagated anymore. Updates will be stopped indefinitely when `until` becomes `true`.
      */
     until: TakeOptionValue<V>;
 
@@ -226,7 +231,7 @@ export interface TakeOptions<V> {
     when: TakeOptionValue<V>;
 
     /**
-     * When `true` the only one (not `unresolved`) update will propagate, after which it will stop indefinitely.
+     * When `true` only one (not `unresolved`) update will propagate, after which it will stop indefinitely.
      */
     once: boolean;
 

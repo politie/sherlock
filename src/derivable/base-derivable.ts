@@ -1,5 +1,5 @@
 import { Derivable, MaybeFinalState, SettableDerivable } from '../interfaces';
-import { autoCacheMode, connect, disconnect, internalGetState, observers } from '../symbols';
+import { autoCacheMode, connect, disconnect, finalize, internalGetState, observers } from '../symbols';
 import { independentTracking, isRecordingObservations, maybeDisconnectInNextTick, TrackedObservable, TrackedObserver } from '../tracking';
 import { FinalWrapper, prepareCreationStack, uniqueId } from '../utils';
 
@@ -72,8 +72,15 @@ export abstract class BaseDerivable<V> implements TrackedObservable, Derivable<V
     connected = false;
     /** @internal */
     _connected$?: SettableDerivable<boolean> = undefined;
-    [connect]() { setConnectionStatus(this, true); }
+    [connect]() { this.finalized || setConnectionStatus(this, true); }
     [disconnect]() { setConnectionStatus(this, false); }
+
+    finalized = false;
+
+    [finalize]() {
+        this.finalized = true;
+        this.connected && this[disconnect]();
+    }
 }
 
 function setConnectionStatus(bs: BaseDerivable<any>, status: boolean) {
