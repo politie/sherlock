@@ -1,8 +1,8 @@
 language: node_js
 node_js:
-- "10" # current dev version; first in list will be used by greenkeeper-lock
-- "8" # LTS support until december 2019
-- "6" # LTS support until april 2019
+- "12" # current dev version; first in list will be used by greenkeeper-lock
+- "10" # LTS support ends April 2021
+- "8" # LTS support until December 2019
 script: npm run ci:travis
 cache:
   directories:
