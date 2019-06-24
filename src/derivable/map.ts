@@ -33,9 +33,7 @@ export class Mapping<B, V> extends BaseDerivation<V> implements Derivable<V> {
         try {
             return independentTracking(() => {
                 const baseValue = this._base.getMaybeFinalState();
-                const forceFinal = baseValue instanceof FinalWrapper;
-                const mappedValue = this._pureGetter(FinalWrapper.unwrap(baseValue));
-                return forceFinal ? FinalWrapper.wrap(mappedValue) : mappedValue;
+                return FinalWrapper.map<State<B>, State<V>>(baseValue, v => this._pureGetter(v));
             });
         } catch (e) {
             return new ErrorWrapper(augmentStack(e, this));
@@ -62,11 +60,9 @@ export class Mapping<B, V> extends BaseDerivation<V> implements Derivable<V> {
 
     [finalize]() {
         super[finalize]();
-        if (this.finalized) {
-            // Allow Garbage Collection once we reach final state.
-            (this as any)._base = undefined;
-            (this as any)._pureGetter = undefined;
-        }
+        // Allow Garbage Collection once we reach final state.
+        (this as any)._base = undefined;
+        (this as any)._pureGetter = undefined;
     }
 }
 
@@ -84,7 +80,7 @@ export class BiMapping<B, V> extends Mapping<B, V> implements SettableDerivable<
 
     set(newValue: V) {
         // Cast to B here instead of broadening the interface of set method. Should in practice always support State<B>.
-        this._base.set(this._pureSetter(newValue) as B);
+        this._base.set(FinalWrapper.map(newValue, v => this._pureSetter(v)) as B);
     }
 
     get settable() {
@@ -93,10 +89,8 @@ export class BiMapping<B, V> extends Mapping<B, V> implements SettableDerivable<
 
     [finalize]() {
         super[finalize]();
-        if (this.finalized) {
-            // Allow Garbage Collection once we reach final state.
-            (this as any)._pureSetter = undefined;
-        }
+        // Allow Garbage Collection once we reach final state.
+        (this as any)._pureSetter = undefined;
     }
 }
 

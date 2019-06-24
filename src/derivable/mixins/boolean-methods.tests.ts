@@ -1,15 +1,15 @@
 import { List, Seq } from 'immutable';
 import { internalGetState } from '../../symbols';
-import { $, Factory } from '../base-derivable.tests';
+import { $, Factories } from '../base-derivable.tests';
 import { atom } from '../factories';
 
 /**
  * Tests the `is()`, `or()`, `and()` and `not()` methods.
  */
-export function testBooleanFuncs(factory: Factory) {
+export function testBooleanFuncs(factories: Factories) {
     describe('(boolean functions)', () => {
-        const true$ = factory(true);
-        const false$ = factory(false);
+        const true$ = factories.value(true);
+        const false$ = factories.value(false);
         const bool$ = atom(false);
 
         beforeEach(() => {
@@ -18,13 +18,13 @@ export function testBooleanFuncs(factory: Factory) {
 
         describe('#is', () => {
             it('should report equality on values', () => {
-                const value$ = factory('value');
+                const value$ = factories.value('value');
                 expect(value$.is('value').get()).toBe(true);
                 expect(value$.is('something else').get()).toBe(false);
             });
 
             it('should report equality on derivables', () => {
-                const value$ = factory('value');
+                const value$ = factories.value('value');
                 const atom$ = atom('value');
                 const valueIsAtom$ = value$.is(atom$);
                 expect(valueIsAtom$.get()).toBe(true);
@@ -33,8 +33,8 @@ export function testBooleanFuncs(factory: Factory) {
             });
 
             it('should use the utils.equals function', () => {
-                const a$ = factory(List.of(1, 2, 3));
-                const b$ = factory(Seq.Indexed.of(1, 2, 3));
+                const a$ = factories.value(List.of(1, 2, 3));
+                const b$ = factories.value(Seq.Indexed.of(1, 2, 3));
                 expect(a$.is(b$).get()).toBe(true);
             });
         });

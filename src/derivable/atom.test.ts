@@ -1,9 +1,7 @@
 import { Seq } from 'immutable';
 import { Derivable } from '../interfaces';
 import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from '../reactor/testutils.tests';
-import { unresolved } from '../symbols';
 import { txn } from '../transaction/transaction.tests';
-import { ErrorWrapper } from '../utils';
 import { Atom } from './atom';
 import { $, testDerivable } from './base-derivable.tests';
 import { atom, constant, derive } from './factories';
@@ -11,13 +9,24 @@ import { atom, constant, derive } from './factories';
 describe('derivable/atom', () => {
     describe('(write enabled)', () => {
         testDerivable(
-            v => v === unresolved ? atom.unresolved() : v instanceof ErrorWrapper ? atom.error(v.error) : atom(v),
+            {
+                unresolved: final => final ? atom.final.unresolved() : atom.unresolved(),
+                error: (error, final) => final ? atom.final.error(error) : atom.error(error),
+                value: (value, final) => final ? atom.final(value) : atom(value),
+            },
             'atom', 'settable',
         );
     });
 
     describe('(read only)', () => {
-        testDerivable(v => v === unresolved ? constant.unresolved() : v instanceof ErrorWrapper ? constant.error(v.error) : constant(v), 'final');
+        testDerivable(
+            {
+                unresolved: () => constant.unresolved(),
+                error: error => constant.error(error),
+                value: value => constant(value),
+            },
+            'final',
+        );
     });
 
     describe('#set', () => {

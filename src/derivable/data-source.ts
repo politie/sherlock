@@ -1,5 +1,5 @@
 import { MaybeFinalState, SettableDerivable, State } from '../interfaces';
-import { connect, disconnect, emptyCache, internalGetState, observers, rollback } from '../symbols';
+import { connect, disconnect, emptyCache, internalGetState, rollback } from '../symbols';
 import { independentTracking, recordObservation } from '../tracking';
 import { markObservers, processChangedState, registerForRollback } from '../transaction';
 import { augmentStack, equals, ErrorWrapper, FinalWrapper } from '../utils';
@@ -115,11 +115,6 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
     [disconnect]() {
         super[disconnect]();
         this.finalized || (this._cachedState = emptyCache);
-        // Disconnect all observers. When an observer disconnects it removes itself from this array.
-        const obs = this[observers];
-        for (let i = obs.length - 1; i >= 0; i--) {
-            obs[i][disconnect]();
-        }
     }
 
     /**

@@ -1,8 +1,8 @@
-import { State } from '../interfaces';
+import { Derivable, MaybeFinalState } from '../interfaces';
 import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from '../reactor/testutils.tests';
-import { connect, dependencies, disconnect, unresolved } from '../symbols';
+import { connect, dependencies, disconnect } from '../symbols';
 import { basicTransactionsTests } from '../transaction/transaction.tests';
-import { config, ErrorWrapper } from '../utils';
+import { config } from '../utils';
 import { testDerivable } from './base-derivable.tests';
 import { PullDataSource } from './data-source';
 import { atom } from './factories';
@@ -11,7 +11,7 @@ describe('derivable/data-source', () => {
 
     // Using PullDataSource to simulate an Atom, a bit contrived of course.
     class SimpleDataSource<V> extends PullDataSource<V> {
-        constructor(private _value: State<V>) { super(); }
+        constructor(private _value: MaybeFinalState<V>) { super(); }
         calculateCurrentValue() {
             return this._value;
         }
@@ -22,29 +22,26 @@ describe('derivable/data-source', () => {
     }
 
     describe('(simple)', () => {
-        testDerivable(v => new SimpleDataSource(v), 'settable', 'no-error-augmentation', 'no-rollback-support');
+        testDerivable(a$ => new SimpleDataSource(a$.getMaybeFinalState()), 'settable', 'no-error-augmentation', 'no-rollback-support');
     });
     describe('(derived)', () => {
         testDerivable(
-            v => new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v }).derive(obj => obj.value),
-            'no-error-augmentation',
-            'no-rollback-support'
+            <V>(a$: Derivable<V>) => new SimpleDataSource(a$.map(val => ({ val })).getMaybeFinalState()).derive(obj => obj.val),
+            'no-error-augmentation', 'no-rollback-support',
         );
     });
     describe('(mapped)', () => {
         testDerivable(
-            v => new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v }).map(obj => obj.value),
-            'no-error-augmentation',
-            'no-rollback-support'
+            <V>(a$: Derivable<V>) => new SimpleDataSource(a$.map(val => ({ val })).getMaybeFinalState()).map(obj => obj.val),
+            'no-error-augmentation', 'no-rollback-support',
         );
     });
     describe('(bi-mapped)', () => {
-        testDerivable(<V>(v: State<V>) =>
-            new SimpleDataSource(v === unresolved || v instanceof ErrorWrapper ? v : { value: v })
-                .map<V>(
-                    obj => obj.value,
-                    value => ({ value }),
-                ), 'settable', 'no-error-augmentation', 'no-rollback-support');
+        testDerivable(
+            <V>(a$: Derivable<V>) => new SimpleDataSource(a$.map(val => ({ val })).getMaybeFinalState())
+                .map(obj => obj.val, val => ({ val })),
+            'settable', 'no-error-augmentation', 'no-rollback-support',
+        );
     });
 
     describe('(in transactions)', () => {

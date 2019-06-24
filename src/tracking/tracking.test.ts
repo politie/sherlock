@@ -16,7 +16,6 @@ describe('tracking/tracking', () => {
                 id: 0,
                 [dependencies]: [],
                 [dependencyVersions]: {},
-                [disconnect]: jest.fn(),
                 [mark]: jest.fn(),
             };
         });
@@ -91,7 +90,6 @@ describe('tracking/tracking', () => {
                 id: 4,
                 [dependencies]: [],
                 [dependencyVersions]: {},
-                [disconnect]: jest.fn(),
                 [mark]: jest.fn(),
             };
 
@@ -125,7 +123,6 @@ describe('tracking/tracking', () => {
                 id: 4,
                 [dependencies]: [],
                 [dependencyVersions]: {},
-                [disconnect]: jest.fn(),
                 [mark]: jest.fn(),
             };
             startRecordingObservations(observer);

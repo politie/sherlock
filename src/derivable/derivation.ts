@@ -130,13 +130,6 @@ export abstract class BaseDerivation<V> extends BaseDerivable<V> implements Deri
         this._isUpToDate = false;
         this.finalized || (this._cachedState = emptyCache);
     }
-
-    [finalize]() {
-        if (!this._isFinal()) {
-            return;
-        }
-        super[finalize]();
-    }
 }
 
 export let derivationStackDepth = 0;
@@ -229,11 +222,9 @@ export class Derivation<V> extends BaseDerivation<V> implements Derivable<V> {
 
     [finalize]() {
         super[finalize]();
-        if (this.finalized) {
-            // Allow Garbage Collection once we reach final state.
-            (this as any)._deriver = undefined;
-            (this as any)._args = undefined;
-        }
+        // Allow Garbage Collection once we reach final state.
+        (this as any)._deriver = undefined;
+        (this as any)._args = undefined;
     }
 }
 

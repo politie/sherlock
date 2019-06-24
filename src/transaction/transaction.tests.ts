@@ -1,5 +1,6 @@
 import { derive } from '../derivable';
 import { SettableDerivable } from '../interfaces';
+import { FinalWrapper } from '../utils';
 import { transact } from './transaction';
 
 export function basicTransactionsTests(atomFactory: <V>(v: V) => SettableDerivable<V>, shouldRollbackValue: boolean) {
@@ -102,6 +103,44 @@ export function basicTransactionsTests(atomFactory: <V>(v: V) => SettableDerivab
         });
         expect(derived$.get()).toBe(shouldRollbackValue ? 'a b' : 'b c');
         expect(reactions).toBe(0);
+    });
+
+    shouldRollbackValue && it('should allow rollbacking to final inside a nested transaction', () => {
+        const a$ = atomFactory('a');
+        const d$ = a$.derive(v => v + '!');
+        const reactor = jest.fn();
+        d$.react(reactor, { skipFirst: true });
+        expect(d$.value).toBe('a!');
+        txn(() => {
+            a$.set('b');
+            txn(abort => {
+                a$.set(FinalWrapper.wrap('c') as any);
+                expect(d$.value).toBe('c!');
+                expect(a$.final).toBeTrue();
+                expect(d$.final).toBeTrue();
+                abort();
+            });
+            a$.set('d');
+        });
+        expect(a$.value).toBe('d');
+        expect(a$.final).toBeFalse();
+        expect(reactor).toHaveBeenCalledTimes(1);
+
+        txn(abort => {
+            a$.set('b');
+            txn(() => {
+                a$.set(FinalWrapper.wrap('c') as any);
+                expect(d$.value).toBe('c!');
+                expect(a$.final).toBeTrue();
+                expect(d$.final).toBeTrue();
+            });
+            expect(a$.final).toBeTrue();
+            expect(d$.final).toBeTrue();
+            abort();
+        });
+        expect(a$.value).toBe('d');
+        expect(a$.final).toBeFalse();
+        expect(reactor).toHaveBeenCalledTimes(1);
     });
 
     it('should fully support derivations inside transactions that commit', () => {

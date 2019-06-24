@@ -174,7 +174,6 @@ export interface TrackedObservable extends Observable, Finalizer {
 }
 
 export interface Observer {
-    [disconnect](): void;
     [mark](reactorSink: TrackedReactor[]): void;
 }
 

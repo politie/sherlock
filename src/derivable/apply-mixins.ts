@@ -135,5 +135,4 @@ declare module './map' {
 }));
 Object.defineProperties(Lens.prototype, {
     settable: { value: true },
-    final: { value: false },
 });

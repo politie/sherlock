@@ -56,8 +56,6 @@ export function takeMethod<V>(this: Derivable<V>, { from, when, until, once, ski
     });
 }
 
-function toMaybeDerivable<V>(option: boolean | undefined, derivable: Derivable<V>, defaultValue: boolean, finalValue?: boolean): Atom<boolean> | undefined;
-function toMaybeDerivable<V>(option: TakeOptionValue<V> | undefined, d: Derivable<V>, defaultVal: boolean, finalVal?: boolean): Derivable<boolean> | undefined;
 function toMaybeDerivable<V>(option: TakeOptionValue<V> | undefined, derivable: Derivable<V>, defaultValue: boolean, finalValue?: boolean) {
     if (option === undefined) {
         return;
@@ -73,7 +71,7 @@ function toMaybeDerivable<V>(option: TakeOptionValue<V> | undefined, derivable: 
     }
     if (option instanceof BaseDerivable) {
         if (finalValue !== undefined) {
-            option = option.mapState<boolean>(v => v === finalValue ? FinalWrapper.wrap(v) : v, v => v);
+            option = option.mapState<boolean>(v => v === finalValue ? FinalWrapper.wrap(v) : v);
         }
         return option;
     }

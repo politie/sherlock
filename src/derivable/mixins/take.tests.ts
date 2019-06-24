@@ -2,30 +2,32 @@ import { Derivable, DerivableAtom, SettableDerivable, State, TakeOptions } from 
 import { unresolved } from '../../symbols';
 import { txn } from '../../transaction/transaction.tests';
 import { ErrorWrapper } from '../../utils';
-import { assertDerivableAtom, assertSettable, Factory } from '../base-derivable.tests';
-import { atom } from '../factories';
+import { assertDerivableAtom, assertSettable, Factories } from '../base-derivable.tests';
+import { atom, constant } from '../factories';
 import { isDerivableAtom, isSettableDerivable } from '../typeguards';
 
-export function testTake(factory: Factory, isSettable: boolean, noRollbackSupport: boolean) {
+export function testTake(factories: Factories, isSettable: boolean, noRollbackSupport: boolean) {
 
     describe('#take', () => {
-        describe('with no options', () => {
+        describe('with no or trivial options', () => {
             it('should return the same derivable', () => {
-                const a$ = factory('value');
+                const a$ = factories.value('value');
                 expect(a$.take({})).toBe(a$);
+                expect(a$.take({ from: true, until: false, when: true, skipFirst: false, once: false })).toBe(a$);
+                expect(a$.take({ from: constant(true), until: constant(false), when: constant(true), skipFirst: false, once: false })).toBe(a$);
             });
         });
 
         describe('not connected get with', () => {
             describe('from', () => {
                 it('should be unresolved if `from` is false', () => {
-                    const a$ = factory('value');
+                    const a$ = factories.value('value');
                     const f$ = a$.take({ from: false });
                     expect(f$.resolved).toBe(false);
                 });
 
                 it('should be unresolved while `from` is false', () => {
-                    const a$ = factory('value');
+                    const a$ = factories.value('value');
                     const from = atom(false);
                     const f$ = a$.take({ from });
                     expect(f$.resolved).toBe(false);
@@ -38,7 +40,7 @@ export function testTake(factory: Factory, isSettable: boolean, noRollbackSuppor
                 });
 
                 it('should propagate errors once `from` becomes true (once)', () => {
-                    const a$ = factory(new ErrorWrapper('my error'));
+                    const a$ = factories.value(new ErrorWrapper('my error'));
                     const from = atom(false);
                     const f$ = a$.take({ from });
                     expect(f$.error).toBeUndefined();
@@ -53,13 +55,13 @@ export function testTake(factory: Factory, isSettable: boolean, noRollbackSuppor
 
             describe('until', () => {
                 it('should be unresolved if `until` is true', () => {
-                    const a$ = factory('value');
+                    const a$ = factories.value('value');
                     const f$ = a$.take({ until: true });
                     expect(f$.resolved).toBe(false);
                 });
 
                 it('should not update anymore once `until` becomes true (once)', () => {
-                    const a$ = factory('value');
+                    const a$ = factories.value('value');
                     const until = atom(false);
                     const f$ = a$.take({ until });
                     expect(f$.value).toBe('value');
@@ -82,7 +84,7 @@ export function testTake(factory: Factory, isSettable: boolean, noRollbackSuppor
                 });
 
                 isSettable && it('should become final after the first observation after `until` becomes true (once)', () => {
-                    const a$ = factory('a');
+                    const a$ = factories.value('a');
                     if (!isSettableDerivable(a$)) { throw 0; }
                     const until = atom(false);
                     const f$ = a$.take({ until });
@@ -100,7 +102,7 @@ export function testTake(factory: Factory, isSettable: boolean, noRollbackSuppor
                 });
 
                 it('should propagate errors until `until` becomes true', () => {
-                    const a$ = factory(new ErrorWrapper('an error'));
+                    const a$ = factories.value(new ErrorWrapper('an error'));
                     const until = atom(false);
                     const f$ = a$.take({ until });
                     expect(f$.error).toBe('an error');
@@ -111,7 +113,7 @@ export function testTake(factory: Factory, isSettable: boolean, noRollbackSuppor
                 });
 
                 it('should flag the final value as final', () => {
-                    const a$ = factory('value');
+                    const a$ = factories.value('value');
                     const until = atom(false);
                     const fn = jest.fn(v => v);
                     const d$ = a$.take({ until }).map(fn);
@@ -129,13 +131,13 @@ export function testTake(factory: Factory, isSettable: boolean, noRollbackSuppor
 
             describe('when', () => {
                 it('should be unresolved if `when` is false', () => {
-                    const a$ = factory('value');
+                    const a$ = factories.value('value');
                     const f$ = a$.take({ when: false });
                     expect(f$.resolved).toBe(false);
                 });
 
                 it('should not update while `when` is false', () => {
-                    const a$ = factory('value');
+                    const a$ = factories.value('value');
                     const when = atom(false);
                     const f$ = a$.take({ when });
                     expect(f$.resolved).toBe(false);
@@ -158,7 +160,7 @@ export function testTake(factory: Factory, isSettable: boolean, noRollbackSuppor
                 });
 
                 it('should propagate errors while `when` is true', () => {
-                    const a$ = factory<string>(new ErrorWrapper('foo'));
+                    const a$ = factories.error<string>('foo');
                     const when = atom(false);
                     const f$ = a$.take({ when });
                     expect(f$.error).toBeUndefined();
@@ -182,7 +184,7 @@ export function testTake(factory: Factory, isSettable: boolean, noRollbackSuppor
 
             describe('once', () => {
                 it('should remember the first ever observed value', () => {
-                    const a$ = factory('value');
+                    const a$ = factories.value('value');
                     const f$ = a$.take({ once: true });
                     expect(f$.value).toBe('value');
                     if (isDerivableAtom(a$)) {
@@ -194,7 +196,7 @@ export function testTake(factory: Factory, isSettable: boolean, noRollbackSuppor
                     }
                     expect(f$.value).toBe('value');
 
-                    const b$ = factory('value');
+                    const b$ = factories.value('value');
                     if (isSettableDerivable(b$)) {
                         const g$ = b$.take({ once: true });
                         b$.set('other value');
@@ -206,7 +208,7 @@ export function testTake(factory: Factory, isSettable: boolean, noRollbackSuppor
                 });
 
                 it('should flag the value as final', () => {
-                    const a$ = factory<string>(unresolved);
+                    const a$ = factories.unresolved<string>();
                     const fn = jest.fn(v => v);
                     const d$ = a$.take({ once: true }).map(fn);
                     expect(d$.value).toBeUndefined();
@@ -226,7 +228,7 @@ export function testTake(factory: Factory, isSettable: boolean, noRollbackSuppor
 
             describe('skipFirst', () => {
                 it('should skip the first observed value', () => {
-                    const a$ = factory('value');
+                    const a$ = factories.value('value');
                     const f$ = a$.take({ skipFirst: true });
 
                     // first observation...
@@ -244,7 +246,7 @@ export function testTake(factory: Factory, isSettable: boolean, noRollbackSuppor
                 });
 
                 it('should not count errors or unresolved as an encountered value', () => {
-                    const a$ = factory<string>(unresolved);
+                    const a$ = factories.unresolved<string>();
                     const f$ = a$.take({ skipFirst: true });
                     expect(f$.value).toBeUndefined();
                     if (isDerivableAtom(a$)) {
@@ -269,7 +271,7 @@ export function testTake(factory: Factory, isSettable: boolean, noRollbackSuppor
         isSettable && describe(`connected, using`, () => {
             let a$: SettableDerivable<string>;
 
-            beforeEach(() => a$ = assertSettable(factory<string>(unresolved)));
+            beforeEach(() => a$ = assertSettable(factories.unresolved<string>()));
 
             describe('from', () => {
                 let from: DerivableAtom<boolean>;

@@ -1,6 +1,6 @@
 import { BaseDerivable } from '../derivable';
 import { ReactorOptions, State, ToPromiseOptions } from '../interfaces';
-import { disconnect, emptyCache, internalGetState, mark, unresolved } from '../symbols';
+import { emptyCache, internalGetState, mark, unresolved } from '../symbols';
 import { addObserver, independentTracking, Observer, removeObserver } from '../tracking';
 import { augmentStack, equals, ErrorWrapper, FinalWrapper, prepareCreationStack, uniqueId } from '../utils';
 
@@ -185,13 +185,6 @@ export class Reactor<V> implements Observer {
         removeObserver(this._parent, this);
         lastWish && lastWish();
         this.ended && this.ended();
-    }
-
-    /**
-     * If for some reason any upstream derivable is ordered to disconnect, we have to disconnect as well, which means: stop the reactor.
-     */
-    [disconnect]() {
-        this._stop();
     }
 
     /**
