@@ -236,6 +236,11 @@ export interface TakeOptions<V> {
     once: boolean;
 
     /**
+     * When `true` only one error update will propagate, after which it will stop indefinitely.
+     */
+    stopOnError: boolean;
+
+    /**
      * When `true` any observer will observe `unresolved` in place of the first resolved value. After that it has no effect (i.e. any update,
      * including `unresolved` will be observed by observers).
      */

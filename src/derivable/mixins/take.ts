@@ -11,7 +11,7 @@ const false$ = new Atom(FinalWrapper.wrap(false));
 const skipped = Symbol('skipped');
 const finalSkipped = FinalWrapper.wrap(skipped);
 
-export function takeMethod<V>(this: Derivable<V>, { from, when, until, once, skipFirst }: Partial<TakeOptions<V>>): Derivable<V> {
+export function takeMethod<V>(this: Derivable<V>, { from, when, until, once, stopOnError, skipFirst }: Partial<TakeOptions<V>>): Derivable<V> {
     // From is true by default, once it becomes true, it will stay true.
     const from$ = toMaybeDerivable(from, this, true, true);
     // When is true by default.
@@ -21,7 +21,7 @@ export function takeMethod<V>(this: Derivable<V>, { from, when, until, once, ski
     // SkipFirst is false by default, once it becomes false again, it will stay false.
     const skipFirstState$ = skipFirst ? new Atom<MaybeFinalState<V> | typeof skipped>(unresolved) : undefined;
 
-    if (!from$ && !when$ && !until$ && !once && !skipFirstState$) {
+    if (!from$ && !when$ && !until$ && !once && !stopOnError && !skipFirstState$) {
         return this;
     }
 
@@ -52,7 +52,9 @@ export function takeMethod<V>(this: Derivable<V>, { from, when, until, once, ski
             }
             skipFirstState$.set(finalSkipped);
         }
-        return resultingState(once && isValue(state) ? FinalWrapper.wrap(state) : state);
+        return resultingState(once && isValue(state) || stopOnError && state instanceof ErrorWrapper
+            ? FinalWrapper.wrap(state)
+            : state);
     });
 }
 

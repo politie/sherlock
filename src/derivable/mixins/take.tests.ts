@@ -6,7 +6,7 @@ import { assertDerivableAtom, assertSettable, Factories } from '../base-derivabl
 import { atom, constant } from '../factories';
 import { isDerivableAtom, isSettableDerivable } from '../typeguards';
 
-export function testTake(factories: Factories, isSettable: boolean, noRollbackSupport: boolean) {
+export function testTake(factories: Factories, isSettable: boolean, noRollbackSupport: boolean, isAtom: boolean) {
 
     describe('#take', () => {
         describe('with no or trivial options', () => {
@@ -764,6 +764,71 @@ export function testTake(factories: Factories, isSettable: boolean, noRollbackSu
                         a$.set('c');
                         expect(f$.value).toBe('c');
                     });
+                });
+            });
+
+            describe('stopOnError', () => {
+                isAtom && it('should never update after an error', () => {
+                    startTest({ stopOnError: true });
+                    shouldNotHaveReacted(unresolved);
+                    a$.set('a');
+
+                    shouldHaveReactedOnce('a');
+                    a$.set('b');
+                    shouldHaveReactedOnce('b');
+
+                    assertDerivableAtom(a$).setError('my error');
+                    shouldHaveReactedOnce(new ErrorWrapper('my error'));
+
+                    assertDerivableAtom(a$).setError('my other error');
+                    a$.set('a');
+                    shouldNotHaveReacted(new ErrorWrapper('my error'));
+                });
+
+                it('should work together with `once`', () => {
+                    startTest({ once: true, stopOnError: true });
+                    shouldNotHaveReacted(unresolved);
+                    a$.set('value');
+                    shouldHaveReactedOnce('value');
+
+                    if (isDerivableAtom(a$)) {
+                        a$.setError('my error');
+                        shouldNotHaveReacted('value');
+                    }
+                });
+
+                isAtom && it('should support a synchronous error without maintaining garbage', () => {
+                    assertDerivableAtom(a$).setError('my error');
+                    let connectionChanges = 0;
+                    a$.connected$.react(() => connectionChanges++, { skipFirst: true });
+
+                    const f$ = startTest({ stopOnError: true });
+
+                    expect((f$ as any)._baseConnectionStopper).toBeUndefined();
+
+                    expect(connectionChanges).toBe(2);
+                    expect(f$.error).toBe('my error');
+                    expect(connectionChanges).toBe(2);
+                });
+
+                isAtom && it('should disconnect after the first error', () => {
+                    let connectionChanges = 0;
+                    a$.connected$.react(() => connectionChanges++, { skipFirst: true });
+
+                    const f$ = startTest({ stopOnError: true });
+
+                    expect(f$.resolved).toBe(false);
+
+                    expect(connectionChanges).toBe(1);
+                    expect((f$ as any)._deriver).toBeFunction();
+
+                    assertDerivableAtom(a$).setError('asynchronous error');
+
+                    expect(connectionChanges).toBe(2);
+                    expect((f$ as any)._deriver).toBeUndefined();
+
+                    expect(f$.error).toBe('asynchronous error');
+                    expect(connectionChanges).toBe(2);
                 });
             });
 

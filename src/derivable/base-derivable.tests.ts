@@ -61,7 +61,7 @@ export function testDerivable(factory: Factories | (<V>(atom: Atom<V>) => Deriva
     testFallbackTo(factories);
     testBooleanFuncs(factories);
     testPluck(factories, isSettable, isAtom);
-    testTake(factories, isSettable, noRollbackSupport);
+    testTake(factories, isSettable, noRollbackSupport, isAtom);
 
     if (isSettable) {
         testSwap(factories);
