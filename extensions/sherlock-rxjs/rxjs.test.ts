@@ -1,12 +1,33 @@
-import { _internal, atom, SettableDerivable } from '@politie/sherlock';
-import { Subject } from 'rxjs';
+import { _internal, atom, DerivableAtom } from '@politie/sherlock';
+import { defer, Subject } from 'rxjs';
 import { fromObservable, toObservable } from './rxjs';
 
 describe('rxjs/rxjs', () => {
     describe('toObservable', () => {
-        let a$: SettableDerivable<string>;
+        let a$: DerivableAtom<string>;
 
         beforeEach(() => { a$ = atom('a'); });
+
+        it('should complete the Observable immediately when the derivable is already final', () => {
+            a$.setFinal('final value');
+            let value = '';
+            let complete = false;
+            toObservable(a$).subscribe(v => value = v, undefined, () => complete = true);
+            expect(value).toBe('final value');
+            expect(complete).toBeTrue();
+        });
+
+        it('should complete the Observable when the derivable becomes final', () => {
+            let value = '';
+            let complete = false;
+            toObservable(a$).subscribe(v => value = v, undefined, () => complete = true);
+            expect(value).toBe('a');
+            expect(complete).toBeFalse();
+
+            a$.setFinal('b');
+            expect(value).toBe('b');
+            expect(complete).toBeTrue();
+        });
 
         it('should complete the Observable when until becomes true', () => {
             let complete = false;
@@ -251,6 +272,38 @@ describe('rxjs/rxjs', () => {
             } catch (e) {
                 expect(e.message).toBe('my error');
             }
+        });
+
+        it('should reconnect after a disconnect, allowing to continue after a completed Observable', () => {
+            let connections = 0;
+            let subj: Subject<string> = 0 as any;
+            const obs = defer(() => (++connections, subj = new Subject<string>()));
+            const when = atom(true);
+            const d$ = fromObservable(obs);
+
+            expect(connections).toBe(0);
+
+            let value = '';
+            d$.react(v => value = v, { when });
+
+            expect(connections).toBe(1);
+            expect(value).toBe('');
+
+            subj.next('a');
+            expect(value).toBe('a');
+
+            subj.complete();
+
+            subj.next('b');
+            expect(value).toBe('a');
+
+            expect(connections).toBe(1);
+            when.set(false);
+            when.set(true);
+            expect(connections).toBe(2);
+
+            subj.next('b');
+            expect(value).toBe('b');
         });
     });
 });
