@@ -265,6 +265,32 @@ export function testTake(factories: Factories, isSettable: boolean, noRollbackSu
                         expect(f$.value).toBe('second observed value');
                     }
                 });
+
+                it('should combine properly with `when`', () => {
+                    const a$ = factories.error<string>('my error');
+                    const when = atom(false);
+                    const f$ = a$.take({ skipFirst: true, when });
+
+                    expect(f$.resolved).toBeFalse();
+                    when.set(true);
+                    expect(f$.error).toBe('my error');
+                    when.set(false);
+                    expect(f$.error).toBe('my error');
+
+                    if (isSettableDerivable(a$)) {
+                        a$.set('the skipped value');
+                        expect(f$.error).toBe('my error');
+                        when.set(true);
+                        expect(f$.resolved).toBeFalse();
+                        when.set(false);
+                        expect(f$.resolved).toBeFalse();
+
+                        a$.set('the first observed value');
+                        expect(f$.resolved).toBeFalse();
+                        when.set(true);
+                        expect(f$.value).toBe('the first observed value');
+                    }
+                });
             });
         });
 

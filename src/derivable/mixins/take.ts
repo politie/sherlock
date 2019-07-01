@@ -33,7 +33,7 @@ export function takeMethod<V>(this: Derivable<V>, { from, when, until, once, sto
 
     return new Derivation<V>(() => {
         if (from$ && !from$.get()) {
-            return resultingState(unresolved);
+            return unresolved;
         }
         if (until$ && until$.get()) {
             return resultingState(FinalWrapper.wrap(previousState$!._value));
@@ -42,11 +42,11 @@ export function takeMethod<V>(this: Derivable<V>, { from, when, until, once, sto
             return previousState$!._value;
         }
         const state = this.getMaybeFinalState();
-        if (skipFirstState$ && (!finalSkipped.equals(skipFirstState$._value))) {
+        if (skipFirstState$ && !finalSkipped.equals(skipFirstState$._value)) {
             if (!isValue(state)) {
                 return resultingState(state);
             }
-            if (skipFirstState$._value === unresolved && isValue(state) || equals(state, skipFirstState$._value)) {
+            if (skipFirstState$._value === unresolved || equals(state, skipFirstState$._value)) {
                 skipFirstState$.set(state);
                 return resultingState(unresolved);
             }
@@ -63,8 +63,7 @@ function toMaybeDerivable<V>(option: TakeOptionValue<V> | undefined, derivable: 
         return;
     }
     const knownConstant = option ? true$ : false$;
-    if (option === defaultValue || option === knownConstant ||
-        option instanceof Atom && option._value instanceof FinalWrapper && option._value.value === defaultValue) {
+    if (option === defaultValue || option instanceof Atom && option._value instanceof FinalWrapper && option._value.value === defaultValue) {
         return;
     }
     if (typeof option === 'function') {
@@ -72,10 +71,9 @@ function toMaybeDerivable<V>(option: TakeOptionValue<V> | undefined, derivable: 
         option = new Derivation(() => fn(derivable)).derive(unwrap);
     }
     if (option instanceof BaseDerivable) {
-        if (finalValue !== undefined) {
-            option = option.mapState<boolean>(v => v === finalValue ? FinalWrapper.wrap(v) : v);
-        }
-        return option;
+        return finalValue !== undefined
+            ? option.mapState<boolean>(v => v === finalValue ? FinalWrapper.wrap(v) : v)
+            : option;
     }
     return knownConstant;
 }

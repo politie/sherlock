@@ -418,7 +418,7 @@ export function testDerivable(factory: Factories | (<V>(atom: Atom<V>) => Deriva
             }
         });
 
-        isAtom && it('should react to getting final', () => {
+        isAtom && it('should react to becoming final', () => {
             const reactor = jest.fn();
             const a$ = assertDerivableAtom(factories.value('a'));
             const b$ = assertDerivableAtom(factories.value('b'));

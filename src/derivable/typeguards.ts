@@ -26,7 +26,8 @@ export function isSettableDerivable(derivable: any) {
 }
 
 /**
- * Returns true iff the provided `derivable` is a DerivableAtom.
+ * Returns true iff the provided `derivable` is a proper DerivableAtom. Note that atoms can become final after which they will not
+ * satisfy the `DerivableAtom` interface anymore.
  *
  * @param obj the object to test
  */
