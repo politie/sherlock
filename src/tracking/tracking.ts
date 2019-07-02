@@ -1,4 +1,5 @@
-import { autoCacheMode, connect, dependencies, dependencyVersions, disconnect, mark, observers } from '../symbols';
+import { autoCacheMode, connect, dependencies, dependencyVersions, disconnect, finalize, mark, observers } from '../symbols';
+import { markFinalInTransaction } from '../transaction';
 import { augmentStack } from '../utils';
 
 let currentRecording: Recording | undefined;
@@ -23,7 +24,7 @@ export function startRecordingObservations(observer: TrackedObserver) {
         }
         r = r._previousRecording;
     }
-    currentRecording = { _observer: observer, _confirmed: 0, _previousRecording: currentRecording };
+    currentRecording = { _observer: observer, _confirmed: 0, _previousRecording: currentRecording, _finalObservables: {} };
 }
 
 /**
@@ -38,7 +39,7 @@ export function stopRecordingObservations() {
         throw new Error('No active recording!');
     }
     currentRecording = recording._previousRecording;
-    const { _confirmed, _observer } = recording;
+    const { _confirmed, _observer, _finalObservables } = recording;
     const deps = _observer[dependencies];
     const depVersions = _observer[dependencyVersions];
 
@@ -51,6 +52,8 @@ export function stopRecordingObservations() {
     for (const dep of deps) {
         depVersions[dep.id] = dep.version;
     }
+
+    Object.values(_finalObservables).forEach(markFinalInTransaction);
 }
 
 /**
@@ -58,6 +61,20 @@ export function stopRecordingObservations() {
  */
 export function isRecordingObservations() {
     return !!currentRecording;
+}
+
+export function allDependenciesAreFinal() {
+    if (!currentRecording) {
+        return false;
+    }
+    const { _confirmed, _finalObservables, _observer } = currentRecording;
+    const deps = _observer[dependencies];
+    for (let i = 0; i < _confirmed; i++) {
+        if (!(deps[i].id in _finalObservables)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 export function independentTracking<V>(fn: () => V): V {
@@ -70,15 +87,27 @@ export function independentTracking<V>(fn: () => V): V {
     }
 }
 
+export function markFinal(observable: TrackedObservable) {
+    if (currentRecording) {
+        currentRecording._finalObservables[observable.id] = observable;
+    } else {
+        markFinalInTransaction(observable);
+    }
+}
+
 /**
  * Records in the current recording (if applicable) that the given `dependency` was observed.
  *
  * @param dependency the observable that is being observed
  */
-export function recordObservation(dependency: TrackedObservable) {
-    if (!currentRecording) {
+export function recordObservation(dependency: TrackedObservable, finalValue: boolean) {
+    if (!currentRecording || dependency.finalized) {
         // Not currently recording observations, nevermind...
         return;
+    }
+
+    if (finalValue) {
+        currentRecording._finalObservables[dependency.id] = dependency;
     }
 
     const { _observer } = currentRecording;
@@ -131,7 +160,12 @@ export interface Observable {
     version: number;
 }
 
-export interface TrackedObservable extends Observable {
+export interface Finalizer {
+    [finalize](): void;
+    finalized: boolean;
+}
+
+export interface TrackedObservable extends Observable, Finalizer {
     connected: boolean;
     [connect](): void;
     [disconnect](): void;
@@ -140,7 +174,6 @@ export interface TrackedObservable extends Observable {
 }
 
 export interface Observer {
-    [disconnect](): void;
     [mark](reactorSink: TrackedReactor[]): void;
 }
 
@@ -224,6 +257,10 @@ interface Recording {
      * @internal
      */
     _confirmed: number;
+    /**
+     * Observables that should be disconnected after the recording.
+     */
+    _finalObservables: Record<string, TrackedObservable>;
     /**
      * The recording to return to after this recording ends, if applicable.
      * @internal

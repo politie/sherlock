@@ -1,8 +1,8 @@
-import { SettableDerivable, State } from '../interfaces';
-import { connect, disconnect, emptyCache, internalGetState, observers } from '../symbols';
+import { MaybeFinalState, SettableDerivable, State } from '../interfaces';
+import { connect, disconnect, emptyCache, internalGetState, rollback } from '../symbols';
 import { independentTracking, recordObservation } from '../tracking';
-import { processChangedAtom } from '../transaction';
-import { augmentStack, equals, ErrorWrapper } from '../utils';
+import { markObservers, processChangedState, registerForRollback } from '../transaction';
+import { augmentStack, equals, ErrorWrapper, FinalWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 
 export abstract class PullDataSource<V> extends BaseDerivable<V> implements SettableDerivable<V> {
@@ -11,7 +11,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
      * `get()` is called when not connected. When connected, it will be called once and then only whenever `checkForChanges()`
      * was called.
      */
-    protected abstract calculateCurrentValue(): State<V>;
+    protected abstract calculateCurrentValue(): MaybeFinalState<V>;
 
     /**
      * When implemented this datasource will become settable and any value that is presented to `set()` will
@@ -24,7 +24,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
      * The last value that was calculated for this datasource. Is only used when connected.
      * @internal
      */
-    private _cachedState: State<V> | typeof emptyCache = emptyCache;
+    protected _cachedState: MaybeFinalState<V> | typeof emptyCache = emptyCache;
 
     /**
      * The current version of the state. This number gets incremented every time the state changes when connected. The version
@@ -32,18 +32,26 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
      */
     version = 0;
 
+    private _isFinal(): this is { _cachedState: FinalWrapper<State<V>> } {
+        return this._cachedState instanceof FinalWrapper;
+    }
+
     /**
      * Returns the current value of this derivable. Automatically records the use of this derivable when inside a derivation.
      */
     [internalGetState]() {
-        // Not connected, so just calculate our value one time.
-        if (!this.connected) {
-            return this._callCalculationFn();
+        if (this.connected) {
+            // We are connected, so we should record our dependencies.
+            recordObservation(this, this._isFinal());
+            return this._cachedState as MaybeFinalState<V>;
         }
 
-        // We are connected, so we should record our dependencies.
-        recordObservation(this);
-        return this._cachedState as State<V>;
+        if (this._isFinal()) {
+            return this._cachedState;
+        }
+
+        // Not connected, so just calculate our value one time.
+        return this._callCalculationFn();
     }
 
     /**
@@ -67,10 +75,11 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
         }
 
         const newValue = independentTracking(() => this._callCalculationFn());
-        if (!equals(newValue, this._cachedState)) {
-            const oldState = this._cachedState;
+        const oldValue = this._cachedState;
+        if (!equals(newValue, oldValue)) {
             this._cachedState = newValue;
-            processChangedAtom(this, oldState, this.version++);
+            registerForRollback(this, oldValue, this.version++);
+            processChangedState(this);
         }
     }
 
@@ -87,22 +96,25 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
     }
 
     /**
+     * Datasources do not participate in transactions, so any derivation that depend on them may not assume anything about their state after a rollback.
+     */
+    [rollback](_oldValue: V, _oldVersion: number) {
+        this.version++;
+        markObservers(this, []);
+    }
+
+    /**
      * Connect this datasource. It will make sure that the internal cache is kept up-to-date and all reactors are notified of changes
      * until disconnected.
      */
     [connect]() {
         super[connect]();
-        this.checkForChanges();
+        this.connected && this.checkForChanges();
     }
 
     [disconnect]() {
         super[disconnect]();
-        this._cachedState = emptyCache;
-        // Disconnect all observers. When an observer disconnects it removes itself from this array.
-        const obs = this[observers];
-        for (let i = obs.length - 1; i >= 0; i--) {
-            obs[i][disconnect]();
-        }
+        this.finalized || (this._cachedState = emptyCache);
     }
 
     /**

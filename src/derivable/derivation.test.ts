@@ -1,22 +1,29 @@
 import { Derivable, SettableDerivable } from '../interfaces';
-import { config, ErrorWrapper } from '../utils';
-import { Atom } from './atom';
+import { unresolved } from '../symbols';
+import { config } from '../utils';
 import { testDerivable } from './base-derivable.tests';
-import { Constant } from './constant';
 import { Derivation } from './derivation';
 import { atom, derive } from './factories';
 
 describe('derivable/derive', () => {
     describe('(standalone)', () => {
-        testDerivable(v => derive(() => { if (v instanceof ErrorWrapper) { throw v.error; } return v; }));
+        testDerivable(
+            {
+                error: error => derive(() => { throw error; }),
+                unresolved: <V>() => derive<V>(() => unresolved),
+                value: value => derive(() => value),
+            }, 'final');
     });
 
     describe('(based on atom)', () => {
-        testDerivable(v => new Atom(v).derive(d => d));
+        testDerivable(a$ => a$.derive(d => d));
     });
 
     describe('(based on constant)', () => {
-        testDerivable(v => new Constant(v).derive(d => d));
+        testDerivable(a$ => {
+            a$.setFinal(a$.getState());
+            return a$.derive(d => d);
+        }, 'final');
     });
 
     testAutocache((a$, deriver) => a$.derive(deriver));

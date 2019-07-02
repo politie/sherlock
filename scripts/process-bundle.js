@@ -1,7 +1,7 @@
 'use strict';
 
 const expectedSizes = {
-    'sherlock': 5,
+    'sherlock': 6,
     'sherlock-proxy': 2,
     'sherlock-rxjs': 1,
     'sherlock-utils': 2,

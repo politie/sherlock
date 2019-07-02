@@ -1,4 +1,4 @@
-import { autoCacheMode, connect, dependencies, dependencyVersions, disconnect, mark, observers } from '../symbols';
+import { autoCacheMode, connect, dependencies, dependencyVersions, disconnect, finalize, mark, observers } from '../symbols';
 import {
     isRecordingObservations, Observer, recordObservation, startRecordingObservations, stopRecordingObservations, TrackedObservable, TrackedObserver
 } from './tracking';
@@ -16,7 +16,6 @@ describe('tracking/tracking', () => {
                 id: 0,
                 [dependencies]: [],
                 [dependencyVersions]: {},
-                [disconnect]: jest.fn(),
                 [mark]: jest.fn(),
             };
         });
@@ -30,6 +29,8 @@ describe('tracking/tracking', () => {
                 [connect]: jest.fn(),
                 [disconnect]: jest.fn(),
                 [mark]: jest.fn(),
+                finalized: false,
+                [finalize]: jest.fn(),
             }));
         });
 
@@ -46,7 +47,7 @@ describe('tracking/tracking', () => {
         describe('after one recording', () => {
             beforeEach(() => {
                 startRecordingObservations(observer);
-                observables.forEach(recordObservation);
+                observables.forEach(obs => recordObservation(obs, false));
                 stopRecordingObservations();
             });
 
@@ -59,10 +60,10 @@ describe('tracking/tracking', () => {
             describe('and a second recording', () => {
                 beforeEach(() => {
                     startRecordingObservations(observer);
-                    recordObservation(observables[1]);
-                    recordObservation(observables[0]);
+                    recordObservation(observables[1], false);
+                    recordObservation(observables[0], false);
                     // Observables should be recorded only once in the dependencies array...
-                    recordObservation(observables[1]);
+                    recordObservation(observables[1], false);
                     stopRecordingObservations();
                 });
 
@@ -89,15 +90,14 @@ describe('tracking/tracking', () => {
                 id: 4,
                 [dependencies]: [],
                 [dependencyVersions]: {},
-                [disconnect]: jest.fn(),
                 [mark]: jest.fn(),
             };
 
             startRecordingObservations(observer);
 
             startRecordingObservations(secondObserver);
-            recordObservation(observables[1]);
-            recordObservation(observables[2]);
+            recordObservation(observables[1], false);
+            recordObservation(observables[2], false);
             stopRecordingObservations();
 
             expect(observer[dependencies]).toHaveLength(0);
@@ -106,8 +106,8 @@ describe('tracking/tracking', () => {
             expect(observables[1][observers]).toEqual([secondObserver]);
             expect(observables[2][observers]).toEqual([secondObserver]);
 
-            recordObservation(observables[0]);
-            recordObservation(observables[1]);
+            recordObservation(observables[0], false);
+            recordObservation(observables[1], false);
 
             stopRecordingObservations();
 
@@ -123,7 +123,6 @@ describe('tracking/tracking', () => {
                 id: 4,
                 [dependencies]: [],
                 [dependencyVersions]: {},
-                [disconnect]: jest.fn(),
                 [mark]: jest.fn(),
             };
             startRecordingObservations(observer);
