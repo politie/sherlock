@@ -1,13 +1,13 @@
-import { observers, unresolved } from '../../symbols';
+import { observers } from '../../symbols';
 import { Atom } from '../atom';
-import { Factory } from '../base-derivable.tests';
+import { Factories } from '../base-derivable.tests';
 import { atom } from '../factories';
 import { isDerivableAtom, isSettableDerivable } from '../typeguards';
 
-export function testFallbackTo(factory: Factory) {
+export function testFallbackTo(factories: Factories) {
     describe('#fallbackTo', () => {
         it('fallback to the result of the provided function', () => {
-            const a$ = factory<string>(unresolved);
+            const a$ = factories.unresolved<string>();
             const fallback = jest.fn(() => 42);
             const b$ = a$.fallbackTo(fallback);
 
@@ -28,7 +28,7 @@ export function testFallbackTo(factory: Factory) {
         });
 
         it('fallback to the value of the provided derivable', () => {
-            const a$ = factory<string>(unresolved);
+            const a$ = factories.unresolved<string>();
             const fallback$ = atom(42);
             Object.defineProperty(fallback$, 'get', { value: jest.fn(fallback$.get) });
             const b$ = a$.fallbackTo(fallback$);
@@ -50,7 +50,7 @@ export function testFallbackTo(factory: Factory) {
         });
 
         it('should not connect to the fallback when not needed', () => {
-            const a$ = factory<string>(unresolved);
+            const a$ = factories.unresolved<string>();
             const fallback$ = new Atom(42);
             const b$ = a$.fallbackTo(fallback$);
 
@@ -72,7 +72,7 @@ export function testFallbackTo(factory: Factory) {
         });
 
         it('fallback to the provided value', () => {
-            const a$ = factory<string>(unresolved);
+            const a$ = factories.unresolved<string>();
             const b$ = a$.fallbackTo(42);
 
             expect(b$.get()).toBe(42);

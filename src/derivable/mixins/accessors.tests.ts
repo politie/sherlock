@@ -1,18 +1,17 @@
 import { SettableDerivable } from '../../interfaces';
-import { internalGetState, observers, unresolved } from '../../symbols';
+import { internalGetState, observers } from '../../symbols';
 import { addObserver } from '../../tracking';
-import { ErrorWrapper } from '../../utils';
-import { $, Factory } from '../base-derivable.tests';
+import { $, Factories } from '../base-derivable.tests';
 import { constant } from '../factories';
 import { isDerivableAtom, isSettableDerivable } from '../typeguards';
 
 /**
  * Tests the `get()` method and `value` accessors.
  */
-export function testAccessors(factory: Factory, isConstant: boolean) {
+export function testAccessors(factories: Factories, isConstant: boolean) {
     describe('#get', () => {
         it('should return the current state', () => {
-            const value$ = factory(123);
+            const value$ = factories.value(123);
             expect(value$.get()).toBe(123);
 
             if (isSettableDerivable(value$)) {
@@ -22,7 +21,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
         });
 
         it(`should ${isConstant ? 'not ' : ''}be recorded inside a derivation'`, () => {
-            const value$ = $(factory(123));
+            const value$ = $(factories.value(123));
             expect(value$[observers]).toHaveLength(0);
             const derived$ = $(value$.derive(value => value + 876));
             expect(value$[observers]).toHaveLength(0);
@@ -40,7 +39,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
         });
 
         it('should throw an Error when unresolved', () => {
-            const a$ = factory<number>(unresolved);
+            const a$ = factories.unresolved<number>();
             expect(() => a$.get()).toThrowError('Could not get value, derivable is unresolved');
 
             if (isSettableDerivable(a$)) {
@@ -55,7 +54,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
         });
 
         it('should throw an error when the derivable is in error state', () => {
-            const a$ = factory<number>(new ErrorWrapper(new Error('my error message')));
+            const a$ = factories.error<number>(new Error('my error message'));
             expect(() => a$.get()).toThrowError('my error message');
 
             if (isSettableDerivable(a$)) {
@@ -72,7 +71,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
 
     describe('#getOr', () => {
         it('should return the current state', () => {
-            const value$ = factory(123);
+            const value$ = factories.value(123);
             expect(value$.getOr('whatever')).toBe(123);
 
             if (isSettableDerivable(value$)) {
@@ -82,7 +81,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
         });
 
         it(`should ${isConstant ? 'not ' : ''}be recorded inside a derivation'`, () => {
-            const value$ = $(factory(123));
+            const value$ = $(factories.value(123));
             expect(value$[observers]).toHaveLength(0);
             const derived$ = $(value$.derive(value => value + 876));
             expect(value$[observers]).toHaveLength(0);
@@ -100,7 +99,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
         });
 
         it('should return the fallback when unresolved', () => {
-            const a$ = factory<number>(unresolved);
+            const a$ = factories.unresolved<number>();
             expect(a$.getOr('fallback')).toBe('fallback');
 
             if (isSettableDerivable(a$)) {
@@ -115,7 +114,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
         });
 
         it('should call the provided function when unresolved', () => {
-            const a$ = factory<number>(unresolved);
+            const a$ = factories.unresolved<number>();
             const fallback = jest.fn(() => 'fallback');
             expect(a$.getOr(fallback)).toBe('fallback');
             expect(fallback).toHaveBeenCalledTimes(1);
@@ -134,7 +133,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
         });
 
         it('should fallback to the provided derivable when unresolved', () => {
-            const a$ = factory<number>(unresolved);
+            const a$ = factories.unresolved<number>();
             const fallback = constant('fallback');
             expect(a$.getOr(fallback)).toBe('fallback');
 
@@ -150,7 +149,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
         });
 
         it('should throw an error when the derivable is in error state', () => {
-            const a$ = factory<number>(new ErrorWrapper(new Error('my error message')));
+            const a$ = factories.error<number>(new Error('my error message'));
             expect(() => a$.getOr('fallback')).toThrowError('my error message');
 
             if (isSettableDerivable(a$)) {
@@ -167,7 +166,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
 
     describe('#value', () => {
         it('should call #getState() when getting the #value property', () => {
-            const a$ = factory('a');
+            const a$ = factories.value('a');
             const s = jest.spyOn($(a$), internalGetState as any);
 
             // Use the getter
@@ -177,7 +176,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
         });
 
         it(`should ${isConstant ? 'not ' : ''}be recorded inside a derivation'`, () => {
-            const value$ = $(factory(123));
+            const value$ = $(factories.value(123));
             expect(value$[observers]).toHaveLength(0);
             const derived$ = $(value$.derive(value => value + 876));
             expect(value$[observers]).toHaveLength(0);
@@ -195,7 +194,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
         });
 
         it('should return undefined when unresolved', () => {
-            const a$ = factory<number>(unresolved);
+            const a$ = factories.unresolved<number>();
             expect(a$.value).toBeUndefined();
 
             if (isSettableDerivable(a$)) {
@@ -209,9 +208,9 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
             }
         });
 
-        if (isSettableDerivable(factory(''))) {
+        if (isSettableDerivable(factories.value(''))) {
             it('should call #set() when setting the #value property', () => {
-                const a$ = factory('a') as SettableDerivable<string>;
+                const a$ = factories.value('a') as SettableDerivable<string>;
                 const s = jest.spyOn(a$, 'set');
 
                 a$.value = 'b';
@@ -222,7 +221,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
         }
 
         it('should not throw an error when the derivable is in error state', () => {
-            const a$ = factory<number>(new ErrorWrapper(new Error('my error message')));
+            const a$ = factories.error<number>(new Error('my error message'));
             expect(a$.value).toBeUndefined();
 
             if (isSettableDerivable(a$)) {
@@ -239,7 +238,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
 
     describe('#resolved', () => {
         it('should return the resolved status', () => {
-            const a$ = factory<string>(unresolved);
+            const a$ = factories.unresolved<string>();
             expect(a$.resolved).toBe(false);
             if (isSettableDerivable(a$)) {
                 a$.set('abc');
@@ -249,14 +248,14 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
                     expect(a$.resolved).toBe(false);
                 }
             }
-            const b$ = factory('with value');
+            const b$ = factories.value('with value');
             expect(b$.resolved).toBe(true);
         });
     });
 
     describe('#errored', () => {
         it('should return the errored status', () => {
-            const a$ = factory<string>(new ErrorWrapper(0));
+            const a$ = factories.error<string>(0);
             expect(a$.resolved).toBe(true);
             expect(a$.errored).toBe(true);
             if (isSettableDerivable(a$)) {
@@ -269,7 +268,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
                     expect(a$.errored).toBe(true);
                 }
             }
-            const b$ = factory('with value');
+            const b$ = factories.value('with value');
             expect(b$.resolved).toBe(true);
             expect(b$.errored).toBe(false);
         });
@@ -277,7 +276,7 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
 
     describe('#error', () => {
         it('should return the error when applicable', () => {
-            const a$ = factory<string>(new ErrorWrapper(0));
+            const a$ = factories.error<string>(0);
             expect(a$.error).toBe(0);
             if (isSettableDerivable(a$)) {
                 a$.set('abc');
@@ -287,8 +286,21 @@ export function testAccessors(factory: Factory, isConstant: boolean) {
                     expect(a$.error).toBe(1);
                 }
             }
-            const b$ = factory('with value');
+            const b$ = factories.value('with value');
             expect(b$.error).toBeUndefined();
+        });
+    });
+
+    describe('#final', () => {
+        it('should return the final status', () => {
+            let a$ = factories.value<string>('value').autoCache();
+            expect(a$.final).toBe(isConstant);
+            if (isDerivableAtom(a$)) {
+                a$.setFinal('value');
+            } else {
+                a$ = factories.value('value', true).autoCache();
+            }
+            expect(a$.final).toBeTrue();
         });
     });
 }

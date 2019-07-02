@@ -4,6 +4,8 @@
     "files.trimTrailingWhitespace": true,
     "editor.formatOnSave": true,
     "files.insertFinalNewline": true,
-    "tslint.autoFixOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": true
+    },
     "typescript.tsdk": "node_modules/typescript/lib"
 }

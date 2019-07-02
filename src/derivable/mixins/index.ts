@@ -4,3 +4,4 @@ export * from './fallback-to';
 export * from './pluck';
 export * from './setters';
 export * from './swap';
+export * from './take';

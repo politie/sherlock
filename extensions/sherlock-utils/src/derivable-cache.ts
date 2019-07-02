@@ -1,4 +1,4 @@
-import { _internal, Derivable, isDerivable, isSettableDerivable, lens, LensDescriptor, SettableDerivable, Unwrappable } from '@politie/sherlock';
+import { _internal, atom, Derivable, isDerivable, isSettableDerivable, lens, LensDescriptor, SettableDerivable, Unwrappable } from '@politie/sherlock';
 
 export interface MapImplementation<K, V> {
     set(key: K, value: V): void;
@@ -24,21 +24,25 @@ export function derivableCache<K, V>(opts: DerivableCacheOptions<K, V>): Derivab
     const { delayedEviction, derivableFactory } = opts;
     const descriptor: LensDescriptor<V, K> = {
         get(key) {
-            let derivable = cache.get(key);
+            const cachedDerivable = cache.get(key);
             // If the cache has a hit for the current key, we know it is already connected (through another proxy).
-            if (derivable) {
-                return derivable.getState();
+            if (cachedDerivable) {
+                return cachedDerivable.getState();
             }
 
             // A cache miss means no other proxy is currently connected.
-            derivable = _internal.independentTracking(() => derivableFactory(key));
-            if (derivable instanceof _internal.Constant) {
-                // Enable connection administration (constants cannot be connected)
-                derivable = derivable.map(v => v);
-            }
+            const newDerivable = _internal.independentTracking(() => derivableFactory(key));
+            // We don't want final-value-optimalization, because that defeats the purpose of the cache. A final value
+            // is not registered as an observed value, which means we cannot track the usage of our newly created derivable.
+            // Therefore introduce a non-final atom (`atom(0)`) in the derivation:
+            const derivable = isSettableDerivable(newDerivable)
+                ? lens({ get: () => newDerivable.get(), set: v => newDerivable.set(v) }, atom(0))
+                : atom(0).derive(() => newDerivable.get());
+
             if (delayedEviction) {
                 derivable.autoCache();
             }
+
             // Get the state of our derivable early so it connects when needed.
             const state = derivable.getState();
             if (derivable.connected) {

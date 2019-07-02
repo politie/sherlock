@@ -2,20 +2,18 @@ import { unresolved } from '../symbols';
 import { config, ErrorWrapper } from '../utils';
 import { Atom } from './atom';
 import { $, testDerivable } from './base-derivable.tests';
-import { Constant } from './constant';
 import { testAutocache } from './derivation.test';
 import { atom, constant, lens } from './factories';
 import { isDerivableAtom } from './typeguards';
 
 describe('derivable/map', () => {
     describe('(based on atom)', () => {
-        testDerivable(v => new Atom(v).map(d => d));
-        testDerivable(v => new Atom(v).map(d => d, d => d), 'atom', 'settable');
+        testDerivable(a$ => a$.map(d => d));
+        testDerivable(a$ => a$.map(d => d, d => d), 'atom', 'settable');
     });
 
     describe('(sandwiched)', () => {
-        testDerivable(v => {
-            const a$ = new Atom(v);
+        testDerivable(a$ => {
             const sw$ = a$.derive(e => e).map(e => e).derive(e => e);
             return lens({
                 get: () => sw$.get(),
@@ -25,14 +23,20 @@ describe('derivable/map', () => {
     });
 
     describe('(based on constant)', () => {
-        testDerivable(v => new Constant(v).map(d => d));
+        testDerivable(a$ => {
+            a$.setFinal(a$.getState());
+            return a$.map(d => d);
+        }, 'final');
     });
 
     describe('(bi-mapping)', () => {
-        testDerivable(v => (new Atom(v === unresolved || v instanceof ErrorWrapper ? v : { value: v })).map(
-            obj => obj.value,
-            value => ({ value }),
-        ), 'atom', 'settable');
+        testDerivable(
+            <V>(a$: Atom<V>) => {
+                const startValue = a$.map(val => ({ val })).getMaybeFinalState();
+                return new Atom(startValue).map(obj => obj.val, val => ({ val }));
+            },
+            'atom', 'settable',
+        );
 
         describe('#set', () => {
             it('should change the current state (and version) of the parent atom', () => {
@@ -90,10 +94,14 @@ describe('derivable/map', () => {
     });
 
     describe('(bi-state-mapping)', () => {
-        testDerivable(v => (new Atom(v === unresolved || v instanceof ErrorWrapper ? v : { value: v })).mapState(
-            obj => obj === unresolved || obj instanceof ErrorWrapper ? obj : obj.value,
-            value => value === unresolved || value instanceof ErrorWrapper ? value : ({ value }),
-        ), 'atom', 'settable');
+        testDerivable(
+            <V>(a$: Atom<V>) => new Atom(a$.map(val => ({ val })).getMaybeFinalState())
+                .mapState(
+                    obj => obj === unresolved || obj instanceof ErrorWrapper ? obj : obj.val,
+                    val => val === unresolved || val instanceof ErrorWrapper ? val : ({ val }),
+                ),
+            'atom', 'settable',
+        );
 
         it('should return a DerivableAtom iff the base is a DerivableAtom', () => {
             const a$ = atom(0);
@@ -153,7 +161,7 @@ describe('derivable/map', () => {
 
     it('should not call the deriver when the cached value is known to be up to date because of a reactor', () => {
         const deriver = jest.fn(() => 123);
-        const d$ = constant(0).map(deriver);
+        const d$ = atom(0).map(deriver);
         d$.get();
         expect(deriver).toHaveBeenCalledTimes(1);
         d$.react(() => 0);

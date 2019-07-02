@@ -1,5 +1,3 @@
-import { unresolved } from '../symbols';
-import { ErrorWrapper } from '../utils';
 import { Atom } from './atom';
 import { testDerivable } from './base-derivable.tests';
 import { lens } from './factories';
@@ -7,13 +5,14 @@ import { Lens } from './lens';
 
 describe('derivable/lens', () => {
     describe('(standalone)', () => {
-        testDerivable(v => {
-            const a$ = new Atom(v);
-            const b$ = new Atom(v);
+        testDerivable(a$ => {
+            const b$ = new Atom(a$.getMaybeFinalState());
             return lens({
                 get: () => {
                     const val = a$.get();
-                    if (b$.get() !== val) { throw new Error(); }
+                    if (b$.get() !== val) {
+                        throw new Error();
+                    }
                     return val;
                 },
                 set: x => {
@@ -25,13 +24,15 @@ describe('derivable/lens', () => {
     });
 
     describe('(standalone with params)', () => {
-        testDerivable(v => {
-            const obj1$ = new Atom(v === unresolved || v instanceof ErrorWrapper ? v : { prop1: v });
-            const obj2$ = new Atom(v === unresolved || v instanceof ErrorWrapper ? v : { prop2: v });
+        testDerivable(a$ => {
+            const obj1$ = new Atom(a$.map(prop1 => ({ prop1 })).getMaybeFinalState());
+            const obj2$ = new Atom(a$.map(prop2 => ({ prop2 })).getMaybeFinalState());
             return lens({
                 get(prop1, prop2) {
                     const val = obj1$.get()[prop1];
-                    if (obj2$.get()[prop2] !== val) { throw new Error(); }
+                    if (obj2$.get()[prop2] !== val) {
+                        throw new Error();
+                    }
                     return val;
                 },
                 set(newValue, prop1, prop2) {

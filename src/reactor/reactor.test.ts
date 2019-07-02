@@ -1,9 +1,10 @@
 import { atom, Atom, BaseDerivable, constant, derive } from '../derivable';
 import { $ } from '../derivable/base-derivable.tests';
-import { Derivable, ReactorOptions, SettableDerivable } from '../interfaces';
+import { Derivable, SettableDerivable } from '../interfaces';
 import { atomically } from '../transaction';
 import { config } from '../utils';
 import { Reactor } from './reactor';
+import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from './testutils.tests';
 
 describe('reactor/reactor', () => {
     let a$: Atom<string>;
@@ -415,14 +416,14 @@ describe('reactor/reactor', () => {
     });
 
     it('should never react twice when `once` is `true`', () => {
-        currentReactorTest = { reactions: 0, value: undefined };
+        const reactor = jest.fn();
         a$.react(v => {
-            currentReactorTest!.reactions++;
-            currentReactorTest!.value = v;
+            reactor(v);
             a$.set(v + '!');
         }, { once: true });
 
-        shouldHaveReactedOnce('a');
+        expect(reactor).toHaveBeenCalledTimes(1);
+        expect(reactor).toHaveBeenCalledWith('a');
     });
 
     it('should support combining `skipFirst` and `once`, skipping 1 and taking 1', () => {
@@ -1008,28 +1009,6 @@ describe('reactor/reactor efficiency', () => {
         shouldHaveBeenCalledOnce(path2Derivation);
     });
 });
-
-let currentReactorTest: { reactions: number, value: any } | undefined;
-export function react<V>(d: Derivable<V>, opts?: Partial<ReactorOptions<V>>) {
-    currentReactorTest = { reactions: 0, value: undefined as any as V };
-    return d.react(v => {
-        currentReactorTest!.reactions++;
-        currentReactorTest!.value = v;
-    }, opts);
-}
-
-afterEach(() => currentReactorTest = undefined);
-
-export function shouldNotHaveReacted() {
-    expect(currentReactorTest!.reactions).toBe(0);
-    currentReactorTest!.reactions = 0;
-}
-
-export function shouldHaveReactedOnce(value: any) {
-    expect(currentReactorTest!.reactions).toBe(1);
-    expect(currentReactorTest!.value).toBe(value);
-    currentReactorTest!.reactions = 0;
-}
 
 function shouldHaveBeenCalledOnce(s: jest.Mock) {
     expect(s).toHaveBeenCalledTimes(1);

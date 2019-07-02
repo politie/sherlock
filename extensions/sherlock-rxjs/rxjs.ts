@@ -1,4 +1,4 @@
-import { _internal, atom, Derivable, ReactorOptions } from '@politie/sherlock';
+import { _internal, atom, Derivable, ErrorWrapper, ReactorOptions } from '@politie/sherlock';
 import { Observable, Subscribable, Subscriber, Unsubscribable } from 'rxjs';
 
 /**
@@ -25,12 +25,12 @@ export function fromObservable<V>(observable: Subscribable<V>): Derivable<V> {
         if (connected) {
             subscription = observable.subscribe(
                 value => atom$.set(value),
-                err => atom$.setError(err),
+                err => atom$.setFinal(new ErrorWrapper(err)),
+                () => atom$.setFinal(atom$.getState()),
             );
         } else {
             subscription!.unsubscribe();
             subscription = undefined;
-            atom$.unset();
         }
     }, { skipFirst: true });
 

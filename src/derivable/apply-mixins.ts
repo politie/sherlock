@@ -6,8 +6,8 @@ import { deriveMethod } from './derivation';
 import { Lens } from './lens';
 import { BiMapping, mapMethod, mapStateMethod } from './map';
 import {
-    andMethod, connected$Getter, erroredGetter, errorGetter, fallbackToMethod, getMethod, getOrMethod, isMethod, notMethod,
-    orMethod, pluckMethod, resolvedGetter, setErrorMethod, settablePluckMethod, swapMethod, unsetMethod, valueGetter, valueSetter,
+    andMethod, connected$Getter, erroredGetter, errorGetter, fallbackToMethod, finalGetter, getMethod, getOrMethod, isMethod, notMethod, orMethod,
+    pluckMethod, resolvedGetter, setErrorMethod, setFinalMethod, settablePluckMethod, swapMethod, takeMethod, unsetMethod, valueGetter, valueSetter,
 } from './mixins';
 
 declare module './base-derivable' {
@@ -18,6 +18,7 @@ declare module './base-derivable' {
         readonly value: Derivable<V>['value'];
         readonly resolved: Derivable<V>['resolved'];
         readonly settable: Derivable<V>['settable'];
+        readonly final: Derivable<V>['final'];
 
         readonly errored: Derivable<V>['errored'];
         readonly error: Derivable<V>['error'];
@@ -29,6 +30,8 @@ declare module './base-derivable' {
         readonly mapState: Derivable<V>['mapState'];
         readonly pluck: Derivable<V>['pluck'];
         readonly fallbackTo: Derivable<V>['fallbackTo'];
+
+        readonly take: Derivable<V>['take'];
 
         readonly and: Derivable<V>['and'];
         readonly or: Derivable<V>['or'];
@@ -44,6 +47,7 @@ Object.defineProperties(BaseDerivable.prototype, {
     value: { get: valueGetter },
     resolved: { get: resolvedGetter },
     settable: { value: false },
+    final: { get: finalGetter },
 
     errored: { get: erroredGetter },
     error: { get: errorGetter },
@@ -55,6 +59,8 @@ Object.defineProperties(BaseDerivable.prototype, {
     mapState: { value: mapStateMethod },
     pluck: { value: pluckMethod },
     fallbackTo: { value: fallbackToMethod },
+
+    take: { value: takeMethod },
 
     and: { value: andMethod },
     or: { value: orMethod },
@@ -68,12 +74,12 @@ declare module './atom' {
 
         readonly unset: DerivableAtom<V>['unset'];
         readonly setError: DerivableAtom<V>['setError'];
+        readonly setFinal: DerivableAtom<V>['setFinal'];
         readonly map: DerivableAtom<V>['map'];
         readonly mapState: DerivableAtom<V>['mapState'];
 
         readonly swap: SettableDerivable<V>['swap'];
         readonly pluck: SettableDerivable<V>['pluck'];
-        readonly settable: true;
     }
 }
 
@@ -108,12 +114,12 @@ declare module './map' {
 
         readonly unset: DerivableAtom<V>['unset'];
         readonly setError: DerivableAtom<V>['setError'];
+        readonly setFinal: DerivableAtom<V>['setFinal'];
         readonly map: DerivableAtom<V>['map'];
         readonly mapState: DerivableAtom<V>['mapState'];
 
         readonly swap: SettableDerivable<V>['swap'];
         readonly pluck: SettableDerivable<V>['pluck'];
-        readonly settable: true;
     }
 }
 
@@ -125,6 +131,8 @@ declare module './map' {
 [Atom, BiMapping].forEach(c => Object.defineProperties(c.prototype, {
     unset: { value: unsetMethod },
     setError: { value: setErrorMethod },
-    settable: { value: true },
+    setFinal: { value: setFinalMethod },
 }));
-Object.defineProperties(Lens.prototype, { settable: { value: true } });
+Object.defineProperties(Lens.prototype, {
+    settable: { value: true },
+});
