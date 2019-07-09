@@ -1,5 +1,5 @@
 import { _internal, atom, DerivableAtom } from '@politie/sherlock';
-import { defer, Subject } from 'rxjs';
+import { defer, of, Subject } from 'rxjs';
 import { fromObservable, toObservable } from './rxjs';
 
 describe('rxjs/rxjs', () => {
@@ -356,6 +356,13 @@ describe('rxjs/rxjs', () => {
             } catch (e) {
                 expect(e.message).toBe('my error');
             }
+        });
+
+        it('should support scalar observables', () => {
+            const obs = of(1);
+            const d$ = fromObservable(obs);
+            expect(d$.value).toBe(undefined);
+            expect(d$.autoCache().value).toBe(1);
         });
     });
 });
