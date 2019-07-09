@@ -61,7 +61,7 @@ export class Atom<V> extends BaseDerivable<V> implements DerivableAtom<V> {
         const oldState = this._value;
         if (!equals(newState, oldState)) {
             if (this._isFinal()) {
-                throw augmentStack(new Error('cannot set a final atom'), this);
+                throw augmentStack(new Error('cannot set a final derivable'), this);
             }
 
             this._value = augmentState(newState, this);

@@ -1,3 +1,4 @@
+import { FinalWrapper } from '../utils';
 import { Atom } from './atom';
 import { testDerivable } from './base-derivable.tests';
 import { lens } from './factories';
@@ -36,8 +37,8 @@ describe('derivable/lens', () => {
                     return val;
                 },
                 set(newValue, prop1, prop2) {
-                    obj1$.swap(obj => ({ ...obj, [prop1]: newValue }));
-                    obj2$.swap(obj => ({ ...obj, [prop2]: newValue }));
+                    obj1$.swap(obj => FinalWrapper.map(newValue, unwrapped => ({ ...obj, [prop1]: unwrapped })) as any);
+                    obj2$.swap(obj => FinalWrapper.map(newValue, unwrapped => ({ ...obj, [prop2]: unwrapped })) as any);
                 },
             }, 'prop1', 'prop2');
         }, 'settable');

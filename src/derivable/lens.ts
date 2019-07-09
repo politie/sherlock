@@ -1,5 +1,6 @@
 import { LensDescriptor, SettableDerivable } from '../interfaces';
 import { atomic } from '../transaction';
+import { augmentStack } from '../utils';
 import { Derivation } from './derivation';
 import { safeUnwrap } from './unwrap';
 
@@ -35,6 +36,9 @@ export class Lens<V> extends Derivation<V> implements SettableDerivable<V> {
      */
     @atomic()
     set(newValue: V) {
+        if (this.finalized) {
+            throw augmentStack(new Error('cannot set a final derivable'), this);
+        }
         if (this._args) {
             this._setter(newValue, ...this._args.map(safeUnwrap));
         } else {
