@@ -418,6 +418,14 @@ export function testDerivable(factory: Factories | (<V>(atom: Atom<V>) => Deriva
             }
         });
 
+        isSettable && it('should throw when trying to set a new value', () => {
+            // Make sure we are not final to begin with, otherwise some factories might create a derivable without a setter.
+            const a$ = assertSettable(factories.value('first value'));
+            a$.set(FinalWrapper.wrap('final value') as any);
+            a$.autoCache().value;
+            expect(() => a$.set('not possible')).toThrowError('cannot set a final derivable');
+        });
+
         isAtom && it('should react to becoming final', () => {
             const reactor = jest.fn();
             const a$ = assertDerivableAtom(factories.value('a'));

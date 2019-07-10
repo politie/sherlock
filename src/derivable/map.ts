@@ -79,6 +79,9 @@ export class BiMapping<B, V> extends Mapping<B, V> implements SettableDerivable<
     }
 
     set(newValue: V) {
+        if (this.finalized) {
+            throw augmentStack(new Error('cannot set a final derivable'), this);
+        }
         // Cast to B here instead of broadening the interface of set method. Should in practice always support State<B>.
         this._base.set(FinalWrapper.map(newValue, v => this._pureSetter(v)) as B);
     }
