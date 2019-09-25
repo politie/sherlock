@@ -2,8 +2,8 @@ import { Derivable, MaybeFinalState, TakeOptions, TakeOptionValue } from '../../
 import { unresolved } from '../../symbols';
 import { equals, ErrorWrapper, FinalWrapper } from '../../utils';
 import { Atom } from '../atom';
-import { BaseDerivable } from '../base-derivable';
 import { Derivation } from '../derivation';
+import { isDerivable } from '../typeguards';
 import { unwrap } from '../unwrap';
 
 const true$ = new Atom(FinalWrapper.wrap(true));
@@ -63,14 +63,14 @@ function toMaybeDerivable<V>(option: TakeOptionValue<V> | undefined, derivable: 
         return;
     }
     const knownConstant = option ? true$ : false$;
-    if (option === defaultValue || option instanceof Atom && option._value instanceof FinalWrapper && option._value.value === defaultValue) {
+    if (isAlwaysEqualTo(option, defaultValue)) {
         return;
     }
     if (typeof option === 'function') {
         const fn = option;
         option = new Derivation(() => fn(derivable)).derive(unwrap);
     }
-    if (option instanceof BaseDerivable) {
+    if (isDerivable(option)) {
         return finalValue !== undefined
             ? option.mapState<boolean>(v => v === finalValue ? FinalWrapper.wrap(v) : v)
             : option;
@@ -81,4 +81,8 @@ function toMaybeDerivable<V>(option: TakeOptionValue<V> | undefined, derivable: 
 function isValue<V>(state: MaybeFinalState<V>): state is V | FinalWrapper<V> {
     const s = FinalWrapper.unwrap(state);
     return s !== unresolved && !(s instanceof ErrorWrapper);
+}
+
+function isAlwaysEqualTo(option: unknown, value: unknown) {
+    return option === value || option instanceof Atom && option._value instanceof FinalWrapper && option._value.value === value;
 }

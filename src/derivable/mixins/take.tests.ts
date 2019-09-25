@@ -183,7 +183,7 @@ export function testTake(factories: Factories, isSettable: boolean, noRollbackSu
 
                 it('should passthrough errors when `when` errored', () => {
                     const a$ = factories.value('value');
-                    const when = factories.error<string>('foo1').derive(() => false);
+                    const when = factories.error<boolean>('foo1');
                     let f$ = a$.take({ when });
                     expect(f$.error).toBe('foo1');
 
