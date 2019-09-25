@@ -188,7 +188,7 @@ export function testTake(factories: Factories, isSettable: boolean, noRollbackSu
                     expect(f$.error).toBe('foo1');
 
                     const b$ = factories.error<string>('foo2');
-                    f$ = b$.take({ when: (v$) => v$.derive(() => false) });
+                    f$ = b$.take({ when: v$ => v$.derive(() => false) });
                     expect(f$.error).toBe('foo2');
                 });
             });
