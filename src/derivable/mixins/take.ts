@@ -38,7 +38,7 @@ export function takeMethod<V>(this: Derivable<V>, { from, when, until, once, sto
         if (until$ && until$.get()) {
             return resultingState(FinalWrapper.wrap(previousState$!._value));
         }
-        if (when$ && !when$.value) {
+        if (when$ && !when$.getOr(false)) {
             return previousState$!._value;
         }
         const state = this.getMaybeFinalState();
