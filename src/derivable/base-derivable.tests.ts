@@ -10,6 +10,7 @@ import { Mapping } from './map';
 import { testAccessors } from './mixins/accessors.tests';
 import { testBooleanFuncs } from './mixins/boolean-methods.tests';
 import { testFallbackTo } from './mixins/fallback-to.tests';
+import { testFlatMap } from './mixins/flat-map.tests';
 import { testPluck } from './mixins/pluck.tests';
 import { testDerivableAtomSetters } from './mixins/setters.tests';
 import { testSwap } from './mixins/swap.tests';
@@ -58,8 +59,9 @@ export function testDerivable(factory: Factories | (<V>(atom: Atom<V>) => Deriva
     };
 
     testAccessors(factories, isConstant);
-    testFallbackTo(factories);
     testBooleanFuncs(factories);
+    testFallbackTo(factories);
+    testFlatMap(factories);
     testPluck(factories, isSettable, isAtom);
     testTake(factories, isSettable, noRollbackSupport, isAtom);
 
