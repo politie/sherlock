@@ -61,7 +61,7 @@ export function testDerivable(factory: Factories | (<V>(atom: Atom<V>) => Deriva
     testAccessors(factories, isConstant);
     testBooleanFuncs(factories);
     testFallbackTo(factories);
-    testFlatMap(factories);
+    testFlatMap(factories, isSettable, isAtom);
     testPluck(factories, isSettable, isAtom);
     testTake(factories, isSettable, noRollbackSupport, isAtom);
 
