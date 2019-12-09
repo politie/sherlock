@@ -10,6 +10,7 @@ import { Mapping } from './map';
 import { testAccessors } from './mixins/accessors.tests';
 import { testBooleanFuncs } from './mixins/boolean-methods.tests';
 import { testFallbackTo } from './mixins/fallback-to.tests';
+import { testFlatMap } from './mixins/flat-map.tests';
 import { testPluck } from './mixins/pluck.tests';
 import { testDerivableAtomSetters } from './mixins/setters.tests';
 import { testSwap } from './mixins/swap.tests';
@@ -58,8 +59,9 @@ export function testDerivable(factory: Factories | (<V>(atom: Atom<V>) => Deriva
     };
 
     testAccessors(factories, isConstant);
-    testFallbackTo(factories);
     testBooleanFuncs(factories);
+    testFallbackTo(factories);
+    testFlatMap(factories, isSettable, isAtom);
     testPluck(factories, isSettable, isAtom);
     testTake(factories, isSettable, noRollbackSupport, isAtom);
 
@@ -416,6 +418,14 @@ export function testDerivable(factory: Factories | (<V>(atom: Atom<V>) => Deriva
                 // Should remain final. No way back.
                 expect(d$.final).toBeTrue();
             }
+        });
+
+        isSettable && it('should throw when trying to set a new value', () => {
+            // Make sure we are not final to begin with, otherwise some factories might create a derivable without a setter.
+            const a$ = assertSettable(factories.value('first value'));
+            a$.set(FinalWrapper.wrap('final value') as any);
+            a$.autoCache().value;
+            expect(() => a$.set('not possible')).toThrowError('cannot set a final derivable');
         });
 
         isAtom && it('should react to becoming final', () => {

@@ -6,8 +6,8 @@ import { deriveMethod } from './derivation';
 import { Lens } from './lens';
 import { BiMapping, mapMethod, mapStateMethod } from './map';
 import {
-    andMethod, connected$Getter, erroredGetter, errorGetter, fallbackToMethod, finalGetter, getMethod, getOrMethod, isMethod, notMethod, orMethod,
-    pluckMethod, resolvedGetter, setErrorMethod, setFinalMethod, settablePluckMethod, swapMethod, takeMethod, unsetMethod, valueGetter, valueSetter,
+    andMethod, connected$Getter, erroredGetter, errorGetter, fallbackToMethod, finalGetter, flatMapMethod, getMethod, getOrMethod, isMethod, notMethod,
+    orMethod, pluckMethod, resolvedGetter, setErrorMethod, setFinalMethod, settablePluckMethod, swapMethod, takeMethod, unsetMethod, valueGetter, valueSetter,
 } from './mixins';
 
 declare module './base-derivable' {
@@ -28,6 +28,7 @@ declare module './base-derivable' {
         readonly derive: Derivable<V>['derive'];
         readonly map: Derivable<V>['map'];
         readonly mapState: Derivable<V>['mapState'];
+        readonly flatMap: Derivable<V>['flatMap'];
         readonly pluck: Derivable<V>['pluck'];
         readonly fallbackTo: Derivable<V>['fallbackTo'];
 
@@ -57,6 +58,7 @@ Object.defineProperties(BaseDerivable.prototype, {
     derive: { value: deriveMethod },
     map: { value: mapMethod },
     mapState: { value: mapStateMethod },
+    flatMap: { value: flatMapMethod },
     pluck: { value: pluckMethod },
     fallbackTo: { value: fallbackToMethod },
 
