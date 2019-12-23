@@ -55,7 +55,7 @@
     },
     "devDependencies": {
         "@types/jest": "^24.0.18",
-        "@types/node": "^12.7.5",
+        "@types/node": "^13.1.0",
         "coveralls": "^3.0.6",
         "gzip-size": "^5.1.1",
         "immutable": "^4.0.0-rc.12",
