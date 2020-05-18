@@ -35,9 +35,7 @@
             "never-prefix"
         ],
         "no-empty-interface": false,
-        "max-classes-per-file": [
-            false
-        ],
+        "max-classes-per-file": false,
         "new-parens": false,
         "object-literal-sort-keys": false,
         "space-before-function-paren": [
@@ -56,7 +54,10 @@
                 "esSpecCompliant": true
             }
         ],
-        "callable-types": false
+        "callable-types": false,
+        "array-type": {
+            "options": "array-simple"
+        }
     },
     "rulesDirectory": []
 }
