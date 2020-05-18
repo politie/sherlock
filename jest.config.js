@@ -27,6 +27,7 @@ module.exports = {
     collectCoverageFrom: [
         '**/*.ts',
         '!**/index.ts',
+        '!**/internal.ts',
         '!**/*.tests.ts',
     ],
 
