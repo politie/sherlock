@@ -220,7 +220,7 @@ export class ProxyDescriptor<V = any, T = V> {
         return target.derive.apply(target, arguments as any);
     }
 
-    $react(reaction: (value: V) => void, options?: Partial<ReactorOptions<any>>): () => void {
+    $react(reaction: (value: V, stop: () => void) => void, options?: Partial<ReactorOptions<any>>): () => void {
         return this.$proxyDescriptor.$derivable.react(reaction, options);
     }
 
