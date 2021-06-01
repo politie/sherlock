@@ -25,6 +25,7 @@
         "lint": "tslint -p tsconfig.json --format codeFrame",
         "copy": "node scripts/copy-boilerplate.js",
         "ci:travis": "npm run build && cat coverage/lcov.info | node_modules/.bin/coveralls",
+        "ci:circle": "npm run build"
     },
     "repository": {
         "type": "git",
