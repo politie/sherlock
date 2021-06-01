@@ -1,7 +1,5 @@
 # Sherlock
 
-[![Coverage Status](https://coveralls.io/repos/github/politie/sherlock/badge.svg?branch=master)](https://coveralls.io/github/politie/sherlock?branch=master)
-
 A reactive programming library for JavaScript applications, built with TypeScript.
 
 ## Introduction
