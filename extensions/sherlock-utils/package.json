@@ -34,7 +34,7 @@
     },
     "homepage": "https://github.com/politie/sherlock/tree/master/extensions/sherlock-utils#readme",
     "dependencies": {
-        "tslib": "^1.9.0"
+        "tslib": "^2.2.0"
     },
     "peerDependencies": {
         "@politie/sherlock": "0.0.0-PLACEHOLDER"

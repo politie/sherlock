@@ -236,7 +236,8 @@ describe('derivable/data-source', () => {
 
             [connect]() {
                 super[connect]();
-                this.intervalId = setInterval(() => this.checkForChanges(), 1000);
+                // needs global. (nodejs, returns Timer) to differentiate from plain JS (returns number)
+                this.intervalId = global.setInterval(() => this.checkForChanges(), 1000);
             }
 
             [disconnect]() {
