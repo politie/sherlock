@@ -1,10 +1,9 @@
-import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
+import visualizer from 'rollup-plugin-visualizer';
 
 const libs = ['sherlock', 'sherlock-proxy', 'sherlock-rxjs', 'sherlock-utils'];
-
-const oldVersion = process.version.startsWith('v8');
 
 export default [].concat.apply([], libs.map(lib => {
     const pkg = require(`./dist/${lib}/package.json`);
@@ -29,8 +28,8 @@ export default [].concat.apply([], libs.map(lib => {
             plugins: [
                 sourcemaps(),
                 commonjs(),
-                resolve(),
-                ...(oldVersion ? [] : [require('rollup-plugin-visualizer')({ filename: `dist/stats/${lib}.umd.html` })]),
+                nodeResolve(),
+                visualizer({ filename: `dist/stats/${lib}.umd.html` }),
             ],
         },
 
@@ -44,8 +43,8 @@ export default [].concat.apply([], libs.map(lib => {
             ],
             plugins: [
                 sourcemaps(),
-                resolve(),
-                ...(oldVersion ? [] : [require('rollup-plugin-visualizer')({ filename: `dist/stats/${lib}.html` })]),
+                nodeResolve(),
+                visualizer({ filename: `dist/stats/${lib}.html` }),
             ],
         },
     ];
