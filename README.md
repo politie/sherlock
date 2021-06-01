@@ -1,8 +1,5 @@
 # Sherlock
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/politie/sherlock.svg)](https://greenkeeper.io/)
-[![Coverage Status](https://coveralls.io/repos/github/politie/sherlock/badge.svg?branch=master)](https://coveralls.io/github/politie/sherlock?branch=master)
-
 A reactive programming library for JavaScript applications, built with TypeScript.
 
 ## Introduction
@@ -24,6 +21,7 @@ Special thanks to @ds300 for creating [derivablejs](https://github.com/ds300/der
 ## Concepts
 
 ### Application state
+
 Sherlock Holmes, the fictional consulting detective, is known for his power of deduction. The Sherlock library applies the power of deduction to application state. This is best explained using a small example. Let's say we're developing an eBook reader (to read about Sherlock Holmes of course). Our naive version is as follow:
 
 ```typescript
@@ -54,11 +52,13 @@ function selectFontSize(newSize: number) {
 ```
 
 Here we can observe two kinds of variables. The first kind contains the real mutable state of the application, that is:
+
 - `currentBook`
 - `currentFontSize`
 - `currentPageNumber`
 
 The rest of the variables is derived state:
+
 - `currentPages`
 - `currentPage`
 
@@ -69,6 +69,7 @@ Another way to explain the difference between real state and derived state is to
 Another thing we can see in the eBook code is that this magic `updateScreen` function needs to be called whenever `currentPage` changes.
 
 ### The power of deduction
+
 The idea behind Sherlock (and other reactive libraries) is to make all derivations *(i.e. calculating derived state)* and reactions *(calling some function whenever something changes)* explicit and automatic.
 
 All real state is put in so-called Atoms, all other state is derived. An Atom has a `#get` and a `#set` method to access or change its state. Using Sherlock, the code could look as follows *(the dollar-suffix is a syntactic indication that a variable has been "sherlocked", i.e. that a variable is derivable)*:
@@ -159,7 +160,6 @@ To execute side effects, you can react to changes on any derivable as seen in an
 
 *More documentation coming soon*
 
-
 ## Transactions
 
 *More documentation coming soon*
@@ -177,7 +177,11 @@ To execute side effects, you can react to changes on any derivable as seen in an
 @politie/sherlock should be used in combination with immutable data structures such as the excellent [Immutable](https://facebook.github.io/immutable-js/) library by Facebook.
 
 ## Differences with derivablejs
+
 ### Fixes to the change propagation algorithm
+
 *Coming soon*
+
 ### Cyclic reactors
+
 *Coming soon*
