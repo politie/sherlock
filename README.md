@@ -1,5 +1,7 @@
 # Sherlock
 
+[![CI](https://github.com/politie/sherlock/actions/workflows/build.yml/badge.svg)](https://github.com/politie/sherlock/actions/workflows/build.yml)
+
 A reactive programming library for JavaScript applications, built with TypeScript.
 
 ## Introduction
