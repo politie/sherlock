@@ -1,8 +1,9 @@
 # Sherlock
 
 [![CI](https://github.com/politie/sherlock/actions/workflows/build.yml/badge.svg)](https://github.com/politie/sherlock/actions/workflows/build.yml)
-![npm version](https://img.shields.io/npm/v/@politie/sherlock)
-![license](https://img.shields.io/npm/l/@politie/sherlock?color=blue)
+[![Known Vulnerabilities](https://snyk.io/test/github/politie/sherlock/badge.svg)](https://snyk.io/test/github/politie/sherlock)
+[![npm version](https://img.shields.io/npm/v/@politie/sherlock)](https://www.npmjs.com/package/@politie/sherlock)
+[![license](https://img.shields.io/npm/l/@politie/sherlock?color=blue)](https://github.com/politie/sherlock/blob/main/LICENSE)
 
 A reactive programming library for JavaScript applications, built with TypeScript.
 
