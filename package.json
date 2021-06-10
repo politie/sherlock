@@ -37,12 +37,6 @@
         "derivation",
         "state"
     ],
-    "contributors": [
-        "Paco van der Linden <pavadeli@gmail.com>",
-        "Wilfred van der Deijl <wilfred@vanderdeijl.com>",
-        "Merijn van der Linden <njirem@gmail.com>",
-        "Wouter Spaak <w.spaak@gmail.com>"
-    ],
     "license": "Apache-2.0",
     "bugs": {
         "url": "https://github.com/politie/sherlock/issues"
