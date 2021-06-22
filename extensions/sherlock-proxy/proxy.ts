@@ -36,7 +36,7 @@ export interface DerivableProxy<V> {
     $derive<R, P>(f: (v: V, ...ps: P[]) => R, ...ps: Array<MaybePacked<P>>): Derivable<R>;
 
     /** {@see Derivable#react} */
-    $react(reaction: (value: V) => void, options?: Partial<ReactorOptions<V>>): () => void;
+    $react(reaction: (value: V, stop: () => void) => void, options?: Partial<ReactorOptions<V>>): () => void;
 }
 
 const IS_DERIVABLE_PROXY = Symbol('isDerivableProxy');
