@@ -1,0 +1,88 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+env:
+  NODE_VERSION: 14.x
+  # This is a public_repo Github personal access token.
+  GITHUB_TOKEN: ${{ secrets.WORKFLOW_GITHUB_TOKEN }}
+
+jobs:
+  bump-version:
+    name: Bump package.json Version
+    runs-on: ubuntu-latest
+    outputs:
+      tag-name: ${{ steps.lib-bump.outputs.newTag }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Bump version
+        id: lib-bump
+        uses: phips28/gh-action-bump-version@v9.0.1
+        with:
+          tag-prefix: 'v'
+          commit-message: '[CI/CD]: bump to {{version}}'
+
+  github-release:
+    name: Release on Github
+    needs: bump-version
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.bump-version.outputs.tag-name }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.bump-version.outputs.tag-name }}
+
+  npm-release:
+    name: Release on NPM
+    needs: bump-version
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.bump-version.outputs.tag-name }}
+
+      - name: Use node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Release sherlock
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          # This is an automation type NPM access token.
+          token: ${{ secrets.WORKFLOW_NPM_TOKEN }}
+          package: dist/sherlock/package.json
+
+      - name: Release sherlock-proxy
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.WORKFLOW_NPM_TOKEN }}
+          package: dist/sherlock-proxy/package.json
+
+      - name: Release sherlock-rxjs
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.WORKFLOW_NPM_TOKEN }}
+          package: dist/sherlock-rxjs/package.json
+
+      - name: Release sherlock-utils
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.WORKFLOW_NPM_TOKEN }}
+          package: dist/sherlock-utils/package.json
