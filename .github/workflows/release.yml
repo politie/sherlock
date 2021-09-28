@@ -6,18 +6,20 @@ on:
 
 env:
   NODE_VERSION: 14.x
-  # This is a public_repo Github personal access token.
-  GITHUB_TOKEN: ${{ secrets.WORKFLOW_GITHUB_TOKEN }}
 
 jobs:
   bump-version:
     name: Bump package.json Version
     runs-on: ubuntu-latest
+    if: ${{ !startsWith(github.event.head_commit.message, '[CI/CD]') }}
     outputs:
       tag-name: ${{ steps.lib-bump.outputs.newTag }}
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          # This is a public_repo Github personal access token.
+          token: ${{ secrets.WORKFLOW_GITHUB_TOKEN }}
 
       - name: Bump version
         id: lib-bump
@@ -29,6 +31,7 @@ jobs:
   github-release:
     name: Release on Github
     needs: bump-version
+    if: startsWith(needs.bump-version.outputs.tag-name, 'v')
     runs-on: ubuntu-latest
 
     steps:
@@ -44,6 +47,7 @@ jobs:
   npm-release:
     name: Release on NPM
     needs: bump-version
+    if: startsWith(needs.bump-version.outputs.tag-name, 'v')
     runs-on: ubuntu-latest
 
     steps:
