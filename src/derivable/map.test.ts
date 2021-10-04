@@ -152,7 +152,7 @@ describe('derivable/map', () => {
             expect(() => d$.get()).toThrowError('the Error');
             try {
                 d$.get();
-            } catch (e) {
+            } catch (e: any) {
                 expect(e.stack).toContain('the Error');
                 expect(e.stack).toContain(d$.creationStack);
             }

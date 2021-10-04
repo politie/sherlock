@@ -194,7 +194,7 @@ export class Derivation<V> extends BaseDerivation<V> implements Derivable<V> {
         try {
             const value = this._args ? this._deriver(...this._args.map(unwrap)) : this._deriver();
             return allDependenciesAreFinal() ? FinalWrapper.wrap(value) : value;
-        } catch (e) {
+        } catch (e: any) {
             if (e === unresolved) {
                 return unresolved;
             }

@@ -676,7 +676,7 @@ describe('reactor/reactor', () => {
             const reactor = new TestReactor($(a$), () => { throw new Error('the Error'); });
             try {
                 reactor._start();
-            } catch (e) {
+            } catch (e: any) {
                 reactor._stop();
                 expect(e.stack).toContain('the Error');
                 expect(e.stack).toContain(reactor.creationStack);

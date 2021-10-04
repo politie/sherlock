@@ -94,7 +94,7 @@ export class ProxyDescriptor<V = any, T = V> {
         const pd = this.$proxyDescriptor;
         try {
             return pd.$derivable.get();
-        } catch (e) {
+        } catch (e: any) {
             // istanbul ignore next: for debug purposes
             throw Object.assign(new Error(`error while getting ${pd.$expression || '$value'}: ${e && e.message}`), { jse_cause: e });
         }
@@ -108,7 +108,7 @@ export class ProxyDescriptor<V = any, T = V> {
         }
         try {
             atom.set(newValue);
-        } catch (e) {
+        } catch (e: any) {
             throw Object.assign(new Error(`error while setting ${expression || '$value'}: ${e && e.message}`), { jse_cause: e });
         }
     }
@@ -120,7 +120,7 @@ export class ProxyDescriptor<V = any, T = V> {
         const pd = this.$proxyDescriptor;
         try {
             return pd.$target.get();
-        } catch (e) {
+        } catch (e: any) {
             // istanbul ignore next: for debug purposes
             throw Object.assign(new Error(`error while getting ${pd.$expression || '$targetValue'}: ${e && e.message}`), { jse_cause: e });
         }
@@ -134,7 +134,7 @@ export class ProxyDescriptor<V = any, T = V> {
         }
         try {
             atom.set(newValue);
-        } catch (e) {
+        } catch (e: any) {
             throw Object.assign(new Error(`error while setting ${expression || '$targetValue'}: ${e && e.message}`), { jse_cause: e });
         }
     }

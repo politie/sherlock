@@ -1,4 +1,5 @@
 import { _internal, atom, DerivableAtom } from '@politie/sherlock';
+import 'expect-more-jest';
 import { defer, of, Subject } from 'rxjs';
 import { fromObservable, toObservable } from './rxjs';
 
@@ -74,9 +75,9 @@ describe('rxjs/rxjs', () => {
 
         it('should stop the internal reactor when the Observable is unobserved', () => {
             const sub = toObservable(a$).subscribe();
-            expect(a$[_internal.symbols.observers]).not.toBeEmpty();
+            expect(a$[_internal.symbols.observers]).not.toBeEmptyArray();
             sub.unsubscribe();
-            expect(a$[_internal.symbols.observers]).toBeEmpty();
+            expect(a$[_internal.symbols.observers]).toBeEmptyArray();
         });
 
         it('should support multiple subscriptions to the returned Observable', () => {
@@ -353,7 +354,7 @@ describe('rxjs/rxjs', () => {
             try {
                 await fromObservable(subj).toPromise();
                 throw new Error('should have thrown an error');
-            } catch (e) {
+            } catch (e: any) {
                 expect(e.message).toBe('my error');
             }
         });

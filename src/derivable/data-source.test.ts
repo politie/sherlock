@@ -207,7 +207,7 @@ describe('derivable/data-source', () => {
             expect(() => d$.get()).toThrowError('the error');
             try {
                 d$.get();
-            } catch (e) {
+            } catch (e: any) {
                 expect(e.stack).toContain('the error');
                 expect(e.stack).toContain(d$.creationStack);
             }

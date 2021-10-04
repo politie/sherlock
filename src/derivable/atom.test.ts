@@ -189,7 +189,7 @@ describe('derivable/atom', () => {
             try {
                 await promise;
                 throw new Error('should have thrown an error');
-            } catch (e) {
+            } catch (e: any) {
                 expect(e.message).toBe('my error');
             }
 
