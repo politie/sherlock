@@ -1,6 +1,7 @@
 export * from './augment-stack';
 export * from './clone';
 export * from './config';
+export * from './is-error';
 export * from './equals';
 export * from './error-wrapper';
 export * from './final-wrapper';

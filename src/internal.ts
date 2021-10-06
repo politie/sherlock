@@ -29,5 +29,5 @@ export {
     stopRecordingObservations,
 } from './tracking';
 export { processChangedState } from './transaction';
-export { augmentStack } from './utils';
+export { augmentStack, isError } from './utils';
 export { symbols };

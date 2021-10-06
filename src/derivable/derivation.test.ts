@@ -1,6 +1,6 @@
 import { Derivable, SettableDerivable } from '../interfaces';
 import { unresolved } from '../symbols';
-import { config } from '../utils';
+import { config, isError } from '../utils';
 import { testDerivable } from './base-derivable.tests';
 import { Derivation } from './derivation';
 import { atom, derive } from './factories';
@@ -41,9 +41,12 @@ describe('derivable/derive', () => {
             expect(() => d$.get()).toThrowError('the Error');
             try {
                 d$.get();
-            } catch (e: any) {
-                expect(e.stack).toContain('the Error');
-                expect(e.stack).toContain(d$.creationStack);
+            } catch (e) {
+                expect(isError(e)).toBeTrue();
+
+                const stack = (e as Error).stack;
+                expect(stack).toContain('the Error');
+                expect(stack).toContain(d$.creationStack);
             }
         });
     });

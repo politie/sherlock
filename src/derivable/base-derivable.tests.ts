@@ -2,7 +2,7 @@ import { fromJS } from 'immutable';
 import 'expect-more-jest';
 import { Derivable, DerivableAtom, SettableDerivable } from '../interfaces';
 import { dependencies, observers, unresolved } from '../symbols';
-import { config, ErrorWrapper, FinalWrapper } from '../utils';
+import { config, ErrorWrapper, FinalWrapper, isError } from '../utils';
 import { Atom } from './atom';
 import { BaseDerivable } from './base-derivable';
 import { Derivation } from './derivation';
@@ -339,9 +339,8 @@ export function testDerivable(factory: Factories | (<V>(atom: Atom<V>) => Deriva
 
             try {
                 await d$.toPromise();
-            } catch (e: any) {
-                expect(e).toBeInstanceOf(Error);
-                expect(e.message).toBe('with a message');
+            } catch (e) {
+                expect(isError(e) && e.message).toBe('with a message');
                 return;
             }
             throw new Error('expected promise to reject');
@@ -542,8 +541,8 @@ export function testDerivable(factory: Factories | (<V>(atom: Atom<V>) => Deriva
             expect(() => d$.get()).toThrowError('the Error');
             try {
                 d$.get();
-            } catch (e: any) {
-                expect(e.stack).toContain(' created:\n');
+            } catch (e) {
+                expect(isError(e) && e.stack).toContain(' created:\n');
             }
         });
     });

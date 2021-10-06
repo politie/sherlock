@@ -354,8 +354,8 @@ describe('rxjs/rxjs', () => {
             try {
                 await fromObservable(subj).toPromise();
                 throw new Error('should have thrown an error');
-            } catch (e: any) {
-                expect(e.message).toBe('my error');
+            } catch (e) {
+                expect(_internal.isError(e) && e.message).toBe('my error');
             }
         });
 

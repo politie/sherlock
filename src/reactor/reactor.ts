@@ -166,8 +166,8 @@ export class Reactor<V> implements Observer {
                 throw new Error('Too deeply nested synchronous cyclical reactions disallowed. Use setImmediate.');
             }
             this._reaction(value, () => this._stop());
-        } catch (e: any) {
-            this._errorHandler(augmentStack(e, this));
+        } catch (e) {
+            this._errorHandler(augmentStack((e as Error), this));
         } finally {
             this._reactionDepth--;
         }

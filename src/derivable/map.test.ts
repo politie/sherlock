@@ -1,5 +1,5 @@
 import { unresolved } from '../symbols';
-import { config, ErrorWrapper } from '../utils';
+import { config, ErrorWrapper, isError } from '../utils';
 import { Atom } from './atom';
 import { $, testDerivable } from './base-derivable.tests';
 import { testAutocache } from './derivation.test';
@@ -152,9 +152,12 @@ describe('derivable/map', () => {
             expect(() => d$.get()).toThrowError('the Error');
             try {
                 d$.get();
-            } catch (e: any) {
-                expect(e.stack).toContain('the Error');
-                expect(e.stack).toContain(d$.creationStack);
+            } catch (e) {
+                expect(isError(e)).toBeTrue();
+
+                const stack = (e as Error).stack;
+                expect(stack).toContain('the Error');
+                expect(stack).toContain(d$.creationStack);
             }
         });
     });

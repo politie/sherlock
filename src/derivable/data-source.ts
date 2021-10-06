@@ -90,8 +90,8 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
     private _callCalculationFn() {
         try {
             return this.calculateCurrentValue();
-        } catch (e: any) {
-            return new ErrorWrapper(augmentStack(e, this));
+        } catch (e) {
+            return new ErrorWrapper(augmentStack((e as Error), this));
         }
     }
 
