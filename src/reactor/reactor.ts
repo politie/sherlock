@@ -167,7 +167,7 @@ export class Reactor<V> implements Observer {
             }
             this._reaction(value, () => this._stop());
         } catch (e) {
-            this._errorHandler(augmentStack(e, this));
+            this._errorHandler(augmentStack((e as Error), this));
         } finally {
             this._reactionDepth--;
         }

@@ -1,3 +1,4 @@
+import { isError } from './is-error';
 import { getOwnPropertyDescriptors } from './get-own-property-descriptors';
 
 /**
@@ -19,6 +20,6 @@ function cloneArray<T extends any[]>(obj: T): T {
         return Object.defineProperties(new (obj.constructor as any)(), getOwnPropertyDescriptors(obj));
     } catch (e) {
         // istanbul ignore next: for debug purposes
-        throw Object.assign(new Error('could not clone Array: ' + (e && e.message)), { jse_cause: e });
+        throw Object.assign(new Error('could not clone Array: ' + (isError(e) && e.message)), { jse_cause: e });
     }
 }

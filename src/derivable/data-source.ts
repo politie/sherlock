@@ -91,7 +91,7 @@ export abstract class PullDataSource<V> extends BaseDerivable<V> implements Sett
         try {
             return this.calculateCurrentValue();
         } catch (e) {
-            return new ErrorWrapper(augmentStack(e, this));
+            return new ErrorWrapper(augmentStack((e as Error), this));
         }
     }
 

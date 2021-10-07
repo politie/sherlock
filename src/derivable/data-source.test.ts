@@ -2,7 +2,7 @@ import { Derivable, MaybeFinalState } from '../interfaces';
 import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from '../reactor/testutils.tests';
 import { connect, dependencies, disconnect } from '../symbols';
 import { basicTransactionsTests } from '../transaction/transaction.tests';
-import { config, FinalWrapper } from '../utils';
+import { config, FinalWrapper, isError } from '../utils';
 import { testDerivable } from './base-derivable.tests';
 import { PullDataSource } from './data-source';
 import { atom } from './factories';
@@ -208,8 +208,11 @@ describe('derivable/data-source', () => {
             try {
                 d$.get();
             } catch (e) {
-                expect(e.stack).toContain('the error');
-                expect(e.stack).toContain(d$.creationStack);
+                expect(isError(e)).toBeTrue();
+
+                const stack = (e as Error).stack;
+                expect(stack).toContain('the error');
+                expect(stack).toContain(d$.creationStack);
             }
         });
     });

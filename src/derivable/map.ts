@@ -36,7 +36,7 @@ export class Mapping<B, V> extends BaseDerivation<V> implements Derivable<V> {
                 return FinalWrapper.map<State<B>, State<V>>(baseValue, v => this._pureGetter(v));
             });
         } catch (e) {
-            return new ErrorWrapper(augmentStack(e, this));
+            return new ErrorWrapper(augmentStack((e as Error), this));
         }
     }
 

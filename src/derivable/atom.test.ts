@@ -1,4 +1,5 @@
 import { Seq } from 'immutable';
+import { isError } from '../utils';
 import { Derivable } from '../interfaces';
 import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from '../reactor/testutils.tests';
 import { txn } from '../transaction/transaction.tests';
@@ -190,7 +191,7 @@ describe('derivable/atom', () => {
                 await promise;
                 throw new Error('should have thrown an error');
             } catch (e) {
-                expect(e.message).toBe('my error');
+                expect(isError(e) && e.message).toBe('my error');
             }
 
             expect(f$.value).toBeUndefined();

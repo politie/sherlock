@@ -198,7 +198,7 @@ export class Derivation<V> extends BaseDerivation<V> implements Derivable<V> {
             if (e === unresolved) {
                 return unresolved;
             }
-            return new ErrorWrapper(augmentStack(e, this));
+            return new ErrorWrapper(augmentStack((e as Error), this));
         } finally {
             --derivationStackDepth;
         }

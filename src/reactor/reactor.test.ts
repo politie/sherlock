@@ -2,7 +2,7 @@ import { atom, Atom, BaseDerivable, constant, derive } from '../derivable';
 import { $ } from '../derivable/base-derivable.tests';
 import { Derivable, SettableDerivable } from '../interfaces';
 import { atomically } from '../transaction';
-import { config } from '../utils';
+import { config, isError } from '../utils';
 import { Reactor } from './reactor';
 import { react, shouldHaveReactedOnce, shouldNotHaveReacted } from './testutils.tests';
 
@@ -678,8 +678,12 @@ describe('reactor/reactor', () => {
                 reactor._start();
             } catch (e) {
                 reactor._stop();
-                expect(e.stack).toContain('the Error');
-                expect(e.stack).toContain(reactor.creationStack);
+
+                expect(isError(e)).toBeTrue();
+
+                const stack = (e as Error).stack;
+                expect(stack).toContain('the Error');
+                expect(stack).toContain(reactor.creationStack);
                 return;
             }
             throw new Error('Reactor did not throw');
