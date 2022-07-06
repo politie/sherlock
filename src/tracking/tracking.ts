@@ -1,6 +1,6 @@
 import { autoCacheMode, connect, dependencies, dependencyVersions, disconnect, finalize, mark, observers } from '../symbols';
 import { markFinalInTransaction } from '../transaction';
-import { augmentStack } from '../utils';
+import { augmentStack } from '../utils/augment-stack';
 
 let currentRecording: Recording | undefined;
 

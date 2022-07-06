@@ -1,7 +1,9 @@
 import { Derivable, MaybeFinalState, SettableDerivable } from '../interfaces';
 import { autoCacheMode, connect, disconnect, finalize, internalGetState, observers } from '../symbols';
 import { independentTracking, isRecordingObservations, maybeDisconnectInNextTick, TrackedObservable, TrackedObserver } from '../tracking';
-import { FinalWrapper, prepareCreationStack, uniqueId } from '../utils';
+import { FinalWrapper } from '../utils/final-wrapper';
+import { prepareCreationStack } from '../utils/augment-stack';
+import { uniqueId } from '../utils/unique-id';
 
 /**
  * The base class for all Derivables. Derivables must extend from this, to be 'tracked' and to classify as a Derivable.
