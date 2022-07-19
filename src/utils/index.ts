@@ -3,7 +3,6 @@ export * from './clone';
 export * from './config';
 export * from './is-error';
 export * from './equals';
-export * from './function-data-source';
 export * from './error-wrapper';
 export * from './final-wrapper';
 export * from './plain-object-detection';

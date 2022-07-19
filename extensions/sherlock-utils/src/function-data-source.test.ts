@@ -1,7 +1,7 @@
-import { atom, isDerivable } from '../derivable'
+import { atom, isDerivable } from '@politie/sherlock';
 import { FunctionDataSource } from './function-data-source';
 
-describe('util/function-data-source', () => {
+describe('sherlock-utils/function-data-source', () => {
     describe('calculate', () => {
         let ds$: FunctionDataSource<{key: string}>;
 

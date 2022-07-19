@@ -2,10 +2,7 @@ import { MaybeFinalState, SettableDerivable, State } from '../interfaces';
 import { connect, disconnect, emptyCache, internalGetState, rollback } from '../symbols';
 import { independentTracking, recordObservation } from '../tracking';
 import { markObservers, processChangedState, registerForRollback } from '../transaction';
-import { augmentStack } from '../utils/augment-stack';
-import { equals } from '../utils/equals'
-import { ErrorWrapper } from '../utils/error-wrapper'
-import { FinalWrapper } from '../utils/final-wrapper'
+import { augmentStack, equals, ErrorWrapper, FinalWrapper } from '../utils';
 import { BaseDerivable } from './base-derivable';
 
 export abstract class PullDataSource<V> extends BaseDerivable<V> implements SettableDerivable<V> {

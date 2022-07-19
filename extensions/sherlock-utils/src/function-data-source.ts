@@ -1,4 +1,4 @@
-import { PullDataSource } from '../derivable/data-source';
+import { PullDataSource } from '@politie/sherlock';
 
 /**
  * Lazy PullDataSource that is based on a plain javascript function that has to supply the value when someone subscribes to this
