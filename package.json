@@ -68,7 +68,7 @@
         "rollup-plugin-visualizer": "^5.5.0",
         "rxjs": "^6.6.7",
         "shelljs": "^0.8.5",
-        "terser": "^5.7.0",
+        "terser": "^5.14.2",
         "ts-jest": "^27.0.2",
         "ts-node": "^10.0.0",
         "tslint": "^6.1.2",
