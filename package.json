@@ -55,7 +55,7 @@
         "@rollup/plugin-commonjs": "^21.0.0",
         "@rollup/plugin-node-resolve": "^13.0.0",
         "@types/jest": "^27.0.2",
-        "@types/node": "^16.10.2",
+        "@types/node": "^18.6.3",
         "expect-more-jest": "^5.4.0",
         "gzip-size": "^6.0.0",
         "immutable": "^4.0.0-rc.12",
