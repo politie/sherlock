@@ -71,7 +71,7 @@ jobs:
         with:
           # This is a granular NPM access token with
           # "Packages and scopes" permission "Read and write"
-          # for this package only.
+          # for the four sherlock packages only.
           token: ${{ secrets.WORKFLOW_NPM_TOKEN }}
           package: dist/sherlock/package.json
 
