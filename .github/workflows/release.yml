@@ -69,7 +69,9 @@ jobs:
       - name: Release sherlock
         uses: JS-DevTools/npm-publish@v1
         with:
-          # This is an automation type NPM access token.
+          # This is a granular NPM access token with
+          # "Packages and scopes" permission "Read and write"
+          # for this package only.
           token: ${{ secrets.WORKFLOW_NPM_TOKEN }}
           package: dist/sherlock/package.json
 
