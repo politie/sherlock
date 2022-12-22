@@ -75,13 +75,13 @@ jobs:
         run: echo "//registry.npmjs.org/:_authToken=$npmToken" >> .npmrc
         
       - name: Release sherlock
-        run: npm publish dist/sherlock
+        run: npm publish ./dist/sherlock
 
       - name: Release sherlock-proxy
-        run: npm publish dist/sherlock-proxy
+        run: npm publish ./dist/sherlock-proxy
 
       - name: Release sherlock-rxjs
-        run: npm publish dist/sherlock-rxjs
+        run: npm publish ./dist/sherlock-rxjs
 
       - name: Release sherlock-utils
-        run: npm publish dist/sherlock-utils
+        run: npm publish ./dist/sherlock-utils
