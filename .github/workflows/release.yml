@@ -66,29 +66,22 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Release sherlock
-        uses: JS-DevTools/npm-publish@v1
-        with:
+      - name: Add token to .npmrc
+        env:
           # This is a granular NPM access token with
           # "Packages and scopes" permission "Read and write"
           # for the four sherlock packages only.
-          token: ${{ secrets.WORKFLOW_NPM_TOKEN }}
-          package: dist/sherlock/package.json
+          npmToken: ${{ secrets.WORKFLOW_NPM_TOKEN }}
+        run: echo "//registry.npmjs.org/:_authToken=$npmToken" >> .npmrc
+        
+      - name: Release sherlock
+        run: npm publish dist/sherlock
 
       - name: Release sherlock-proxy
-        uses: JS-DevTools/npm-publish@v1
-        with:
-          token: ${{ secrets.WORKFLOW_NPM_TOKEN }}
-          package: dist/sherlock-proxy/package.json
+        run: npm publish dist/sherlock-proxy
 
       - name: Release sherlock-rxjs
-        uses: JS-DevTools/npm-publish@v1
-        with:
-          token: ${{ secrets.WORKFLOW_NPM_TOKEN }}
-          package: dist/sherlock-rxjs/package.json
+        run: npm publish dist/sherlock-rxjs
 
       - name: Release sherlock-utils
-        uses: JS-DevTools/npm-publish@v1
-        with:
-          token: ${{ secrets.WORKFLOW_NPM_TOKEN }}
-          package: dist/sherlock-utils/package.json
+        run: npm publish dist/sherlock-utils
