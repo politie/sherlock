@@ -1,6 +1,6 @@
 {
     "name": "@politie/sherlock",
-    "version": "3.4.4",
+    "version": "3.4.6",
     "private": true,
     "description": "A reactive programming library for JavaScript applications, built with TypeScript.",
     "main": "sherlock.cjs.js",
