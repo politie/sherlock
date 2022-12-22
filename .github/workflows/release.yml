@@ -16,14 +16,14 @@ jobs:
       tag-name: ${{ steps.lib-bump.outputs.newTag }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           # This is a public_repo Github personal access token.
           token: ${{ secrets.WORKFLOW_GITHUB_TOKEN }}
 
       - name: Bump version
         id: lib-bump
-        uses: phips28/gh-action-bump-version@v9.0.1
+        uses: phips28/gh-action-bump-version@v9.1.0
         with:
           tag-prefix: 'v'
           commit-message: '[CI/CD]: bump to {{version}}'
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ needs.bump-version.outputs.tag-name }}
 
@@ -51,12 +51,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ needs.bump-version.outputs.tag-name }}
 
       - name: Use node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -66,29 +66,22 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Release sherlock
-        uses: JS-DevTools/npm-publish@v1
-        with:
+      - name: Add token to .npmrc
+        env:
           # This is a granular NPM access token with
           # "Packages and scopes" permission "Read and write"
           # for the four sherlock packages only.
-          token: ${{ secrets.WORKFLOW_NPM_TOKEN }}
-          package: dist/sherlock/package.json
+          npmToken: ${{ secrets.WORKFLOW_NPM_TOKEN }}
+        run: echo "//registry.npmjs.org/:_authToken=$npmToken" >> .npmrc
+        
+      - name: Release sherlock
+        run: npm publish dist/sherlock
 
       - name: Release sherlock-proxy
-        uses: JS-DevTools/npm-publish@v1
-        with:
-          token: ${{ secrets.WORKFLOW_NPM_TOKEN }}
-          package: dist/sherlock-proxy/package.json
+        run: npm publish dist/sherlock-proxy
 
       - name: Release sherlock-rxjs
-        uses: JS-DevTools/npm-publish@v1
-        with:
-          token: ${{ secrets.WORKFLOW_NPM_TOKEN }}
-          package: dist/sherlock-rxjs/package.json
+        run: npm publish dist/sherlock-rxjs
 
       - name: Release sherlock-utils
-        uses: JS-DevTools/npm-publish@v1
-        with:
-          token: ${{ secrets.WORKFLOW_NPM_TOKEN }}
-          package: dist/sherlock-utils/package.json
+        run: npm publish dist/sherlock-utils
