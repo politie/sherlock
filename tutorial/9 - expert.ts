@@ -71,7 +71,7 @@ describe.skip('expert', () => {
             expect(secondHasDerived, 'second after second .get()').to.have.been.calledTwice;
 
             /**
-                          * Notice that the first `Derivable` has only been executed once, even though the second `Derivable` executed twice.
+             * Notice that the first `Derivable` has only been executed once, even though the second `Derivable` executed twice.
              * Now we wait a tick
              */
 
@@ -103,7 +103,7 @@ describe.skip('expert', () => {
      * *Note that a `Derivable` without an input is (hopefully) created only once, so it does not have this problem*
      */
     describe('`derivableCache`', () => {
-                type Stocks = 'GOOGL' | 'MSFT' | 'APPL';
+        type Stocks = 'GOOGL' | 'MSFT' | 'APPL';
         let stockPrice$: SinonStub<[Stocks], DerivableAtom<number>>;
         beforeEach(() => stockPrice$ = stub<[Stocks], DerivableAtom<number>>().callsFake(() => atom.unresolved()));
 
@@ -203,7 +203,7 @@ describe.skip('expert', () => {
              * **Your Turn**
              *
              * *Hint: there is even an `unwrap` helper function for just such an occasion, try it!*
-                          */
+             */
 
             /**
              * But even when you split the setup and the `unwrap`, you may not be out of the woods yet!
@@ -335,7 +335,7 @@ describe.skip('expert', () => {
                 expect(reactSpy).to.have.callCount(__YOUR_TURN__);
                 // The first should be 'GOOGL'
                 expect(lastEmittedHTMLs()[0]).to.contain(__YOUR_TURN__);
-                // The first should be 'APPL'
+                // The second should be 'APPL'
                 expect(lastEmittedHTMLs()[1]).to.contain(__YOUR_TURN__);
 
                 // Now let's resolve the price for APPL
@@ -344,7 +344,7 @@ describe.skip('expert', () => {
                 expect(reactSpy).to.have.callCount(__YOUR_TURN__);
                 // The first should be 'GOOGL'
                 expect(lastEmittedHTMLs()[0]).to.contain(__YOUR_TURN__);
-                // The first should be 'APPL'
+                // The second should be 'APPL'
                 expect(lastEmittedHTMLs()[1]).to.contain(__YOUR_TURN__);
             });
         });
