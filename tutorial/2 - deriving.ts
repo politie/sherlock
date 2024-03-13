@@ -90,7 +90,7 @@ describe.skip('deriving', () => {
      * This can be really powerful, but also dangerous. One of the dangers is shown here.
      */
     it('indirect derivations', () => {
-        const pastTweets = [] as string[];
+        const pastTweets: string[] = [];
         const currentUser$ = atom('Barack');
         function log(tweet: string) {
             pastTweets.push(`${currentUser$.get()} - ${tweet}`);
@@ -122,7 +122,7 @@ describe.skip('deriving', () => {
          * **Your Turn**
          * Time to set your own expectations.
          */
-        expect(pastTweets).to.have.length(2); // Is there a new tweet?
+        expect(pastTweets).to.have.length(__YOUR_TURN__); // Is there a new tweet?
         expect(pastTweets[2]).to.contain(__YOUR_TURN__); // Who sent it? Donald? Or Barack?
         expect(pastTweets[2]).to.contain(__YOUR_TURN__); // What did he tweet?
 
@@ -153,7 +153,7 @@ describe.skip('deriving', () => {
         /**
          * **Your Turn**
          * The FizzBuzz example above can be rewritten using the convenience methods.
-         * This is not how you would normally write it, but it looks like a fun excercise.
+         * This is not how you would normally write it, but it looks like a fun exercise.
          *
          * `fizz$` and `buzz$` can be completed with only `.is(...)`, `.and(...)` and `.or(...)`;
          * Make sure the output of those `Derivable`s is either 'Fizz'/'Buzz' or ''.

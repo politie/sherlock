@@ -19,7 +19,7 @@ describe.skip('advanced', () => {
     it('`constant`', () => {
         /**
          * We cast to `SettableDerivable` to trick TypeScript for this test.
-         * It can be valueable to know what a `constant()` is, though.
+         * It can be valuable to know what a `constant()` is, though.
          * So try and remove the `cast`, see what happens!
          */
         const c = constant('value') as unknown as SettableDerivable<string>;

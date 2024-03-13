@@ -73,8 +73,7 @@ describe.skip('unresolved', () => {
          * **Your Turn**
          * What do you expect?
          */
-        expect(hasReacted).to.have.callCount(__YOUR_TURN__)
-            .and.calledWith(__YOUR_TURN__);
+        expect(hasReacted).to.have.callCount(__YOUR_TURN__);
 
         /**
          * **Your Turn**

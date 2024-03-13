@@ -26,7 +26,7 @@ describe.skip('expert', () => {
              * **Your Turn**
              * `hasDerived` is used in the first derivation. But has it been called at this point?
              */
-            expect(hasDerived).to.not.have.callCount(__YOUR_TURN__);
+            expect(hasDerived).to.have.callCount(__YOUR_TURN__);
 
             mySecondDerivation$.get();
 
@@ -71,7 +71,7 @@ describe.skip('expert', () => {
             expect(secondHasDerived, 'second after second .get()').to.have.been.calledTwice;
 
             /**
-             * Notice that the first `Derivable` has only been executed once, even though the second `Derivable` executed twice.
+                          * Notice that the first `Derivable` has only been executed once, even though the second `Derivable` executed twice.
              * Now we wait a tick
              */
 
@@ -103,7 +103,7 @@ describe.skip('expert', () => {
      * *Note that a `Derivable` without an input is (hopefully) created only once, so it does not have this problem*
      */
     describe('`derivableCache`', () => {
-        type Stocks = 'GOOGL' | 'MSFT' | 'APPL';
+                type Stocks = 'GOOGL' | 'MSFT' | 'APPL';
         let stockPrice$: SinonStub<[Stocks], DerivableAtom<number>>;
         beforeEach(() => stockPrice$ = stub<[Stocks], DerivableAtom<number>>().callsFake(() => atom.unresolved()));
 
@@ -149,7 +149,7 @@ describe.skip('expert', () => {
              * When the setup of a `Derivable` is done inside the same derivation as where `.get()` is called.
              * You may be creating some problems.
              */
-            it('unresolveable values', () => {
+            it('unresolvable values', () => {
                 // First setup an `Atom` with the company we are currently interested in
                 const company$ = atom<Stocks>('GOOGL');
 
@@ -161,9 +161,9 @@ describe.skip('expert', () => {
                 // Because the stockPrice is still `unresolved` the reactor should not have emitted anything yet
                 expect(reactSpy).to.have.not.been.called;
 
-                // Now let's increase the price
+                // Now let's set the price
                 // First we have to get the atom that was given by the `stockPrice$` stub
-                const googlPrice$ = stockPrice$.firstCall.returnValue as DerivableAtom<number>;
+                const googlPrice$ = stockPrice$.firstCall.returnValue;
                 // Check if it is the right `Derivable`
                 expect(googlPrice$.connected).to.be.true;
 
@@ -172,10 +172,9 @@ describe.skip('expert', () => {
 
                 /**
                  * **Your Turn**
-                 * So the value was increased. What do you think happened?
+                 * So the value was set. What do you think happened?
                  */
                 expect(reactSpy).to.have.callCount(__YOUR_TURN__);
-                expect(reactSpy).to.have.been.calledWith(__YOUR_TURN__);
                 // And how many times did the setup run?
                 expect(stockPrice$).to.have.callCount(__YOUR_TURN__);
                 expect(googlPrice$.connected).to.equal(__YOUR_TURN__);
@@ -204,7 +203,7 @@ describe.skip('expert', () => {
              * **Your Turn**
              *
              * *Hint: there is even an `unwrap` helper function for just such an occasion, try it!*
-             */
+                          */
 
             /**
              * But even when you split the setup and the `unwrap`, you may not be out of the woods yet!
@@ -221,7 +220,7 @@ describe.skip('expert', () => {
                      * There is no need derive anything here, so we use `.map()` on `companies$`
                      * And since `companies` is an array of strings, we `.map()` over that array to create an array of `Derivable`s
                      */
-                    .map(companies => companies.map(company => stockPrice$(company)))
+                    .map(companies => companies.map(company => stockPrice$(company) as DerivableAtom<number>))
                     // Then we get the prices from the created `Derivable`s in a separate step
                     .derive(price$s => price$s.map(price$ => price$.value));
 
@@ -310,7 +309,7 @@ describe.skip('expert', () => {
                  */
                 expect(stockPrice$).to.have.callCount(__YOUR_TURN__);
 
-                // Now let's resolve the price
+                // Now let's resolve the price for GOOGL
                 stockPrice$.firstCall.returnValue.set(1079.11);
 
                 /**
@@ -332,6 +331,16 @@ describe.skip('expert', () => {
                  * But did it calculate 'GOOGL' again too?
                  */
                 expect(stockPrice$).to.have.callCount(__YOUR_TURN__);
+
+                expect(reactSpy).to.have.callCount(__YOUR_TURN__);
+                // The first should be 'GOOGL'
+                expect(lastEmittedHTMLs()[0]).to.contain(__YOUR_TURN__);
+                // The first should be 'APPL'
+                expect(lastEmittedHTMLs()[1]).to.contain(__YOUR_TURN__);
+
+                // Now let's resolve the price for APPL
+                stockPrice$.secondCall.returnValue.set(5.07);
+
                 expect(reactSpy).to.have.callCount(__YOUR_TURN__);
                 // The first should be 'GOOGL'
                 expect(lastEmittedHTMLs()[0]).to.contain(__YOUR_TURN__);

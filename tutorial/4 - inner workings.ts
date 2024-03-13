@@ -97,7 +97,8 @@ describe.skip('inner workings', () => {
         /**
          * The state of any `Derivable` can change at any moment.
          * But you don't want to keep a record of the state and changes to a `Derivable` that no one is listening to.
-         * That's why a `Derivable` has to recalculate it's internal state every time `.get()` is called.
+         * That's why a `Derivable` has to recalculate it's internal state every time `.get()` is called. There is however
+         * an exception to this rule (see next test)
          */
     });
 
@@ -304,6 +305,12 @@ describe.skip('inner workings', () => {
 
         // `switch$` is set to false (string)
         switch$.set(false);
+        /**
+         * **Your Turn**
+         * What do you expect?
+         */
+        expect(reacted).to.have.callCount(__YOUR_TURN__);
+
         number$.set(3);
 
         /**
