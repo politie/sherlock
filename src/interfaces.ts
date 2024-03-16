@@ -1,5 +1,5 @@
 import { unresolved } from './symbols';
-import { ErrorWrapper } from './utils';
+import { ErrorWrapper, FinalWrapper } from './utils';
 
 /**
  * Derivable is the base interface of all variants of Sherlock Derivables.
@@ -8,14 +8,36 @@ import { ErrorWrapper } from './utils';
  */
 export interface Derivable<V> {
 
+    /**
+     * Get the current value of the derivable. Throws when the derivable is in an error state or unresolved.
+     */
     get(): V;
 
+    /**
+     * Get the current value of the derivable. Throws when the derivable is in an error state and returns the given fallback when the derivable
+     * is unresolved.
+     *
+     * @param fallback fallback to use when the derivable is unresolved
+     */
     getOr<T>(fallback: Fallback<T>): V | T;
 
+    /**
+     * Returns the current state, never throws.
+     */
     getState(): State<V>;
 
+    getMaybeFinalState(): MaybeFinalState<V>;
+
+    /**
+     * Returns a derivable that falls back to the given `fallback` when the current derivable is unresolved.
+     *
+     * @param fallback fallback to use when the derivable is unresolved
+     */
     fallbackTo<T>(fallback: Fallback<T>): Derivable<V | T>;
 
+    /**
+     * Get the current value of the derivable when applicable, otherwise returns undefined (when in error state or unresolved).
+     */
     readonly value: V | undefined;
 
     readonly resolved: boolean;
@@ -23,6 +45,8 @@ export interface Derivable<V> {
     readonly errored: boolean;
 
     readonly error: any;
+
+    readonly final: boolean;
 
     readonly creationStack?: string;
 
@@ -43,13 +67,22 @@ export interface Derivable<V> {
      *
      * @param f the deriver function
      */
-    derive<R>(f: (v: V) => State<R>): Derivable<R>;
-    derive<R, P1>(f: (v: V, p1: P1) => State<R>, p1: Unwrappable<P1>): Derivable<R>;
-    derive<R, P1, P2>(f: (v: V, p1: P1, p2: P2) => State<R>, p1: Unwrappable<P1>, p2: Unwrappable<P2>): Derivable<R>;
-    derive<R, P>(f: (v: V, ...ps: P[]) => State<R>, ...ps: Array<Unwrappable<P>>): Derivable<R>;
+    derive<R>(f: (v: V) => MaybeFinalState<R>): Derivable<R>;
+    derive<R, P1>(f: (v: V, p1: P1) => MaybeFinalState<R>, p1: Unwrappable<P1>): Derivable<R>;
+    derive<R, P1, P2>(f: (v: V, p1: P1, p2: P2) => MaybeFinalState<R>, p1: Unwrappable<P1>, p2: Unwrappable<P2>): Derivable<R>;
+    derive<R, P>(f: (v: V, ...ps: P[]) => MaybeFinalState<R>, ...ps: Array<Unwrappable<P>>): Derivable<R>;
 
-    map<R>(f: (v: V) => State<R>): Derivable<R>;
-    mapState<R>(f: (v: State<V>) => State<R>): Derivable<R>;
+    map<R>(f: (v: V) => MaybeFinalState<R>): Derivable<R>;
+    mapState<R>(f: (v: State<V>) => MaybeFinalState<R>): Derivable<R>;
+
+    flatMap<R>(f: (v: V) => Derivable<R>): Derivable<R>;
+
+    take(options: Partial<TakeOptions<V>>): Derivable<V>;
+
+    /**
+     * Creates a derivable that has the same state, but update propagation can be pauzed based on the given `options`.
+     */
+    // take(options: TakeOptions<V>): Derivable<V>;
 
     /**
      * Create a derivation that plucks the property with the given key of the current value of the Derivable.
@@ -129,10 +162,10 @@ export interface SettableDerivable<V> extends Derivable<V> {
      *
      * @param descriptor the deriver (get) and transform (set) functions
      */
-    map<R>(get: (baseValue: V) => State<R>): Derivable<R>;
-    map<R>(get: (baseValue: V) => State<R>, set: (newValue: R, oldBaseValue?: V) => V): SettableDerivable<R>;
-    mapState<R>(get: (baseState: State<V>) => State<R>): Derivable<R>;
-    mapState<R>(get: (baseState: State<V>) => State<R>, set: (newValue: R, oldBaseState: State<V>) => V): SettableDerivable<R>;
+    map<R>(get: (baseValue: V) => MaybeFinalState<R>): Derivable<R>;
+    map<R>(get: (baseValue: V) => MaybeFinalState<R>, set: (newValue: R, oldBaseValue?: V) => V): SettableDerivable<R>;
+    mapState<R>(get: (baseState: State<V>) => MaybeFinalState<R>): Derivable<R>;
+    mapState<R>(get: (baseState: State<V>) => MaybeFinalState<R>, set: (newValue: R, oldBaseState: State<V>) => V): SettableDerivable<R>;
 
     /**
      * Create a lens that plucks the property with the given key of the current value of the SettableDerivable.
@@ -156,13 +189,14 @@ export interface SettableDerivable<V> extends Derivable<V> {
 }
 
 export interface DerivableAtom<V> extends SettableDerivable<V> {
-    set(newState: State<V>): void;
+    set(newState: MaybeFinalState<V>): void;
     unset(): void;
     setError(err: any): void;
-    map<R>(get: (baseValue: V) => State<R>): Derivable<R>;
-    map<R>(get: (baseValue: V) => State<R>, set: (newValue: R, oldBaseValue?: V) => V): DerivableAtom<R>;
-    mapState<R>(get: (baseState: State<V>) => State<R>): Derivable<R>;
-    mapState<R>(get: (baseState: State<V>) => State<R>, set: (newValue: State<R>, oldBaseState: State<V>) => State<V>): DerivableAtom<R>;
+    setFinal(state: State<V>): void;
+    map<R>(get: (baseValue: V) => MaybeFinalState<R>): Derivable<R>;
+    map<R>(get: (baseValue: V) => MaybeFinalState<R>, set: (newValue: R, oldBaseValue?: V) => V): DerivableAtom<R>;
+    mapState<R>(get: (baseState: State<V>) => MaybeFinalState<R>): Derivable<R>;
+    mapState<R>(get: (baseState: State<V>) => MaybeFinalState<R>, set: (newValue: State<R>, oldBaseState: State<V>) => State<V>): DerivableAtom<R>;
 }
 
 /**
@@ -174,40 +208,51 @@ export interface LensDescriptor<V, P> {
     set(this: SettableDerivable<V>, newValue: V, ...ps: P[]): void;
 }
 
-export type ReactorOptionValue<V> = Unwrappable<boolean> | ((d: Derivable<V>) => Unwrappable<boolean>);
+export type TakeOptionValue<V> = Unwrappable<boolean> | ((d: Derivable<V>) => Unwrappable<boolean>);
 
 /**
- * The lifecycle options that can be used when creating a new Reactor.
+ * The options that can be given to the `.take()` method.
  */
-export interface ReactorOptions<V> {
+export interface TakeOptions<V> {
     /**
-     * Indicates when the reactor should become active. The reactor is started when `from` becomes true. After that `from` is
+     * Indicates when updates should start being propagated to listeners. Updates are propagated when `from` becomes true. After that `from` is
      * not observed anymore.
      */
-    from: ReactorOptionValue<V>;
+    from: TakeOptionValue<V>;
 
     /**
-     * Indicates when the reactor should stop. The reactor is stopped indefinitely when `until` becomes false.
+     * Indicates when updates should not be propagated anymore. Updates will be stopped indefinitely when `until` becomes `true`.
      */
-    until: ReactorOptionValue<V>;
+    until: TakeOptionValue<V>;
 
     /**
-     * Indicates when the reactor should react, starts and stops the reactor whenever the value changes. The first time
-     * `when` becomes true, `skipFirst` is respected if applicable. After that the reactor will fire each time `when` becomes
+     * Indicates when updates should be propagated, starts and stops the "stream of updates" whenever the value changes. The first time
+     * `when` becomes true, `skipFirst` is respected if applicable. After that updates will propagate each time `when` becomes
      * true.
      */
-    when: ReactorOptionValue<V>;
+    when: TakeOptionValue<V>;
 
     /**
-     * When `true` the reactor will fire only once, after which it will stop indefinitely.
+     * When `true` only one (not `unresolved`) update will propagate, after which it will stop indefinitely.
      */
     once: boolean;
 
     /**
-     * When `true` the reactor will not react the first time it would normally react. After that it has no effect.
+     * When `true` only one error update will propagate, after which it will stop indefinitely.
+     */
+    stopOnError: boolean;
+
+    /**
+     * When `true` any observer will observe `unresolved` in place of the first resolved value. After that it has no effect (i.e. any update,
+     * including `unresolved` will be observed by observers).
      */
     skipFirst: boolean;
+}
 
+/**
+ * The lifecycle options that can be used when creating a new Reactor.
+ */
+export interface ReactorOptions<V> extends TakeOptions<V> {
     /**
      * An errorhandler that gets called when an error is thrown in any upstream derivation or the reactor itself. Any
      * error will not stop the reactor, call the provided stop callback to stop the reactor.
@@ -222,3 +267,5 @@ export declare type Unwrappable<T> = T | Derivable<T>;
 export type Fallback<T> = Unwrappable<T> | (() => T);
 
 export type State<V> = V | typeof unresolved | ErrorWrapper;
+
+export type MaybeFinalState<V> = State<V> | FinalWrapper<State<V>>;

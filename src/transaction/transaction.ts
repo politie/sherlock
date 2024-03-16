@@ -1,5 +1,5 @@
-import { mark, observers, restorableState } from '../symbols';
-import { TrackedObservable, TrackedReactor } from '../tracking';
+import { finalize, mark, observers, rollback } from '../symbols';
+import { Finalizer, Observable, TrackedObservable, TrackedReactor } from '../tracking';
 
 let currentTransaction: Transaction | undefined;
 
@@ -10,23 +10,32 @@ export function inTransaction() {
     return !!currentTransaction;
 }
 
+export function markFinalInTransaction(observable: Finalizer & Observable) {
+    if (currentTransaction) {
+        currentTransaction._finalObservables[observable.id] = observable;
+    } else {
+        observable[finalize]();
+    }
+}
+
+export function registerForRollback<V>(atom: TransactionAtom<V>, oldValue: V, oldVersion: number) {
+    currentTransaction && storeOldValueInTransaction(currentTransaction, atom, oldValue, oldVersion);
+}
+
 /**
  * Processes a changed atom. The observertree starting at this atom will be marked stale. When not inside a transaction all
  * reactors in this tree will also get a chance to fire (otherwise they will be remembered and fired later).
  *
- * @param atom the atom that was changed
+ * @param observable the atom that was changed
  * @param oldValue the previous value of the atom
  * @param oldVersion the previous version number of the atom
  */
-export function processChangedAtom<V>(atom: TrackedObservable | TransactionAtom<V>, oldValue: V, oldVersion: number) {
+export function processChangedState<V>(observable: TrackedObservable | TransactionAtom<V>) {
     if (currentTransaction) {
-        markObservers(atom, currentTransaction._touchedReactors);
-        if (isTransactionAtom(atom)) {
-            storeOldValueInTransaction(currentTransaction, atom, oldValue!, oldVersion!);
-        }
+        markObservers(observable, currentTransaction._touchedReactors);
     } else {
         const reactors: TrackedReactor[] = [];
-        markObservers(atom, reactors);
+        markObservers(observable, reactors);
         reactIfNeeded(reactors);
     }
 }
@@ -47,13 +56,18 @@ interface Transaction {
      * entry in this map.
      * @internal
      */
-    _oldValues: { [id: string]: any };
+    _oldValues: Record<string, any>;
     /**
      * A mapping from atom.id to its version number before this transaction. All atoms in touchedAtoms will have a corresponding
      * entry in this map.
      * @internal
      */
-    _oldVersions: { [id: string]: number };
+    _oldVersions: Record<string, number>;
+    /**
+     * A mapping from derivable.id to commit-listener.
+     * @internal
+     */
+    _finalObservables: Record<string, Finalizer>;
     /**
      * The parent transaction, if applicable, will become active again after this transaction ends and will inherit the
      * touched atoms and reactors.
@@ -63,14 +77,10 @@ interface Transaction {
 }
 
 export interface TransactionAtom<V> extends TrackedObservable {
-    [restorableState]: V;
+    [rollback](value: V, version: number): void;
 }
 
-function isTransactionAtom<V>(obj: TrackedObservable): obj is TransactionAtom<V> {
-    return restorableState in obj;
-}
-
-function markObservers(changedAtom: TrackedObservable, reactorSink: TrackedReactor[]) {
+export function markObservers(changedAtom: TrackedObservable, reactorSink: TrackedReactor[]) {
     for (const observer of changedAtom[observers]) {
         observer[mark](reactorSink);
     }
@@ -175,6 +185,7 @@ function beginTransaction() {
         _touchedAtoms: [],
         _oldValues: {},
         _oldVersions: {},
+        _finalObservables: {},
         _touchedReactors: [],
         _parentTransaction: currentTransaction,
     };
@@ -202,7 +213,10 @@ function commitTransaction() {
         // added to currentTransaction.touchedReactors, therefore we have to
         // do it explicitly here.
         currentTransaction._touchedReactors.push(...ctx._touchedReactors);
+        Object.assign(currentTransaction._finalObservables, ctx._finalObservables);
     } else {
+        // First finalize to make sure we don't erase final values on disconnect.
+        Object.values(ctx._finalObservables).forEach(obx => obx[finalize]());
         // No parent transaction, so we just committed the outermost transaction, let's react.
         reactIfNeeded(ctx._touchedReactors);
     }
@@ -217,11 +231,7 @@ function rollbackTransaction() {
     currentTransaction = ctx._parentTransaction;
 
     // Restore the state of all touched atoms that can be restored using the internalState token.
-    ctx._touchedAtoms.forEach(atom => {
-        atom[restorableState] = ctx._oldValues[atom.id];
-        atom.version = ctx._oldVersions[atom.id];
-        markObservers(atom, []);
-    });
+    ctx._touchedAtoms.forEach(atom => atom[rollback](ctx._oldValues[atom.id], ctx._oldVersions[atom.id]));
 }
 
 function storeOldValueInTransaction<V>(txn: Transaction, atom: TransactionAtom<V>, oldValue: V, oldVersion: number) {

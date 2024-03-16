@@ -1,4 +1,4 @@
-import { Derivable, isDerivable, isSettableDerivable, lens, ReactorOptions, utils } from '@politie/sherlock';
+import { Derivable, isDerivable, isSettableDerivable, lens, ReactorOptions, utils, _internal } from '@politie/sherlock';
 
 /**
  * The base interface for DerivableProxies. Defines only the $-properties and $-methods. Any property accessed with a number or
@@ -36,7 +36,7 @@ export interface DerivableProxy<V> {
     $derive<R, P>(f: (v: V, ...ps: P[]) => R, ...ps: Array<MaybePacked<P>>): Derivable<R>;
 
     /** {@see Derivable#react} */
-    $react(reaction: (value: V) => void, options?: Partial<ReactorOptions<V>>): () => void;
+    $react(reaction: (value: V, stop: () => void) => void, options?: Partial<ReactorOptions<V>>): () => void;
 }
 
 const IS_DERIVABLE_PROXY = Symbol('isDerivableProxy');
@@ -96,7 +96,7 @@ export class ProxyDescriptor<V = any, T = V> {
             return pd.$derivable.get();
         } catch (e) {
             // istanbul ignore next: for debug purposes
-            throw Object.assign(new Error(`error while getting ${pd.$expression || '$value'}: ${e && e.message}`), { jse_cause: e });
+            throw Object.assign(new Error(`error while getting ${pd.$expression || '$value'}: ${_internal.isError(e) && e.message}`), { jse_cause: e });
         }
     }
     set $value(newValue) {
@@ -109,7 +109,7 @@ export class ProxyDescriptor<V = any, T = V> {
         try {
             atom.set(newValue);
         } catch (e) {
-            throw Object.assign(new Error(`error while setting ${expression || '$value'}: ${e && e.message}`), { jse_cause: e });
+            throw Object.assign(new Error(`error while setting ${expression || '$value'}: ${_internal.isError(e) && e.message}`), { jse_cause: e });
         }
     }
 
@@ -122,7 +122,10 @@ export class ProxyDescriptor<V = any, T = V> {
             return pd.$target.get();
         } catch (e) {
             // istanbul ignore next: for debug purposes
-            throw Object.assign(new Error(`error while getting ${pd.$expression || '$targetValue'}: ${e && e.message}`), { jse_cause: e });
+            throw Object.assign(
+                new Error(`error while getting ${pd.$expression || '$targetValue'}: ${_internal.isError(e) && e.message}`),
+                { jse_cause: e },
+            );
         }
     }
     set $targetValue(newValue) {
@@ -135,7 +138,7 @@ export class ProxyDescriptor<V = any, T = V> {
         try {
             atom.set(newValue);
         } catch (e) {
-            throw Object.assign(new Error(`error while setting ${expression || '$targetValue'}: ${e && e.message}`), { jse_cause: e });
+            throw Object.assign(new Error(`error while setting ${expression || '$targetValue'}: ${_internal.isError(e) && e.message}`), { jse_cause: e });
         }
     }
 
@@ -220,7 +223,7 @@ export class ProxyDescriptor<V = any, T = V> {
         return target.derive.apply(target, arguments as any);
     }
 
-    $react(reaction: (value: V) => void, options?: Partial<ReactorOptions<any>>): () => void {
+    $react(reaction: (value: V, stop: () => void) => void, options?: Partial<ReactorOptions<any>>): () => void {
         return this.$proxyDescriptor.$derivable.react(reaction, options);
     }
 

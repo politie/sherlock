@@ -1,4 +1,4 @@
-import { _internal, atom, Derivable, ReactorOptions } from '@politie/sherlock';
+import { _internal, atom, Derivable, ErrorWrapper, ReactorOptions } from '@politie/sherlock';
 import { Observable, Subscribable, Subscriber, Unsubscribable } from 'rxjs';
 
 /**
@@ -21,18 +21,21 @@ export function fromObservable<V>(observable: Subscribable<V>): Derivable<V> {
     const atom$ = atom.unresolved<V>();
 
     let subscription: Unsubscribable | undefined;
-    atom$.connected$.react(connected => {
-        if (connected) {
+    atom$.connected$.react(() => {
+        if (atom$.connected && !subscription) {
             subscription = observable.subscribe(
                 value => atom$.set(value),
-                err => atom$.setError(err),
+                err => atom$.setFinal(new ErrorWrapper(err)),
+                () => atom$.setFinal(atom$.getState()),
             );
-        } else {
-            subscription!.unsubscribe();
-            subscription = undefined;
-            atom$.unset();
         }
-    }, { skipFirst: true });
+        // This is not chained with the previous as an `else` branch, because this can be true immediately after
+        // the subscription occurs. Observables can complete synchronously on subscription.
+        if (!atom$.connected && subscription) {
+            subscription.unsubscribe();
+            subscription = undefined;
+        }
+    });
 
     return atom$;
 }
