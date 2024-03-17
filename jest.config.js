@@ -130,6 +130,7 @@ module.exports = {
     roots: [
         "<rootDir>/src",
         "<rootDir>/extensions",
+        "<rootDir>/tutorial",
     ],
 
     // Allows you to use a custom runner instead of Jest's default test runner

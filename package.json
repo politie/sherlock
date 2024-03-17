@@ -21,11 +21,10 @@
         "tsc:base": "tsc -p scripts/tsconfig.base.json",
         "tsc:extensions": "tsc -p scripts/tsconfig.extensions.json",
         "test": "jest --coverage --runInBand --ci",
-        "watch": "jest --watch",
+        "watch": "jest --watch --testPathIgnorePatterns './tutorial'",
+        "watch:tutorial": "jest --watch ./tutorial",
         "lint": "tslint -p tsconfig.json --format codeFrame",
-        "copy": "node scripts/copy-boilerplate.js",
-        "tutorial": "nodemon --watch tutorial --ext ts --exec npm run tutorial:run",
-        "tutorial:run": "mocha tutorial/**/*.ts -r ts-node/register -r tsconfig-paths/register --reporter landing"
+        "copy": "node scripts/copy-boilerplate.js"
     },
     "repository": {
         "type": "git",
