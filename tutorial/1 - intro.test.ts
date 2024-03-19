@@ -14,7 +14,7 @@ export const __YOUR_TURN__ = {} as any;
  *
  * All specs except the first one are set to `.skip`. Remove this to start on that part of the tutorial.
  *
- * Start the tutorial by running: `npm run tutorial`.
+ * Start the tutorial by running: `npm run watch:tutorial`.
  *
  * *Hint: most methods and functions are fairly well documented in jsDoc, which is easily accessed through TypeScript*
  */
