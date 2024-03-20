@@ -145,7 +145,7 @@ There are three types of Derivables:
 
 - **Derivations**
 
-    Derivations are calculated derived state (deductions if you will) based on other Atoms of Derivations. They can be created with the `#derive` method that is present on all derivables.
+    Derivations are calculated derived state (deductions if you will) based on other Atoms or Derivations. They can be created with the `#derive` method that is present on all derivables.
 
     ```typescript
     const isBrilliant$ = name$.derive(name => name === 'Sherlock');
@@ -190,3 +190,7 @@ To execute side effects, you can react to changes on any derivable as seen in an
 ### Cyclic reactors
 
 *Coming soon*
+
+## Tutorial
+
+To familiarize yourself with all the functionality Sherlock has to offer, you can follow a tutorial. The tutorial consists of a number of Jest test files. It is your job to fix all the broken tests one by one. You can start the tutorial by cloning the repository and executing `npm run watch:tutorial`.
