@@ -206,22 +206,22 @@ describe.skip('advanced', () => {
             /**
              * **Your Turn**
              */
-            const myInverse$ = myAtom$.map(
+            const plusOne$ = myAtom$.map(
                 // This first function is called when getting
                 n => n + 1,
                 // The second is called when setting
                 n => n - 1,
             );
 
-            expect(myInverse$.get()).toEqual(2);
+            expect(plusOne$.get()).toEqual(2);
 
-            myInverse$.set(4);
+            plusOne$.set(4);
 
             /**
              * **Your Turn**
              */
             expect(myAtom$.get()).toEqual(__YOUR_TURN__);
-            expect(myInverse$.get()).toEqual(__YOUR_TURN__);
+            expect(plusOne$.get()).toEqual(__YOUR_TURN__);
         });
     });
 

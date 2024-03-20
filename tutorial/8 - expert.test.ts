@@ -107,7 +107,6 @@ describe.skip('expert', () => {
 
         const reactSpy = jest.fn(val => val);
         beforeEach(() => reactSpy.mockClear());
-        // function reactor(v: any) { reactSpy(v); }
 
         /**
          * If the function to create the `Derivable` is called multiple times, the `Derivable` will be created multiple times.
