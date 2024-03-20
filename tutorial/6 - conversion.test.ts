@@ -1,5 +1,8 @@
-import { pairwise, scan, struct } from '../extensions/sherlock-utils';
-import { atom } from '../src';
+import { fromPromise, pairwise, scan, struct } from '../extensions/sherlock-utils';
+import { fromObservable, toObservable } from '../extensions/sherlock-rxjs';
+
+import { Derivable, atom } from '../src';
+import { Subject } from 'rxjs';
 
 /**
  * **Your Turn**
@@ -11,14 +14,157 @@ describe.skip('conversion', () => {
     /**
      * `@politie/sherlock` has the ability to produce and use Promises
      */
-    describe('promises', () => {
-        it('toPromise', () => {});
-        it('fromPromise', () => {});
+    describe.skip('promises', () => {
+        it('toPromise', done => {
+            const myAtom$ = atom.unresolved<number>();
+            const myAtomPromise = myAtom$.toPromise();
+
+            /**
+             * **Your Turn**
+             * How many times will expect be called?
+             */
+            expect.assertions(__YOUR_TURN__);
+            myAtomPromise.then(value => {
+                /**
+                 * **Your Turn**
+                 * What do you expect the value to be?
+                 */
+                expect(value).toBe(__YOUR_TURN__);
+            }).finally(() => {
+                done();
+            })
+            myAtom$.set(1);
+            myAtom$.set(2);
+            /**
+             * Note: After a value is set on the atom the promise resolves, consecutive setters have no impact on the promise.
+             * If you want to listen to subsequent updates, use toObservable instead of toPromise.
+             */
+        });
+
+        it('fromPromise', async () => {
+            const promise = Promise.resolve(123);
+            const promiseDerivable$: Derivable<number> = fromPromise(promise);
+
+            expect(promiseDerivable$.resolved).toBe(false);
+            expect(promiseDerivable$.final).toBe(false);
+
+            await promise;
+            /**
+             * **Your Turn**
+             * What do you expect the value to be and is the Derivable now in the final state?
+             */
+            expect(promiseDerivable$.get()).toBe(__YOUR_TURN__);
+            expect(promiseDerivable$.final).toBe(__YOUR_TURN__);
+        });
     });
 
-    describe('RxJS', () => {
-        it('toObservable', () => {});
-        it('fromObservable', () => {});
+    /**
+     * `@politie/sherlock` has the ability to produce and use RxJS observables
+     */
+    describe.skip('RxJS', () => {
+        it('toObservable', () => {
+            let currentValue = 0;
+            let complete = false;
+            const myAtom$ = atom(1);
+            toObservable<number>(myAtom$).subscribe({
+                next: (value) => currentValue = value,
+                complete: () => complete = true
+            });
+
+            /**
+             * **Your Turn**
+             * What do you expect the currentValue to be and has the observable completed already?
+             */
+            expect(currentValue).toBe(__YOUR_TURN__);
+            expect(complete).toBe(__YOUR_TURN__);
+
+            myAtom$.set(2);
+            /**
+             * **Your Turn**
+             * What do you expect the currentValue to be and has the observable completed already?
+             */
+            expect(currentValue).toBe(__YOUR_TURN__);
+            expect(complete).toBe(__YOUR_TURN__);
+
+            myAtom$.setFinal(3);
+            /**
+             * **Your Turn**
+             * What do you expect the currentValue to be and has the observable completed already?
+             */
+            expect(currentValue).toBe(__YOUR_TURN__);
+            expect(complete).toBe(__YOUR_TURN__);
+        });
+
+        /**
+         * toObservable supports same options as react such as from, until, when, skipFirst, and once.
+         */
+        it('toObservable supports options', () => {
+            const myAtom$ = atom('a');
+            let complete = false;
+            const values: string[] = [];
+            toObservable<string>(myAtom$, { skipFirst: true, once: true }).subscribe({
+                next: value => values.push(value),
+                complete: () => complete = true
+            });
+            /**
+             * **Your Turn**
+             * What do you expect values to contain and has the observable completed already?
+             */
+            expect(values).toEqual(__YOUR_TURN__);
+            expect(complete).toBe(__YOUR_TURN__);
+
+            myAtom$.set('b');
+            /**
+             * **Your Turn**
+             * What do you expect values to contain and has the observable completed already?
+             */
+            expect(values).toEqual(__YOUR_TURN__);
+            expect(complete).toBe(__YOUR_TURN__);
+
+            myAtom$.set('c');
+            /**
+             * **Your Turn**
+             * What do you expect values to contain and has the observable completed already?
+             */
+            expect(values).toEqual(__YOUR_TURN__);
+            expect(complete).toBe(__YOUR_TURN__);
+        });
+
+        it('fromObservable', () => {
+            let currentValue = 0;
+            const subject$ = new Subject<number>();
+            const derivable$: Derivable<number> = fromObservable(subject$);
+
+            derivable$.react((value => currentValue = value), { until: (value) => value.get() > 2 });
+            expect(derivable$.resolved).toBe(false)
+            /**
+             * Additional challenge: What do you have to do in the setup to make sure the derivable$ is resolved?
+             * Hint: React runs immediately after creation but it needs to receive a value from the
+             * observable Subject.
+             */
+
+            subject$.next(1);
+            /**
+             * **Your Turn**
+             * What do you expect the currentValue is and is the derivable$ resolved?
+             */
+            expect(derivable$.resolved).toBe(__YOUR_TURN__);
+            expect(currentValue).toBe(__YOUR_TURN__);
+
+            subject$.next(2);
+            /**
+             * **Your Turn**
+             * What do you expect values to contain and has the observable completed already?
+             */
+            expect(currentValue).toBe(__YOUR_TURN__);
+
+            subject$.next(3);
+            /**
+             * **Your Turn**
+             * What do you expect values to contain and has the observable completed already?
+             */
+            expect(currentValue).toBe(__YOUR_TURN__);
+        });
     });
 
     /**
