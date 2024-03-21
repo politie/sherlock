@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  NODE_VERSION: 16.x
+  NODE_VERSION: 18.x
 
 jobs:
   bump-version:
@@ -16,14 +16,14 @@ jobs:
       tag-name: ${{ steps.lib-bump.outputs.newTag }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # This is a public_repo Github personal access token.
           token: ${{ secrets.WORKFLOW_GITHUB_TOKEN }}
 
       - name: Bump version
         id: lib-bump
-        uses: phips28/gh-action-bump-version@v9.1.0
+        uses: phips28/gh-action-bump-version@v11.0.4
         with:
           tag-prefix: 'v'
           commit-message: '[CI/CD]: bump to {{version}}'
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ needs.bump-version.outputs.tag-name }}
 
@@ -51,12 +51,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ needs.bump-version.outputs.tag-name }}
 
       - name: Use node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
