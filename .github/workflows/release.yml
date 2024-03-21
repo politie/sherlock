@@ -20,7 +20,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # This is a public_repo Github personal access token.
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Bump version
