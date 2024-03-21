@@ -14,13 +14,12 @@ jobs:
     if: ${{ !startsWith(github.event.head_commit.message, '[CI/CD]') }}
     outputs:
       tag-name: ${{ steps.lib-bump.outputs.newTag }}
-    permissions:
-      contents: write
 
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # This is a public_repo Github personal access token.
+          token: ${{ secrets.WORKFLOW_GITHUB_TOKEN }}
 
       - name: Bump version
         id: lib-bump
