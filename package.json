@@ -67,7 +67,7 @@
         "rollup": "^2.50.5",
         "rollup-plugin-sourcemaps": "^0.6.3",
         "rollup-plugin-visualizer": "^5.5.0",
-        "rxjs": "^6.6.7",
+        "rxjs": "^7.8.1",
         "shelljs": "^0.8.5",
         "terser": "^5.14.2",
         "ts-jest": "^27.0.2",
