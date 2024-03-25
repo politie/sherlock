@@ -133,7 +133,7 @@ describe.skip('conversion', () => {
         it('fromObservable', () => {
             let currentValue = 0;
             const subject$ = new Subject<number>();
-            const derivable$ = fromObservable(subject$);
+            const derivable$: Derivable<number> = fromObservable(subject$);
 
             derivable$.react((value => currentValue = value), { until: (value) => value.get() > 2 });
             expect(derivable$.resolved).toBe(false)
