@@ -130,7 +130,7 @@ describe('rxjs/rxjs', () => {
     describe('fromObservable', () => {
         it('should be unresolved until connected and the first value has been emitted', () => {
             const subj = new Subject<string>();
-            const d$ = fromObservable<string>(subj);
+            const d$ = fromObservable(subj);
 
             expect(d$.resolved).toBe(false);
             let value = '';
@@ -156,7 +156,7 @@ describe('rxjs/rxjs', () => {
 
         it('should subscribe to observable when used to power a reactor', () => {
             const subj = new Subject<string>();
-            const d$ = fromObservable<string>(subj);
+            const d$ = fromObservable(subj);
 
             expect(subj.observers).toHaveLength(0);
 
@@ -207,7 +207,7 @@ describe('rxjs/rxjs', () => {
         it('should disconnect and finalize when the observable completes', () => {
             const subj = new Subject<string>();
             let connections = 0;
-            const d$ = fromObservable<string>(defer(() => (++connections, subj)));
+            const d$ = fromObservable(defer(() => (++connections, subj)));
 
             expect(connections).toBe(0);
 
@@ -277,7 +277,7 @@ describe('rxjs/rxjs', () => {
 
         it('should disconnect when not directly used in a derivation', () => {
             const subj = new Subject<string>();
-            const obs$ = fromObservable<string>(subj);
+            const obs$ = fromObservable(subj);
             const useIt$ = atom(false);
             const derivation$ = useIt$.derive(v => v && obs$.get());
 
@@ -310,7 +310,7 @@ describe('rxjs/rxjs', () => {
         it('should work with a fallback when given and not connected', () => {
             const subj = new Subject<string>();
             const f$ = atom('fallback');
-            const d$ = fromObservable<string>(subj).fallbackTo(f$);
+            const d$ = fromObservable(subj).fallbackTo(f$);
             expect(d$.get()).toBe('fallback');
             expect(subj.observers).toHaveLength(0);
 
