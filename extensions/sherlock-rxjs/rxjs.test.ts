@@ -13,7 +13,10 @@ describe('rxjs/rxjs', () => {
             a$.setFinal('final value');
             let value = '';
             let complete = false;
-            toObservable(a$).subscribe(v => value = v, undefined, () => complete = true);
+            toObservable(a$).subscribe({
+                next: v => value = v,
+                complete: () => complete = true
+            });
             expect(value).toBe('final value');
             expect(complete).toBeTrue();
         });
@@ -21,7 +24,10 @@ describe('rxjs/rxjs', () => {
         it('should complete the Observable when the derivable becomes final', () => {
             let value = '';
             let complete = false;
-            toObservable(a$).subscribe(v => value = v, undefined, () => complete = true);
+            toObservable(a$).subscribe({
+                next: v => value = v,
+                complete:  () => complete = true
+            });
             expect(value).toBe('a');
             expect(complete).toBeFalse();
 
@@ -33,7 +39,10 @@ describe('rxjs/rxjs', () => {
         it('should complete the Observable when until becomes true', () => {
             let complete = false;
             let value = '';
-            toObservable(a$, { until: d$ => d$.get().length > 2 }).subscribe(v => value = v, undefined, () => complete = true);
+            toObservable(a$, { until: d$ => d$.get().length > 2 }).subscribe({
+                next: v => value = v,
+                complete: () => complete = true
+            });
             expect(complete).toBe(false);
             expect(value).toBe('a');
 
@@ -49,7 +58,10 @@ describe('rxjs/rxjs', () => {
         it('should complete the Observable after one value when once is true', () => {
             let complete = false;
             const values: string[] = [];
-            toObservable(a$, { once: true }).subscribe(v => values.push(v), undefined, () => complete = true);
+            toObservable(a$, { once: true }).subscribe({
+                next: v => values.push(v),
+                complete: () => complete = true
+            });
             expect(complete).toBe(true);
             expect(values).toEqual(['a']);
 
@@ -60,7 +72,10 @@ describe('rxjs/rxjs', () => {
         it('should skip the first value if skipFirst is true', () => {
             let complete = false;
             const values: string[] = [];
-            toObservable(a$, { skipFirst: true, once: true }).subscribe(v => values.push(v), undefined, () => complete = true);
+            toObservable(a$, { skipFirst: true, once: true }).subscribe({
+                next: v => values.push(v),
+                complete:  () => complete = true
+            });
             expect(complete).toBe(false);
             expect(Object.keys(values)).toHaveLength(0);
 
@@ -107,7 +122,7 @@ describe('rxjs/rxjs', () => {
 
         it('should not complete on unsubscribe', () => {
             let complete = false;
-            toObservable(a$).subscribe(undefined, undefined, () => complete = true).unsubscribe();
+            toObservable(a$).subscribe({ complete: () => complete = true}).unsubscribe();
             expect(complete).toBe(false);
         });
     });
