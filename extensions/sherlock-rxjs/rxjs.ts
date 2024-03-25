@@ -1,5 +1,5 @@
 import { _internal, atom, Derivable, ErrorWrapper, ReactorOptions } from '@politie/sherlock';
-import { Observable, Subscribable, Subscriber, Unsubscribable } from 'rxjs';
+import { Observable, Subscriber, Unsubscribable } from 'rxjs';
 
 /**
  * Creates an RxJS Observable from a Derivable. Optionally accepts a `ReactorOptions` that governs RxJS emissions
@@ -17,7 +17,7 @@ export function toObservable<V>(derivable: Derivable<V>, options?: Partial<React
     });
 }
 
-export function fromObservable<V>(observable: Subscribable<V>): Derivable<V> {
+export function fromObservable<V>(observable: Observable<V>): Derivable<V> {
     const atom$ = atom.unresolved<V>();
 
     let subscription: Unsubscribable | undefined;
