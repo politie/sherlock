@@ -10,11 +10,11 @@ import { Subject } from 'rxjs';
  */
 export const __YOUR_TURN__ = {} as any;
 
-describe.skip('conversion', () => {
+describe('conversion', () => {
     /**
      * `@politie/sherlock` has the ability to produce and use Promises
      */
-    describe.skip('promises', () => {
+    describe('promises', () => {
         it('toPromise', done => {
             const myAtom$ = atom.unresolved<number>();
             const myAtomPromise = myAtom$.toPromise();
@@ -23,13 +23,13 @@ describe.skip('conversion', () => {
              * **Your Turn**
              * How many times will expect be called?
              */
-            expect.assertions(__YOUR_TURN__);
+            expect.assertions(1);
             myAtomPromise.then(value => {
                 /**
                  * **Your Turn**
                  * What do you expect the value to be?
                  */
-                expect(value).toBe(__YOUR_TURN__);
+                expect(value).toBe(1);
             }).finally(() => {
                 done();
             })
@@ -53,15 +53,15 @@ describe.skip('conversion', () => {
              * **Your Turn**
              * What do you expect the value to be and is the Derivable now in the final state?
              */
-            expect(promiseDerivable$.get()).toBe(__YOUR_TURN__);
-            expect(promiseDerivable$.final).toBe(__YOUR_TURN__);
+            expect(promiseDerivable$.get()).toBe(123);
+            expect(promiseDerivable$.final).toBe(true);
         });
     });
 
     /**
      * `@politie/sherlock` has the ability to produce and use RxJS observables
      */
-    describe.skip('RxJS', () => {
+    describe('RxJS', () => {
         it('toObservable', () => {
             let currentValue = 0;
             let complete = false;
@@ -75,24 +75,24 @@ describe.skip('conversion', () => {
              * **Your Turn**
              * What do you expect the currentValue to be and has the observable completed already?
              */
-            expect(currentValue).toBe(__YOUR_TURN__);
-            expect(complete).toBe(__YOUR_TURN__);
+            expect(currentValue).toBe(1);
+            expect(complete).toBe(false);
 
             myAtom$.set(2);
             /**
              * **Your Turn**
              * What do you expect the currentValue to be and has the observable completed already?
              */
-            expect(currentValue).toBe(__YOUR_TURN__);
-            expect(complete).toBe(__YOUR_TURN__);
+            expect(currentValue).toBe(2);
+            expect(complete).toBe(false);
 
             myAtom$.setFinal(3);
             /**
              * **Your Turn**
              * What do you expect the currentValue to be and has the observable completed already?
              */
-            expect(currentValue).toBe(__YOUR_TURN__);
-            expect(complete).toBe(__YOUR_TURN__);
+            expect(currentValue).toBe(3);
+            expect(complete).toBe(true);
         });
 
         /**
@@ -110,24 +110,24 @@ describe.skip('conversion', () => {
              * **Your Turn**
              * What do you expect values to contain and has the observable completed already?
              */
-            expect(values).toEqual(__YOUR_TURN__);
-            expect(complete).toBe(__YOUR_TURN__);
+            expect(values).toEqual([]);
+            expect(complete).toBe(false);
 
             myAtom$.set('b');
             /**
              * **Your Turn**
              * What do you expect values to contain and has the observable completed already?
              */
-            expect(values).toEqual(__YOUR_TURN__);
-            expect(complete).toBe(__YOUR_TURN__);
+            expect(values).toEqual(['b']);
+            expect(complete).toBe(true);
 
             myAtom$.set('c');
             /**
              * **Your Turn**
              * What do you expect values to contain and has the observable completed already?
              */
-            expect(values).toEqual(__YOUR_TURN__);
-            expect(complete).toBe(__YOUR_TURN__);
+            expect(values).toEqual(['b']);
+            expect(complete).toBe(true);
         });
 
         it('fromObservable', () => {
@@ -148,22 +148,22 @@ describe.skip('conversion', () => {
              * **Your Turn**
              * What do you expect the currentValue is and is the derivable$ resolved?
              */
-            expect(derivable$.resolved).toBe(__YOUR_TURN__);
-            expect(currentValue).toBe(__YOUR_TURN__);
+            expect(derivable$.resolved).toBe(true);
+            expect(currentValue).toBe(1);
 
             subject$.next(2);
             /**
              * **Your Turn**
              * What do you expect values to contain and has the observable completed already?
              */
-            expect(currentValue).toBe(__YOUR_TURN__);
+            expect(currentValue).toBe(2);
 
             subject$.next(3);
             /**
              * **Your Turn**
              * What do you expect values to contain and has the observable completed already?
              */
-            expect(currentValue).toBe(__YOUR_TURN__);
+            expect(currentValue).toBe(2);
         });
     });
 
@@ -171,7 +171,7 @@ describe.skip('conversion', () => {
      * In the `@politie/sherlock-utils` lib, there are a couple of functions that can combine multiple values of a single `Derivable`
      * or combine multiple `Derivable`s into one. We will show a couple of those here.
      */
-    describe.skip('utils', () => {
+    describe('utils', () => {
         /**
          * As the name suggests, `pairwise()` will call the given function with both the current and the previous state.
          *
@@ -187,7 +187,7 @@ describe.skip('conversion', () => {
              * **Your Turn**
              * Now, use `pairwise()`, to subtract the previous value from the current
              */
-            myCounter$.derive(__YOUR_TURN__).react(reactSpy);
+            myCounter$.derive(pairwise((newValue, oldValue) => oldValue ? newValue - oldValue : newValue)).react(reactSpy);
 
             expect(reactSpy).toBeCalledTimes(1);
             expect(reactSpy).lastReturnedWith(1);
@@ -218,7 +218,7 @@ describe.skip('conversion', () => {
              * **Your Turn**
              * Now, use `scan()`, to add all the emitted values together
              */
-            myCounter$.derive(__YOUR_TURN__).react(reactSpy);
+            myCounter$.derive(scan((total, value) => total += value, 0)).react(reactSpy);
 
             expect(reactSpy).toBeCalledTimes(1);
             expect(reactSpy).lastReturnedWith(1);
@@ -275,11 +275,11 @@ describe.skip('conversion', () => {
              * Now have a look at the properties of `myOneAtom$`. Is this what you expect?
              */
             expect(myOneAtom$.get()).toEqual({
-                regularProp: __YOUR_TURN__,
-                string: __YOUR_TURN__,
-                number: __YOUR_TURN__,
+                regularProp: 'new value',
+                string: 'my string',
+                number: 1,
                 sub: {
-                    string: __YOUR_TURN__,
+                    string: 'my new substring',
                 },
             });
         });

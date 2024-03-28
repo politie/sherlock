@@ -1,4 +1,4 @@
-import { atom, Derivable, DerivableAtom } from '../src';
+import { atom, Derivable, DerivableAtom, derive } from '../src';
 
 /**
  * **Your Turn**
@@ -13,7 +13,7 @@ export const __YOUR_TURN__ = {} as any;
  * To support this, `Derivable`s in `@politie/sherlock` support a separate state, called `unresolved`.
  * This indicates that the data is not available yet, but (probably) will be at some point.
  */
-describe.skip('unresolved', () => {
+describe('unresolved', () => {
     /**
      * Let's start by creating an `unresolved` `Derivable`.
      */
@@ -22,13 +22,13 @@ describe.skip('unresolved', () => {
         // Note that you will need to indicate the type of this atom, since it can't be inferred by TypeScript this way.
         const myAtom$ = atom.unresolved<number>();
 
-        expect(myAtom$.resolved).toEqual(__YOUR_TURN__);
+        expect(myAtom$.resolved).toEqual(false);
 
         /**
          * **Your Turn**
          * Resolve the atom, it's pretty easy
          */
-
+        myAtom$.set(1)
         expect(myAtom$.resolved).toBe(true);
     });
 
@@ -41,7 +41,7 @@ describe.skip('unresolved', () => {
          * **Your Turn**
          * Time to create an `unresolved` Atom..
          */
-        const myAtom$: DerivableAtom<string> = __YOUR_TURN__;
+        const myAtom$: DerivableAtom<string> = atom.unresolved<string>();
 
         expect(myAtom$.resolved).toBe(false);
         expect(() => myAtom$.get()).toThrow('Could not get value, derivable is unresolved');
@@ -52,8 +52,8 @@ describe.skip('unresolved', () => {
          * **Your Turn**
          * What do you expect?
          */
-        expect(myAtom$.resolved).toEqual(__YOUR_TURN__);
-        expect(() => myAtom$.get()) // .toThrow() or .not.toThrow();
+        expect(myAtom$.resolved).toEqual(true);
+        expect(() => myAtom$.get()).not.toThrow();
     });
 
     /**
@@ -71,13 +71,13 @@ describe.skip('unresolved', () => {
          * **Your Turn**
          * What do you expect?
          */
-        expect(hasReacted).toBeCalledTimes(__YOUR_TURN__)
+        expect(hasReacted).toBeCalledTimes(0);
 
         /**
          * **Your Turn**
          * Now make the last expect succeed
          */
-
+        myAtom$.set(`woohoow, I was called`)
         expect(myAtom$.resolved).toBe(true);
         expect(hasReacted).toBeCalledTimes(1)
         expect(hasReacted).lastReturnedWith(`woohoow, I was called`);
@@ -96,14 +96,14 @@ describe.skip('unresolved', () => {
          * **Your Turn**
          * Set the value..
          */
-
+        myAtom$.set(`it's alive!`)
         expect(myAtom$.get()).toEqual(`it's alive!`);
 
         /**
          * **Your Turn**
          * Unset the value.. (*Hint: TypeScript is your friend*)
          */
-
+        myAtom$.unset()
         expect(myAtom$.resolved).toBe(false);
     });
 
@@ -120,13 +120,13 @@ describe.skip('unresolved', () => {
          * **Your Turn**
          * Combine the two `Atom`s into one `Derivable`
          */
-        const myDerivable$: Derivable<string> = __YOUR_TURN__;
+        const myDerivable$: Derivable<string> = derive(() => myString$.get() + myOtherString$.get());
 
         /**
          * **Your Turn**
          * Is `myDerivable$` expected to be `resolved`?
          */
-        expect(myDerivable$.resolved).toEqual(__YOUR_TURN__);
+        expect(myDerivable$.resolved).toEqual(false);
 
         // Now let's set one of the two source `Atom`s
         myString$.set('some');
@@ -136,10 +136,10 @@ describe.skip('unresolved', () => {
          * What do you expect to see in `myDerivable$`.
          * And what if we set `myOtherString$`?
          */
-        expect(myDerivable$.resolved).toEqual(__YOUR_TURN__);
+        expect(myDerivable$.resolved).toEqual(false);
         myOtherString$.set('data');
-        expect(myDerivable$.resolved).toEqual(__YOUR_TURN__);
-        expect(myDerivable$.get()).toEqual(__YOUR_TURN__);
+        expect(myDerivable$.resolved).toEqual(true);
+        expect(myDerivable$.get()).toEqual('somedata');
 
         /**
          * **Your Turn**
@@ -147,6 +147,6 @@ describe.skip('unresolved', () => {
          * What do you expect `myDerivable$` to be?
          */
         myString$.unset();
-        expect(myDerivable$.resolved).toEqual(__YOUR_TURN__);
+        expect(myDerivable$.resolved).toEqual(false);
     });
 });

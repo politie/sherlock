@@ -7,7 +7,7 @@ import { atom, DerivableAtom, derive } from '../src';
  */
 export const __YOUR_TURN__ = {} as any;
 
-describe.skip('expert', () => {
+describe('expert', () => {
     describe('`.autoCache()`', () => {
         /**
          * If a `.get()` is called on a `Derivable` all derivations will be executed.
@@ -24,7 +24,7 @@ describe.skip('expert', () => {
              * **Your Turn**
              * `hasDerived` is used in the first derivation. But has it been called at this point?
              */
-            expect(hasDerived).toBeCalledTimes(__YOUR_TURN__);
+            expect(hasDerived).toBeCalledTimes(0);
 
             mySecondDerivation$.get();
 
@@ -33,7 +33,7 @@ describe.skip('expert', () => {
              * Now that we have gotten `mySecondDerivation$`, which calls `.get()` on the first multiple times.
              * How many times has the first `Derivable` actually executed it's derivation?
              */
-            expect(hasDerived).toBeCalledTimes(__YOUR_TURN__); // how many times?
+            expect(hasDerived).toBeCalledTimes(3); // how many times?
         });
 
         /**
@@ -52,7 +52,7 @@ describe.skip('expert', () => {
              * Use `.autoCache()` on one of the `Derivable`s below. To make the expectations pass.
              */
             const myAtom$ = atom(true);
-            const myFirstDerivation$ = myAtom$.derive(firstHasDerived);
+            const myFirstDerivation$ = myAtom$.derive(firstHasDerived).autoCache();
             const mySecondDerivation$ = myFirstDerivation$.derive(() => secondHasDerived(myFirstDerivation$.get() + myFirstDerivation$.get()));
 
             expect(firstHasDerived).toBeCalledTimes(0);     // first before .get()
@@ -84,8 +84,8 @@ describe.skip('expert', () => {
              * **Your Turn**
              * Now what do you expect?
              */
-            expect(firstHasDerived).toBeCalledTimes(__YOUR_TURN__);  // How many times was it called?
-            expect(secondHasDerived).toBeCalledTimes(__YOUR_TURN__); // How many times was it called?
+            expect(firstHasDerived).toBeCalledTimes(1);     // How many times was it called?
+            expect(secondHasDerived).toBeCalledTimes(1);    // How many times was it called?
         });
     });
 
@@ -133,7 +133,7 @@ describe.skip('expert', () => {
              * But does that apply here?
              * How many times has the setup run, for the price `Derivable`.
              */
-            expect(stockPrice$).toBeCalledTimes(__YOUR_TURN__);
+            expect(stockPrice$).toBeCalledTimes(2);
 
             /** Can you explain this behavior? */
         });
@@ -172,10 +172,10 @@ describe.skip('expert', () => {
                  * **Your Turn**
                  * So the value was set. What do you think happened?
                  */
-                expect(reactSpy).toBeCalledTimes(__YOUR_TURN__);
+                expect(reactSpy).toBeCalledTimes(0);
                 // And how many times did the setup run?
-                expect(stockPrice$).toBeCalledTimes(__YOUR_TURN__);
-                expect(googlPrice$.connected).toBe(__YOUR_TURN__);
+                expect(stockPrice$).toBeCalledTimes(2);
+                expect(googlPrice$.connected).toBe(false);
 
                 /**
                  * Can you explain this behavior?
@@ -201,6 +201,9 @@ describe.skip('expert', () => {
              * **Your Turn**
              *
              * *Hint: there is even an `unwrap` helper function for just such an occasion, try it!*
+             *
+             *  const priceCompany$ = company$.derive(company => stockPrice$(company) as DerivableAtom<number>);
+             *  const price$ = priceCompany$.derive(priceCompany => unwrap(priceCompany));
              */
 
             /**
@@ -242,8 +245,8 @@ describe.skip('expert', () => {
                  * **Your Turn**
                  * So the value was increased. What do you think happened now?
                  */
-                expect(reactSpy).toBeCalledTimes(__YOUR_TURN__);
-                expect(reactSpy).lastReturnedWith([__YOUR_TURN__]);
+                expect(reactSpy).toBeCalledTimes(2);
+                expect(reactSpy).lastReturnedWith([1079.11]);
 
                 /**
                  * So that worked, now let's try and add another company to the list
@@ -257,8 +260,8 @@ describe.skip('expert', () => {
                  * With both 'GOOGL' and 'APPL' in the list, what do we expect as an output?
                  * We had a price for 'GOOGL', but not for 'APPL'...
                  */
-                expect(reactSpy).toBeCalledTimes(__YOUR_TURN__);
-                expect(reactSpy).lastReturnedWith([__YOUR_TURN__, __YOUR_TURN__]);
+                expect(reactSpy).toBeCalledTimes(3);
+                expect(reactSpy).lastReturnedWith([undefined, undefined]);
             });
         });
         /**
@@ -308,7 +311,7 @@ describe.skip('expert', () => {
                  *
                  * Has anything changed, by using the `derivableCache`?
                  */
-                expect(stockPrice$).toBeCalledTimes(__YOUR_TURN__);
+                expect(stockPrice$).toBeCalledTimes(1);
 
                 // Now let's resolve the price for GOOGL
                 const googlePrice$: DerivableAtom<number> = stockPrice$.mock.results[0].value;
@@ -319,10 +322,10 @@ describe.skip('expert', () => {
                  * Last time this caused the setup to run again, resolving to `unresolved` yet again.
                  * What happens this time? Has the setup run again?
                  */
-                expect(stockPrice$).toBeCalledTimes(__YOUR_TURN__);
+                expect(stockPrice$).toBeCalledTimes(1);
                 // Ok, but did it update the HTML?
-                expect(reactSpy).toBeCalledTimes(__YOUR_TURN__);
-                expect(lastEmittedHTMLs()[0]).toContain(__YOUR_TURN__);
+                expect(reactSpy).toBeCalledTimes(2);
+                expect(lastEmittedHTMLs()[0]).toContain("1079.11");
 
                 // Last chance, what if we add a company
                 companies$.swap(current => [...current, 'APPL']);
@@ -332,23 +335,23 @@ describe.skip('expert', () => {
                  * Now the `stockPrice$` function should have at least run again for 'APPL'.
                  * But did it calculate 'GOOGL' again too?
                  */
-                expect(stockPrice$).toBeCalledTimes(__YOUR_TURN__);
+                expect(stockPrice$).toBeCalledTimes(2);
 
-                expect(reactSpy).toBeCalledTimes(__YOUR_TURN__);
+                expect(reactSpy).toBeCalledTimes(3);
                 // The first should be 'GOOGL'
-                expect(lastEmittedHTMLs()[0]).toContain(__YOUR_TURN__);
+                expect(lastEmittedHTMLs()[0]).toContain("1079.11");
                 // The second should be 'APPL'
-                expect(lastEmittedHTMLs()[1]).toContain(__YOUR_TURN__);
+                expect(lastEmittedHTMLs()[1]).toContain('unknown');
 
                 // Now let's resolve the price for APPL
                 const ApplPrice$: DerivableAtom<number> = stockPrice$.mock.results[1].value;
                 ApplPrice$.set(5.07);
 
-                expect(reactSpy).toBeCalledTimes(__YOUR_TURN__);
+                expect(reactSpy).toBeCalledTimes(4);
                 // The first should be 'GOOGL'
-                expect(lastEmittedHTMLs()[0]).toContain(__YOUR_TURN__);
+                expect(lastEmittedHTMLs()[0]).toContain('1079.11');
                 // The second should be 'APPL'
-                expect(lastEmittedHTMLs()[1]).toContain(__YOUR_TURN__);
+                expect(lastEmittedHTMLs()[1]).toContain('5.07');
             });
         });
     });

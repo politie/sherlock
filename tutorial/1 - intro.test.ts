@@ -18,7 +18,7 @@ export const __YOUR_TURN__ = {} as any;
  *
  * *Hint: most methods and functions are fairly well documented in jsDoc, which is easily accessed through TypeScript*
  */
-describe.skip('intro', () => {
+describe('intro', () => {
     it('should be clear what to do next', () => {
         // At the start of the spec, there will be some setup.
         let bool = false;
@@ -30,7 +30,7 @@ describe.skip('intro', () => {
          * This can also be indicated with the `__YOUR_TURN__` variable.
          * It should be clear what to do here...
          */
-        bool = __YOUR_TURN__;
+        bool = true;
 
         // We use expectations like this to verify the result.
         expect(bool).toBe(true);
@@ -40,7 +40,7 @@ describe.skip('intro', () => {
 /**
  * Let's start with the `Derivable` basics.
  */
-describe.skip('the basics', () => {
+describe('the basics', () => {
     /**
      * The `Atom` is the basic building block of `@politie/sherlock`.
      * It holds a value which you can `get()` and `set()`.
@@ -57,7 +57,7 @@ describe.skip('the basics', () => {
          * **Your Turn**
          * Use the `.set(<newValue>)` method to change the value of the `Atom`.
          */
-
+        myValue$.set(2)
         expect(myValue$.get()).toEqual(2);
     });
 
@@ -77,7 +77,7 @@ describe.skip('the basics', () => {
          * We want to create a new `Derivable` that outputs the inverse of the original `Atom`.
          * Use `myValue$.derive(val => ...)` to create the `myInverse$` variable.
          */
-        const myInverse$ = myValue$.derive(__YOUR_TURN__);
+        const myInverse$ = myValue$.derive(val => -val);
 
         expect(myInverse$.get()).toEqual(-1);
 
@@ -102,7 +102,7 @@ describe.skip('the basics', () => {
          * **Your Turn**
          * Now react to `myCounter$`. In every `react()`, increase the `reacted` variable by one.
          */
-
+        myCounter$.react(() => reacted++)
         expect(reacted).toEqual(1); // `react()` will react immediately, more on that later.
 
         // And then we set the `Atom` a couple of times to make the `Derivable` react.

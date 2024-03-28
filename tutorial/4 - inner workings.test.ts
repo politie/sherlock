@@ -10,7 +10,7 @@ export const __YOUR_TURN__ = {} as any;
 /**
  * Time to dive a bit deeper into the inner workings of `@politie/sherlock`.
  */
-describe.skip('inner workings', () => {
+describe('inner workings', () => {
     /**
      * What if there is a derivation that reads from one of two `Derivable`s dynamically?
      * Will both of those `Derivable`s be tracked for changes?
@@ -38,8 +38,8 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * What do you expect?
          */
-        expect(reacted).toBeCalledTimes(__YOUR_TURN__);
-        expect(reacted).lastReturnedWith(__YOUR_TURN__);
+        expect(reacted).toBeCalledTimes(1);
+        expect(reacted).lastReturnedWith(1);
 
         // `switch$` is still set to true (number)
         number$.set(2);
@@ -48,8 +48,8 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * What do you expect?
          */
-        expect(reacted).toBeCalledTimes(__YOUR_TURN__);
-        expect(reacted).lastReturnedWith(__YOUR_TURN__);
+        expect(reacted).toBeCalledTimes(2);
+        expect(reacted).lastReturnedWith(2);
 
         // Now let's reset the spy, so callCount should be 0 again.
         reacted.mockClear();
@@ -62,8 +62,8 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * What do you expect now?
          */
-        expect(reacted).toBeCalledTimes(__YOUR_TURN__);
-        expect(reacted).lastReturnedWith(__YOUR_TURN__);
+        expect(reacted).toBeCalledTimes(1);
+        expect(reacted).lastReturnedWith('two');
     });
 
     /**
@@ -81,15 +81,15 @@ describe.skip('inner workings', () => {
          * We have created a new `Derivable` by deriving the `Atom`. But have not called `.get()` on that new `Derivable`.
          * Do you think the `hasDerived` function has been called? And how many times?
          */
-        expect(hasDerived).toBeCalledTimes(__YOUR_TURN__); // Well, what do you expect?
+        expect(hasDerived).toBeCalledTimes(0); // Well, what do you expect?
 
         myDerivation$.get();
 
-        expect(hasDerived).toBeCalledTimes(__YOUR_TURN__); // And after a `.get()`?
+        expect(hasDerived).toBeCalledTimes(1); // And after a `.get()`?
 
         myDerivation$.get();
 
-        expect(hasDerived).toBeCalledTimes(__YOUR_TURN__); // And after the second `.get()`? Is there an extra call?
+        expect(hasDerived).toBeCalledTimes(2); // And after the second `.get()`? Is there an extra call?
 
         /**
          * The state of any `Derivable` can change at any moment.
@@ -121,27 +121,27 @@ describe.skip('inner workings', () => {
          * Ok, it's your turn to complete the expectations.
          * *Hint: you can use `.calledOnce`/`.calledTwice` etc or `.callCount()`*
          */
-        expect(hasDerived).toBeCalledTimes(__YOUR_TURN__);
+        expect(hasDerived).toBeCalledTimes(1);
 
         myDerivation$.get();
 
-        expect(hasDerived).toBeCalledTimes(__YOUR_TURN__);
+        expect(hasDerived).toBeCalledTimes(1);
 
         myAtom$.set(false);
 
-        expect(hasDerived).toBeCalledTimes(__YOUR_TURN__);
+        expect(hasDerived).toBeCalledTimes(2);
 
         myDerivation$.get();
 
-        expect(hasDerived).toBeCalledTimes(__YOUR_TURN__);
+        expect(hasDerived).toBeCalledTimes(2);
 
         stopper();
 
-        expect(hasDerived).toBeCalledTimes(__YOUR_TURN__);
+        expect(hasDerived).toBeCalledTimes(2);
 
         myDerivation$.get();
 
-        expect(hasDerived).toBeCalledTimes(__YOUR_TURN__);
+        expect(hasDerived).toBeCalledTimes(3);
 
         /**
          * Since the `.react()` already listens to the value(changes) there is no need to recalculate whenever a `.get()` is called.
@@ -180,23 +180,23 @@ describe.skip('inner workings', () => {
          */
         myAtom$.set(1); // Note that this is the same value as it was initialized with
 
-        expect(first).toBeCalledTimes(__YOUR_TURN__);
-        expect(second).toBeCalledTimes(__YOUR_TURN__);
+        expect(first).toBeCalledTimes(1);
+        expect(second).toBeCalledTimes(1);
 
         myAtom$.set(2);
 
-        expect(first).toBeCalledTimes(__YOUR_TURN__);
-        expect(second).toBeCalledTimes(__YOUR_TURN__);
+        expect(first).toBeCalledTimes(2);
+        expect(second).toBeCalledTimes(1);
 
         myAtom$.set(3);
 
-        expect(first).toBeCalledTimes(__YOUR_TURN__);
-        expect(second).toBeCalledTimes(__YOUR_TURN__);
+        expect(first).toBeCalledTimes(3);
+        expect(second).toBeCalledTimes(2);
 
         myAtom$.set(4);
 
-        expect(first).toBeCalledTimes(__YOUR_TURN__);
-        expect(second).toBeCalledTimes(__YOUR_TURN__);
+        expect(first).toBeCalledTimes(4);
+        expect(second).toBeCalledTimes(2);
 
         /**
          * Can you explain the behavior above?
@@ -226,7 +226,7 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * The `Atom` is set with exactly the same object as before. Will the `.react()` fire?
          */
-        expect(hasReacted).toBeCalledTimes(__YOUR_TURN__);
+        expect(hasReacted).toBeCalledTimes(1);
 
         /**
          * But what if you use an object, that can be easily compared through a library like `ImmutableJS`
@@ -242,7 +242,7 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * Do you think the `.react()` fired with this new value?
          */
-        expect(hasReacted).toBeCalledTimes(__YOUR_TURN__);
+        expect(hasReacted).toBeCalledTimes(0);
 
         atom$.set(Seq.Indexed.of(1, 2));
 
@@ -250,7 +250,7 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * And now?
          */
-        expect(hasReacted).toBeCalledTimes(__YOUR_TURN__);
+        expect(hasReacted).toBeCalledTimes(1);
 
         /**
          * In `@politie/sherlock` equality is a bit complex.
@@ -286,7 +286,7 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * What do you expect?
          */
-        expect(reacted).toBeCalledTimes(__YOUR_TURN__);
+        expect(reacted).toBeCalledTimes(1);
 
         // `switch$` is still set to true (number)
         number$.set(2);
@@ -295,7 +295,7 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * What do you expect?
          */
-        expect(reacted).toBeCalledTimes(__YOUR_TURN__);
+        expect(reacted).toBeCalledTimes(2);
 
         // Now let's reset the spy, so callCount should be 0 again.
         reacted.mockClear();
@@ -306,7 +306,7 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * What do you expect?
          */
-        expect(reacted).toBeCalledTimes(__YOUR_TURN__);
+        expect(reacted).toBeCalledTimes(1);
 
         number$.set(3);
 
@@ -314,6 +314,6 @@ describe.skip('inner workings', () => {
          * **Your Turn**
          * What do you expect now?
          */
-        expect(reacted).toBeCalledTimes(__YOUR_TURN__);
+        expect(reacted).toBeCalledTimes(1);
     });
 });

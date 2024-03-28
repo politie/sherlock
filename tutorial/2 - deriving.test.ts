@@ -12,7 +12,7 @@ export const __YOUR_TURN__ = {} as any;
  *
  * There are a couple of ways to do this.
  */
-describe.skip('deriving', () => {
+describe('deriving', () => {
     /**
      * In the 'intro' we have created a derivable by using the `.derive()` method.
      * This method allows the state of that `Derivable` to be used to create a new `Derivable`.
@@ -30,7 +30,7 @@ describe.skip('deriving', () => {
          * As you might have guessed, we want to repeat the text a couple of times.
          * (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/repeat should do fine)
          */
-        const lyric$ = text$.derive(txt => txt); // We can combine txt with `repeat$.get()` here.
+        const lyric$ = text$.derive(txt => txt.repeat(repeat$.get())); // We can combine txt with `repeat$.get()` here.
 
         expect(lyric$.get()).toBe(`It won't be long`);
 
@@ -56,9 +56,12 @@ describe.skip('deriving', () => {
          * Multiple `Derivable`s can be combined to create a new one. To do this, just use `.get()` on (other) `Derivable`s in the `.derive()` step.
          * This can be done both when `derive()` is used standalone or as a method on another `Derivable`.
          */
-        const fizz$: Derivable<string> = myCounter$.derive(__YOUR_TURN__); // Should return 'Fizz' when `myCounter$` is a multiple of 3 and '' otherwise.
-        const buzz$: Derivable<string> = myCounter$.derive(__YOUR_TURN__); // Should return 'Buzz' when `myCounter$` is a multiple of 5 and '' otherwise.
-        const fizzBuzz$: Derivable<string | number> = derive(__YOUR_TURN__);
+        const fizz$: Derivable<string> = myCounter$.derive(val => val % 3 === 0 ? 'Fizz' : ''); // Should return 'Fizz' when `myCounter$` is a multiple of 3 and '' otherwise.
+        const buzz$: Derivable<string> = myCounter$.derive(val => val % 5  === 0? 'Buzz' : ''); // Should return 'Buzz' when `myCounter$` is a multiple of 5 and '' otherwise.
+        const fizzBuzz$: Derivable<string | number> = derive(() => {
+            const result = fizz$.get() + buzz$.get();
+            return result === '' ? myCounter$.get() : result
+        });
 
         expect(fizz$.get()).toBe('');
         expect(buzz$.get()).toBe('');
@@ -121,9 +124,9 @@ describe.skip('deriving', () => {
          * **Your Turn**
          * Time to set your own expectations.
          */
-        expect(pastTweets).toHaveLength(__YOUR_TURN__); // Is there a new tweet?
-        expect(pastTweets[2]).toContain(__YOUR_TURN__); // Who sent it? Donald? Or Barack?
-        expect(pastTweets[2]).toContain(__YOUR_TURN__); // What did he tweet?
+        expect(pastTweets).toHaveLength(3); // Is there a new tweet?
+        expect(pastTweets[2]).toContain('Donald'); // Who sent it? Donald? Or Barack?
+        expect(pastTweets[2]).toContain('reject'); // What did he tweet?
 
         /**
          * As you can see, this is something to look out for.
@@ -157,9 +160,9 @@ describe.skip('deriving', () => {
          * `fizz$` and `buzz$` can be completed with only `.is(...)`, `.and(...)` and `.or(...)`;
          * Make sure the output of those `Derivable`s is either 'Fizz'/'Buzz' or ''.
          */
-        const fizz$ = myCounter$.derive(count => count % 3).is(__YOUR_TURN__).and(__YOUR_TURN__).or(__YOUR_TURN__) as Derivable<string>;
-        const buzz$ = myCounter$.derive(count => count % 5).is(__YOUR_TURN__).and(__YOUR_TURN__).or(__YOUR_TURN__) as Derivable<string>;
-        const fizzBuzz$ = derive(() => fizz$.get() + buzz$.get()).or(__YOUR_TURN__);
+        const fizz$ = myCounter$.derive(count => count % 3).is(0).and('Fizz').or('') as Derivable<string>;
+        const buzz$ = myCounter$.derive(count => count % 5).is(0).and('Buzz').or('') as Derivable<string>;
+        const fizzBuzz$ = derive(() => fizz$.get() + buzz$.get()).or(myCounter$);
 
         for (let count = 1; count <= 100; count++) {
             // Set the value of the `Atom`,

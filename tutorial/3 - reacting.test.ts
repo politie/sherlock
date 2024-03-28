@@ -10,7 +10,7 @@ export const __YOUR_TURN__ = {} as any;
  * In the intro we have seen a basic usage of the `.react()` method.
  * Let's dive a bit deeper into the details of this method.
  */
-describe.skip('reacting', () => {
+describe('reacting', () => {
     // For easy testing we can count the number of times a reactor was called,
     let wasCalledTimes: number;
     // and record the last value it reacted to.
@@ -50,11 +50,11 @@ describe.skip('reacting', () => {
          * **Your Turn**
          * Time to react to `myAtom$` with the `reactor()` function defined above.
          */
-
+        myAtom$.react(reactor)
         expectReact(1, 'initial value');
 
         // Now set a 'new value' to `myAtom$`.
-
+        myAtom$.set('new value')
         expectReact(2, 'new value');
     });
 
@@ -75,7 +75,7 @@ describe.skip('reacting', () => {
              * **Your Turn**
              * catch the returned `stopper` in a variable
              */
-            myAtom$.react(reactor);
+            const stopper = myAtom$.react(reactor);
 
             expectReact(1, 'initial value');
 
@@ -83,7 +83,7 @@ describe.skip('reacting', () => {
              * **Your Turn**
              * Call the `stopper`.
              */
-
+            stopper();
             myAtom$.set('new value');
 
             // And the reaction stopped.
@@ -102,9 +102,9 @@ describe.skip('reacting', () => {
              * **Your Turn**
              * In the reaction below, use the stopper callback to stop the reaction
              */
-            myAtom$.react((val, __YOUR_TURN___) => {
+            myAtom$.react((val, stopper) => {
                 reactor(val);
-                __YOUR_TURN___;
+                stopper();
             });
 
             expectReact(1, 'initial value');
@@ -147,7 +147,7 @@ describe.skip('reacting', () => {
                  * **Your Turn**
                  * Try giving `boolean$` as `until` option.
                  */
-                string$.react(reactor, __YOUR_TURN__);
+                string$.react(reactor, {until: boolean$});
                 expectReact(1, 'Value');     // It should react directly as usual.
 
                 string$.set('New value');
@@ -171,7 +171,7 @@ describe.skip('reacting', () => {
                  * Since the reactor options expect a boolean, you will sometimes need to calculate the option.
                  * Try giving a `function` as `until` option, use `!string$.get()` to return `true` when the `string` is empty.
                  */
-                string$.react(reactor, __YOUR_TURN__);
+                string$.react(reactor, { until: () => !string$.get() });
                 string$.set('New value');
                 string$.set('Newer Value');
                 expectReact(3, 'Newer Value'); // It should react as usual.
@@ -189,7 +189,7 @@ describe.skip('reacting', () => {
                  * **Your Turn**
                  * Try using the first parameter of the `until` function to do the same as above.
                  */
-                string$.react(reactor, __YOUR_TURN__);
+                string$.react(reactor, { until: (stringVal) => !stringVal.get() });
                 string$.set('New value');
                 string$.set('Newer Value');
                 expectReact(3, 'Newer Value'); // It should react as usual.
@@ -217,7 +217,7 @@ describe.skip('reacting', () => {
              *
              * *Hint: remember the `.is()` method?*
              */
-            sherlock$.react(reactor, __YOUR_TURN__);
+            sherlock$.react(reactor, { from: () => sherlock$.is('dear')});
 
             expectReact(0);
             ['Elementary,', 'my', 'dear', 'Watson'].forEach(txt => sherlock$.set(txt));
@@ -238,7 +238,10 @@ describe.skip('reacting', () => {
              * Now, let's react to all even numbers.
              * Except 4, we don't want to make it too easy now.
              */
-            count$.react(reactor, __YOUR_TURN__);
+            count$.react(reactor, { when: () => {
+                const value = count$.get();
+                return value % 2 === 0 && value !== 4 ? true : false
+            }});
 
             expectReact(1, 0);
 
@@ -263,7 +266,7 @@ describe.skip('reacting', () => {
              * **Your Turn**
              * Say you want to react when `done$` is true. But not right away..
              */
-            done$.react(reactor, __YOUR_TURN__);
+            done$.react(reactor, { skipFirst: true});
             expectReact(0);
 
             done$.set(true);
@@ -285,7 +288,7 @@ describe.skip('reacting', () => {
              *
              * *Hint: you will need to combine `once` with another option*
              */
-            finished$.react(reactor, __YOUR_TURN__);
+            finished$.react(reactor, { once: true, when: finished$});
             expectReact(0);
 
             // When finished it should react once.
@@ -310,7 +313,7 @@ describe.skip('reacting', () => {
              * `connected$` indicates the current connection status.
              * This should be possible with three simple ReactorOptions
              */
-            connected$.react(reactor, __YOUR_TURN__);
+            connected$.react(reactor, { from: connected$ , when: () => connected$.is(false), once: true});
 
             // It starts as 'not connected'
             expectReact(0);
