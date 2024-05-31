@@ -97,12 +97,15 @@ export class BiMapping<B, V> extends Mapping<B, V> implements SettableDerivable<
     }
 }
 
+export const isUnresolvedOrErrorWrapper = (state: State<any>): state is typeof unresolved | ErrorWrapper =>
+    state === unresolved || state instanceof ErrorWrapper;
+
 export function mapMethod<B, V>(this: BaseDerivable<B>, get: (b: B) => MaybeFinalState<V>, set?: (v: V, b?: B) => B): Derivable<V> {
     const stateMapper = function (this: Mapping<B, V>, state: State<B>) {
-        return state === unresolved || state instanceof ErrorWrapper ? state : get.call(this, state);
+        return isUnresolvedOrErrorWrapper(state) ? state : get.call(this, state);
     };
     return set && isSettable(this)
-        ? new BiMapping(this, stateMapper, function (v) { return v === unresolved || v instanceof ErrorWrapper ? v : set.call(this, v, this._base.value); })
+        ? new BiMapping(this, stateMapper, function (v) { return isUnresolvedOrErrorWrapper(v) ? v : set.call(this, v, this._base.value); })
         : new Mapping(this, stateMapper);
 }
 
