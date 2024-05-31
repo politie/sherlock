@@ -1,9 +1,10 @@
 import { unresolved } from '../symbols';
-import { config, ErrorWrapper, isError } from '../utils';
+import { config, isError } from '../utils';
 import { Atom } from './atom';
 import { $, testDerivable } from './base-derivable.tests';
 import { testAutocache } from './derivation.test';
 import { atom, constant, lens } from './factories';
+import { isUnresolvedOrErrorWrapper } from './map';
 import { isDerivableAtom } from './typeguards';
 
 describe('derivable/map', () => {
@@ -97,8 +98,8 @@ describe('derivable/map', () => {
         testDerivable(
             <V>(a$: Atom<V>) => new Atom(a$.map(val => ({ val })).getMaybeFinalState())
                 .mapState(
-                    obj => obj === unresolved || obj instanceof ErrorWrapper ? obj : obj.val,
-                    val => val === unresolved || val instanceof ErrorWrapper ? val : ({ val }),
+                    obj => isUnresolvedOrErrorWrapper(obj) ? obj : obj.val,
+                    val => isUnresolvedOrErrorWrapper(val) ? val : ({ val }),
                 ),
             'atom', 'settable',
         );

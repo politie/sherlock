@@ -235,7 +235,7 @@ describe('derivable/data-source', () => {
     describe('(usecase: simple timer)', () => {
         class Timer extends PullDataSource<number> {
             readonly startTime = Date.now();
-            private intervalId?: NodeJS.Timer;
+            private intervalId?: NodeJS.Timeout;
 
             [connect]() {
                 super[connect]();

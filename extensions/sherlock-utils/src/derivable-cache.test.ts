@@ -274,7 +274,7 @@ describe('sherlock-utils/derivableCache', () => {
 });
 
 class ImmutableMap<K, V> implements MapImplementation<K, V> {
-    private map = immutable.Map<object, V>();
+    private map = immutable.Map<immutable.FromJS<K>, V>();
     set(key: K, value: V) { this.map = this.map.set(immutable.fromJS(key), value); }
     delete(key: K) { this.map = this.map.delete(immutable.fromJS(key)); }
     get(key: K) { return this.map.get(immutable.fromJS(key)); }
