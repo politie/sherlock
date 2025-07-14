@@ -18,7 +18,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # This is a public_repo Github personal access token.
+          # This is a fine-grained Github personal access token
+          # for resource owner "politie" (needs admin approval)
+          # and only repository "politie/sherlock"
+          # with the following "Repository permissions":
+          # - "Contents" (Access: Read and write),
+          # - "Metadata" (Access: Read-only, this is mandatory).
           token: ${{ secrets.WORKFLOW_GITHUB_TOKEN }}
 
       - name: Bump version
@@ -68,8 +73,8 @@ jobs:
 
       - name: Add token to .npmrc
         env:
-          # This is a granular NPM access token with
-          # "Packages and scopes" permission "Read and write"
+          # This is a granular NPM access token
+          # with "Packages and scopes" permission (Access: Read and write)
           # for the four sherlock packages only.
           npmToken: ${{ secrets.WORKFLOW_NPM_TOKEN }}
         run: echo "//registry.npmjs.org/:_authToken=$npmToken" >> .npmrc
