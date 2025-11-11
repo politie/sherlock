@@ -454,7 +454,7 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
 
         describe('(Object.prototype.*)', () => {
             it('should support #toString and #toLocaleString', () => {
-                const obj = createForObject({ a: 1, toString() { return 'unseen'; } });
+                const obj = createForObject({ a: 1, toString() { return 'unseen'; } }) as any;
                 expect(obj.toString()).toBe('[object DerivableProxy]');
                 expect(obj.toLocaleString()).toBe('[object DerivableProxy]');
             });
@@ -518,7 +518,7 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
 
             it('should not break for ... in for primitive values', () => {
                 const obj = createForObject(1234);
-                const result = [];
+                const result: string[] = [];
                 for (const p in obj) {
                     if (obj.hasOwnProperty(p)) {
                         result.push(p);
@@ -529,7 +529,7 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
 
             it('should support for ... of (ES5 style)', () => {
                 const obj = createForObject(['value1', 'value2']) as any;
-                const result = [];
+                const result: any[] = [];
                 // tslint:disable-next-line:prefer-for-of
                 for (let i = 0; i < obj.length; i++) {
                     result.push(obj[i].$value);
@@ -539,7 +539,7 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
 
             it('should support for ... of (ES6 style)', () => {
                 const obj = createForObject(['value1', 'value2']);
-                const result = [];
+                const result: string[] = [];
                 const iter: Iterator<ProxyType<string>> = obj[Symbol.iterator]();
                 for (let item = iter.next(); !item.done; item = iter.next()) {
                     result.push(item.value.$value);
@@ -549,7 +549,7 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
 
             it('should support TypeScript for ... of', () => {
                 const obj = createForObject(['value1', 'value2']) as any;
-                const result = [];
+                const result: any[] = [];
                 for (const item of obj) {
                     result.push(item.$value);
                 }
@@ -617,7 +617,7 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
 
             it('should support for ... of (ES5 style)', () => {
                 const obj = new LetterCount().$create(constant('also pointless')) as any;
-                const result = [];
+                const result: any[] = [];
                 // tslint:disable-next-line:prefer-for-of
                 for (let i = 0; i < obj.length; i++) {
                     result.push(obj[i].$value);
@@ -627,7 +627,7 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
 
             it('should support for ... of (ES6 style)', () => {
                 const obj = new LetterCount().$create(constant('still pointless'));
-                const result = [];
+                const result: string[] = [];
                 const iter: Iterator<ProxyType<string>> = obj[Symbol.iterator]();
                 for (let item = iter.next(); !item.done; item = iter.next()) {
                     result.push(item.value.$value);
@@ -637,7 +637,7 @@ typeof Proxy !== 'undefined' && describe('proxy', () => {
 
             it('should support TypeScript for ... of', () => {
                 const obj = new LetterCount().$create(constant('pointless')) as any;
-                const result = [];
+                const result: any[] = [];
                 for (const item of obj) {
                     result.push(item.$value);
                 }
