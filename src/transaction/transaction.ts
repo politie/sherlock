@@ -148,10 +148,6 @@ export function atomic<F extends (...args: any[]) => any>(f?: F): MethodDecorato
         };
     } else {
         return (_target: any, _propertyKey: any, descriptor: PropertyDescriptor) => {
-            // istanbul ignore if: defensive check for edge cases
-            if(!descriptor || !descriptor.value) {
-                return;
-            }
             descriptor.value = descriptor.value && atomic(descriptor.value);
         };
     }
@@ -179,10 +175,6 @@ export function transaction<F extends (...args: any[]) => any>(f?: F): MethodDec
         };
     } else {
         return (_target: any, _propertyKey: any, descriptor: PropertyDescriptor) => {
-            // istanbul ignore if: defensive check for edge cases
-            if(!descriptor) {
-                return;
-            }
             descriptor.value = descriptor.value && transaction(descriptor.value);
         };
     }
