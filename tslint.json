@@ -34,6 +34,7 @@
             true,
             "never-prefix"
         ],
+        "no-shadowed-variable": false,
         "no-empty-interface": false,
         "max-classes-per-file": false,
         "new-parens": false,

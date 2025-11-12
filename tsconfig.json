@@ -1,6 +1,5 @@
 {
     "compilerOptions": {
-        "ignoreDeprecations": "5.0",
         "target": "es5",
         "module": "es6",
         "lib": [
@@ -25,7 +24,6 @@
         "pretty": true,
         "stripInternal": true,
         "skipLibCheck": true,
-        "suppressImplicitAnyIndexErrors": true,
         "baseUrl": "src",
         "outDir": "dist",
         "paths": {

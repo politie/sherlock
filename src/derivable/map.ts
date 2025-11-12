@@ -101,7 +101,6 @@ export const isUnresolvedOrErrorWrapper = (state: State<any>): state is typeof u
     state === unresolved || state instanceof ErrorWrapper;
 
 export function mapMethod<B, V>(this: BaseDerivable<B>, get: (b: B) => MaybeFinalState<V>, set?: (v: V, b?: B) => B): Derivable<V> {
-    // tslint:disable-next-line:no-shadowed-variable
     const stateMapper = function (this: Mapping<B, V>, state: State<B>) {
         return isUnresolvedOrErrorWrapper(state) ? state : get.call(this, state);
     };
