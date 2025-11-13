@@ -100,6 +100,11 @@ describe('derivable/data-source', () => {
         setInterval(() => now += 100, 100);
     });
 
+    afterEach(() => {
+        jest.runOnlyPendingTimers();
+        jest.useRealTimers();
+    });
+
     describe('#autoCache', () => {
         let ds$: SimpleDataSource<string>;
         beforeEach(() => {
@@ -121,7 +126,7 @@ describe('derivable/data-source', () => {
             expect(ds$.get()).toBe('value');
             expect(ds$.calculateCurrentValue).toHaveBeenCalledTimes(1);
 
-            jest.advanceTimersByTime(0);
+            jest.advanceTimersByTime(1);
 
             expect(ds$.calculateCurrentValue).toHaveBeenCalledTimes(1);
             expect(ds$.get()).toBe('value');
@@ -184,7 +189,7 @@ describe('derivable/data-source', () => {
             expect(ds$.get()).toBe('value');
             expect(ds$.calculateCurrentValue).toHaveBeenCalledTimes(1);
 
-            jest.advanceTimersByTime(0);
+            jest.advanceTimersByTime(1);
 
             // Only after the tick, the cache may be released.
             expect(ds$.get()).toBe('value');

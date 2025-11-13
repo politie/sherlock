@@ -10,7 +10,10 @@
         "declaration": true,
         "sourceMap": true,
         "importHelpers": true,
+        "noImplicitAny": false,
         "strict": true,
+        "noPropertyAccessFromIndexSignature": false,
+        "noUncheckedIndexedAccess": false,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noImplicitReturns": true,
@@ -21,7 +24,6 @@
         "pretty": true,
         "stripInternal": true,
         "skipLibCheck": true,
-        "suppressImplicitAnyIndexErrors": true,
         "baseUrl": "src",
         "outDir": "dist",
         "paths": {
